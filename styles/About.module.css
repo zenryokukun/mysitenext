@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex: 1;
+  background-color: #f3f3f3;
+}
+
+.wrapper {
+  width: 33.3%;
+}
+
+.textContent {
+  padding: 0rem 1rem;
+}
+
+.title {
+  border-left: solid 5px #E91E63;
+  background-color: #f1f1f1;
+  padding-left: 1rem;
+}
+
+@media screen and (max-width:850px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .textContent {
+    margin-bottom: 1rem;
+  }
+}

@@ -1,0 +1,70 @@
+.container {
+  background-color: #333;
+  overflow: hidden;
+}
+
+.myol {
+  margin: 0;
+  padding: 0;
+}
+
+.item,
+.ham {
+  color: #f2f2f2;
+  cursor: pointer;
+  float: left;
+  font-size: 1.2rem;
+  list-style-type: none;
+  padding: 0.8rem 1rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.link {
+  color: #f2f2f2;
+  text-decoration: none;
+}
+
+.item:hover:not(.active) {
+  background-color: rgb(0, 0, 0, 0.5);
+}
+
+.ham {
+  display: none;
+  float: right;
+  right: 0;
+  top: 0;
+}
+
+.active {
+  background-color: #E91E63;
+  color: white;
+}
+
+@media screen and (max-width:600px) {
+  .container {
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+  }
+
+  .item {
+    display: none;
+  }
+
+  .ham {
+    display: block;
+    position: absolute;
+  }
+
+  .active,
+  .spread {
+    display: block;
+    float: none;
+    text-align: left;
+  }
+
+  .spread:not(.active) {
+    background-color: rgba(117, 117, 117, 0.4);
+  }
+}

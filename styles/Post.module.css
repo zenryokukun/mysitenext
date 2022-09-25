@@ -1,0 +1,65 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.likeWrapper {
+    width: 45%;
+    margin-left: auto;
+    margin-right: auto;
+    border-top: 2px solid #eaeaea;
+    text-align: center;
+}
+
+.thanks {
+    margin-top: 1rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+
+}
+
+.primary {
+    color: lightgray;
+}
+
+.accent {
+    color: #E91E63;
+}
+
+.iconWrapper {
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.iconWrapper,
+.thanks {
+    margin-bottom: 0.7rem;
+}
+
+
+@media screen and (max-width:950px) {
+    .likeWrapper {
+        width: 85%;
+    }
+}
+
+@media screen and (max-width:600px) {
+
+    .container {
+        position: relative;
+        top: 4rem;
+    }
+
+    .likeWrapper {
+        position: relative;
+        top: 5rem;
+    }
+
+    .thanks {
+        font-size: 1rem;
+    }
+}

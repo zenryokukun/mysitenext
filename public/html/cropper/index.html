@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/html/cropper/main.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <title>スマホ写真切取君</title>
+</head>
+
+<body>
+  <div id="root">
+    <!--modal-->
+    <div class="lock__modal">
+      <div class="loader-wrapper">
+        <div class="loader-message">ナウ、ローディン...</div>
+      </div>
+    </div>
+    <!--header-->
+    <div class="description">縦長写真を所望の縦横比で切取るサービス</div>
+    <!--content-->
+    <div class="content">
+      <form class="form__self" action="/api/cropper/upload" method="post" target="_self" enctype="multipart/form-data">
+        <fieldset class="form__wrapper">
+          <legend class="legend__text">画像選択</legend>
+          <label class="label__text" for="pics"></label>
+          <input type="file" name="pics" accept="image/*" multiple>
+        </fieldset>
+        <fieldset class="form__wrapper ratio__wrapper">
+          <legend class="legend__text">縦横比を選択</legend>
+          <div><input id="widest" type="radio" name="ratio" checked value="0.5625">
+            <label class="label__text" for="widest">9:16</label>
+          </div>
+          <div><input id="wider" type="radio" name="ratio" value="0.667">
+            <label class="label__text" for="wider">2:3</label>
+          </div>
+          <div><input id="wide" type="radio" name="ratio" value="0.75">
+            <label class="label__text" for="wide">3:4</label>
+          </div>
+          <div><input id="square" type="radio" name="ratio" value="1">
+            <label class="label__text" for="square">1:1</label>
+          </div>
+        </fieldset>
+        <fieldset class="form__wrapper">
+          <legend class="legend__text">リサイズ後の横幅のピクセル数を入力</legend>
+          <input class="no-resize" id="default" type="radio" name="resize" value="default" checked>
+          <label class="label__text" for="default">default</label>
+          <input class="new-width__radio" id="new-width" type="radio" name="resize" value="custom">
+          <input class="new-width__input" type="number" name="width" min=1 max="9999">
+          <label class="label__text" for="new-width">px</label>
+        </fieldset>
+        <div class="form__wrapper">
+          <input class="submit__button" type="submit" value="submit">
+        </div>
+      </form>
+      <div class="disclaimer">※注意事項
+        <p class="disclaimer__message">
+          画像はサーバにアップロードされ、切取り後に圧縮の上ダウンロードを行います。
+          通信はHTTPSで暗号化され、安心安全の日本企業のVPSを利用しておりますが、ご了承の上ご利用下さい。
+        </p>
+      </div>
+      <div class="example">
+        <div class="example__description">
+          <h3 class="example__title">
+            スマホで撮影した縦長の画像を、選択した縦横比に基づいて切り取ります.
+          </h3>
+          <p class="example__explanation">下の赤枠のように、縦方向は中央部分を切り取ります。切り取り後の画像の
+            大きさを変えたい場合は、リサイズ後の横幅をピクセル数で入力してください。
+          </p>
+        </div>
+        <div class="image__wrapper">
+          <img class="example__image" src="/html/cropper/view.jpg" alt="example-image">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--footer-->
+  <div class=" footer">
+    <div class="footer__message">Brought to you by Zenryokukun, with love.</div>
+    <div class="footer__content">
+      <div class="footer__content__about">
+        <div class="about__title">ABOUT</div>
+        <div class="about__message">
+          <div>ありとあらゆる集団からはじき出される不適合者。</div>
+          <div>同じ境遇の人に、少しでも憩いの場を。</div>
+        </div>
+      </div>
+      <div class="footer__content__icon">
+        <div class="icon__message">Feel free to follow me.</div>
+        <div class="icon__wrapper">
+          <a class="icon--default-color" href="https://twitter.com/zenryoku_kun0">
+            <i class="fa-brands fa-twitter fa-2x"></i>
+          </a>
+        </div>
+        <div class="icon__wrapper">
+          <a class="icon--default-color" href="https://z-p42.www.instagram.com/zen_ryoku_kun/">
+            <i class="fa-brands fa-instagram fa-2x"></i>
+          </a>
+        </div>
+        <div class="icon__wrapper"><a class="icon--default-color" href="https://github.com/zenryokukun">
+            <i class="fa-brands fa-github fa-2x"></i>
+          </a>
+        </div>
+      </div>
+      <div class="footer__content__map">
+        <div class="map__company">
+          <div class="icon__wrapper">
+            <a class="icon--default-color"
+              href="https://www.google.co.jp/maps/place/%E5%AF%8C%E5%A3%AB%E5%B1%B1/@35.3669817,138.7807581,11.38z/data=!4m5!3m4!1s0x6019629a42fdc899:0xa6a1fcc916f3a4df!8m2!3d35.3606361!4d138.7272835?hl=ja">
+              <i class="fa-solid fa-location-dot fa-1x"></i>
+            </a>
+          </div><span>Unemployed Inc.</span>
+        </div>
+        <div class="map__address">The Greater Metropolitan Tokyo,JP.</div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <script src="/html/cropper/main.js"></script>
+</body>
+
+</html>

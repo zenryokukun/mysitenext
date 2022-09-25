@@ -1,0 +1,289 @@
+body {
+    margin: 0;
+}
+
+.description {
+    background-color: #333;
+    color: #f2f2f2;
+    text-align: center;
+    width: 100%;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.content {
+    min-height: 80vh;
+    width: 100%;
+    background: linear-gradient(90deg, #91eae4, #86a8e7, #7f7fd5);
+    color: #222;
+}
+
+.form__self,
+.example,
+.disclaimer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 1.5rem;
+    margin: 0 auto;
+    width: 40%;
+}
+
+.form__wrapper:first-child {
+    margin-top: 1.5rem;
+}
+
+.ratio__wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.legend__text {
+    font-weight: bold;
+    color: #333;
+}
+
+.new-width__input {
+    width: 6em;
+}
+
+.submit__button {
+    width: 5rem;
+    height: 2rem;
+    border: none;
+    box-shadow: 0 2px 5px 0 rgb(0 0 0 / 16%), 0 2px 10px 0 rgb(0 0 0 / 12%);
+    background-color: #1abc9c;
+    opacity: 0.8;
+    color: #f3f3f3;
+    font-weight: bold;
+}
+
+.submit__button:hover {
+    background-color: orange;
+}
+
+.example {
+    margin-top: 1.5rem;
+}
+
+.example__explanation {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.image__wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.example__image {
+    max-width: 100%;
+}
+
+.disclaimer {
+    margin-top: 2rem;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.disclaimer__message {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+@media screen and (max-width:1000px) {
+
+    .form__self,
+    .example,
+    .disclaimer {
+        width: 50%;
+    }
+}
+
+
+@media screen and (max-width:800px) {
+
+    .form__self,
+    .example,
+    .disclaimer {
+        width: 60%;
+    }
+}
+
+@media screen and (max-width:650px) {
+
+    .form__self,
+    .example,
+    .disclaimer {
+        width: 80%;
+    }
+}
+
+/***********************************
+Footer Component
+************************************/
+.footer {
+    /*prevent Message overlapping footer*/
+    position: absolute;
+    z-index: 3;
+
+    width: 100%;
+    background-color: #333;
+    /*min-height: 50px;*/
+    text-align: center;
+}
+
+.footer__message {
+    background-color: #333;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: italic;
+    font-size: 17px;
+    border-bottom: 1px solid white;
+}
+
+
+.footer__content {
+    /*
+    background-color: #555;
+    */
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.footer__content__map {
+    color: #f3f3f3;
+    font-size: 17px;
+    /*text-align: left;*/
+    padding: 14px 14px;
+}
+
+.footer__content__map,
+.footer__content__about,
+.footer__content__icon {
+    flex: 1
+}
+
+.map__company {
+    text-decoration: underline;
+}
+
+.map__address {
+    font-size: 12px;
+}
+
+.icon__wrapper {
+    display: inline-block;
+    margin-right: 17px;
+}
+
+.icon--default-color {
+    color: #f3f3f3;
+}
+
+.icon--default-color:hover {
+    /*color: dodgerblue;*/
+    color: lime;
+}
+
+.icon__message {
+    color: #f3f3f3;
+    font-size: 17px;
+}
+
+.about__title {
+    color: #f3f3f3;
+    font-size: 17px;
+}
+
+.about__message {
+    color: #f3f3f3;
+    font-size: 12px;
+}
+
+@media screen and (max-width:850px) {
+    .footer__content {
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    .footer__content__about,
+    .footer__content__icon,
+    .footer__content__map {
+        width: 100%;
+        align-content: center;
+        justify-content: space-evenly;
+        /*padding: 5px 2px;*/
+        padding: 5px;
+        border-top: solid 1px white;
+    }
+
+    .about__title,
+    .icon__message,
+    .map__company {
+        padding-bottom: 5px;
+    }
+}
+
+/*LOADER */
+
+.loader-wrapper {
+    position: absolute;
+    width: 100%;
+    top: 40%;
+    text-align: center;
+}
+
+.loader-message {
+    font-size: 1em;
+    animation: blinker 1s step-start infinite;
+}
+
+@keyframes blinker {
+    25% {
+        opacity: 0.9
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    75% {
+        opacity: 0.5;
+    }
+
+    85% {
+        opacity: 0.3;
+    }
+
+    95% {
+        opacity: 0.2;
+    }
+
+    100% {
+        opacity: 0.1;
+    }
+
+}
+
+.lock__modal {
+    display: none;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(1, 1, 1, 0.7);
+    z-index: 4;
+    color: #EAEAEA;
+    font-size: 24px;
+}

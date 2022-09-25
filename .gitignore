@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# testing...
+test/
+
+/lib/db/dbinfo.json
+/pages/api/genkidama/src/conf
+/pages/api/cropp/pics/*.zip

@@ -1,0 +1,19 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    /* background-color: #f3f3f3; */
+    padding-left: 1rem;
+}
+
+@media screen and (max-width:600px) {
+    .container {
+        position: relative;
+        top: 3rem;
+        /*
+        menuをabsoluteにしている（展開時に下の要素がつられてずれないようにするため）。
+        そのため、mainが(0,0)に描写されるため、3rem分下にずらしている。
+        その分Footerと重なってしまうため、min-heightを余分に取る。
+        */
+        /* min-height: 105vh; */
+    }
+}

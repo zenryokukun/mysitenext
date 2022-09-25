@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9TR64QDHY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-V9TR64QDHY');
+  </script>
+
+  <meta charset="utf-8">
+  <title>マリオ</title>
+  <style>
+    canvas {
+      display: block;
+      background-color: #1F1F1F;
+      margin: auto;
+    }
+  </style>
+  <script src="/html/marimo/objects.js"></script>
+  <script>
+    var SOUND = (function () {
+      var dir = "/html/marimo/"
+      var audio = {};
+      audio["jump"] = new Audio();
+      audio["jump"].src = dir + "jump.wav";
+      audio["die"] = new Audio();
+      audio["die"].src = dir + "die.wav";
+      audio["stomp"] = new Audio();
+      audio["stomp"].src = dir + "stomp.wav";
+      audio["coin"] = new Audio();
+      audio["coin"].src = dir + "coin.wav";
+
+
+      function play(sound) {
+        audio[sound].play();
+      }
+
+      function pause(sound) {
+        audio[sound].pause();
+      }
+
+      return {
+        play: play,
+        pause: pause
+      };
+
+    })();
+  </script>
+</head>
+
+<body>
+  <script>
+
+    var
+      W = 500, H = 290, LEFT = 37, UP = 32, RIGHT = 39, SP_W = 16, SP_H = 20, CW = 12, CH = 14,
+      mario, enemy, bgSprite, cSprite, mSprite, eSprites, cSprite,
+      keyState = {}, pressed = {}, frames, game, score, total,
+      bg, mario, enemy, coin, flash;
+
+    var
+      MOVE = { x: 5, jumpY: 5, jumpInitFrame: 5, jumpMaxFrame: 10, enemyX: 2, enemyY: 3, scoreY: 2, coinY: 3 },
+      M_ST = { default: 0, run1: 1, run2: 2, run3: 3, jump: 4, lose: 5 },
+      E_ST = { run1: 0, run2: 1, stomp1: 2, stomp2: 3 },
+      SCORE = { stomp: 100, coin: 150 };
+    TIMER = { blink: 20, score: 10, coin: 10 };
+
+    function init() {
+      //sprites;
+      bg = bgSprite = new Sprite(1, 49, 16, 14);
+      bg.width = 25;
+      bg.height = 25;
+
+      mSprite = [
+        new Sprite(1, 5, 13, 16), new Sprite(15, 5, 13, 16),
+        new Sprite(30, 4, 13, 17), new Sprite(44, 5, 15, 15),
+        new Sprite(75, 5, 17, 16), new Sprite(93, 5, 14, 14)
+      ];
+
+      eSprites = [
+        [new Sprite(0, 28, 16, 16), new Sprite(16, 28, 16, 16), new Sprite(32, 28, 16, 16)],
+        [new Sprite(115, 24, 15, 21), new Sprite(131, 23, 15, 21), new Sprite(67, 23, 14, 20), new Sprite(50, 24, 15, 20)]
+      ];
+
+      cSprite = new Sprite(71, 49, 10, 14);
+
+      //canvas
+      paint.init(W, H + bg.height);
+      paint.ctx.fillStyle = "#FFF";
+      paint.ctx.font = "12px Helvetica";
+
+      //img
+      var img = new Image();
+      img.addEventListener("load", function (e) {
+        Sprite.prototype.setImage(this);
+        main();
+      }, false);
+      img.src = "/html/marimo/spriteset.png";
+
+      //events
+      document.body.addEventListener("keydown", function (e) {
+        keyState[e.keyCode] = true;
+        if (e.keyCode === 13) {
+          if (!game) {
+            main();
+          }
+        }
+      }, false);
+      document.body.addEventListener("keyup", function (e) {
+        keyState[e.keyCode] = null;
+        pressed[e.keyCode] = null;
+      }, false);
+    };
+
+    function main() {
+      frames = 0;
+      game = true;
+      enemy = [];
+      coin = [];
+      score = [];
+      flash = [];
+      total = 0;
+      paint.renderBG(bg);
+      mario = new Character(0, paint.canvas.height - bg.height - SP_H, SP_W, SP_H, mSprite, 0, 1, true);
+      console.log(mario.y);
+      loop();
+      //loseAnimation();
+    }
+    function loop() {
+      if (frames % 2 === 0) {
+        updateMario();
+        updateEnemy();
+        collisionEnemy();
+        collisionCoin();
+        updateScore();
+        render();
+
+      }
+      updateCoin();
+      updateFlash();
+
+      if (frames % 8 === 0) { generateCoin(); }
+
+      frames++;
+      if (frames === 32) { frames = 0; }
+      if (game) {
+        window.requestAnimationFrame(loop);
+      }
+    }
+    function updateMario() {
+      var xflag = false;
+
+      if (!keyState[RIGHT] && !keyState[LEFT]) {
+        if (mario.isOnLand) {
+          mario.state = M_ST.default;
+        } else if (mario.jump.inertia) {
+          xflag = true;
+        }
+      }
+      /*test*/
+      if (keyState[RIGHT] && keyState[LEFT]) {
+        return;
+      }
+      /*test end*/
+      if (keyState[RIGHT]) {
+        mario.direction = 1;
+        xflag = true;
+      }
+      if (keyState[LEFT]) {
+        mario.direction = -1;
+        xflag = true;
+      }
+
+      if (xflag) {
+        if (mario.isOnLand) {
+          if (mario.state === M_ST.run3) {
+            mario.state = M_ST.run1;
+          } else {
+            mario.state++;
+          }
+        }
+
+        mario.updateX(mario.direction * MOVE.x);
+      }
+      if (isPressed(UP)) {
+        if (mario.isOnLand) {
+          if (keyState[RIGHT] || keyState[LEFT]) {
+            var inertia = true;
+          }
+          mario.verticalAction(M_ST.jump, MOVE.jumpInitFrame, 0, MOVE.jumpMaxFrame, inertia);
+          SOUND.play("jump");
+        }
+      }
+
+      if (keyState[UP] && !mario.isOnLand) {
+        if (mario.jump.topEnd <= mario.jump.max) {
+          mario.jump.add(1);
+        }
+      }
+
+      if (!mario.isOnLand) {
+        mario.jump.update();
+        if (mario.jump.count >= mario.jump.bottomEnd) {
+          mario.updateY(MOVE.jumpY * mario.jump.vector);
+        } else {
+          mario.landingAction(M_ST.default);
+        }
+
+      }
+    }
+
+    function updateEnemy() {
+      for (var i = 0; i < enemy.length; i++) {
+        if (enemy[i].isOnLand) {
+          if (isOut(enemy[i])) {
+            enemy.splice(i, 1);
+            continue;
+          } else {
+            if (enemy[i].state < E_ST.stomp1) {
+              enemy[i].updateX(enemy[i].direction * MOVE.enemyX);
+            }
+          }
+        } else {
+          if (enemy[i].y >= paint.canvas.height - bg.height - enemy[i].height) {
+            enemy[i].landingAction();
+          } else {
+            enemy[i].updateY(MOVE.enemyY);
+          }
+        }
+        if (enemy[i].blink !== undefined) {
+          if (enemy[i].blink % 2 === 0) {
+            enemy[i].hide = true;
+          } else {
+            enemy[i].hide = false;
+          }
+          if (enemy[i].blink < 0) {
+            enemy.splice(i, 1);
+          } else {
+            enemy[i].blink--;
+          }
+        }
+      }
+
+      if (frames % 8 === 0) {
+        for (i = 0; i < enemy.length; i++) {
+          if (enemy[i].state < E_ST.stomp1) {
+            enemy[i].state = enemy[i].state === 0 ? 1 : 0;
+          }
+        }
+        generateEnemy();
+      }
+    }
+
+    function updateCoin() {
+      Coin.prototype.update();
+      for (var i = 0; i < coin.length; i++) {
+        if (coin[i].isOnLand === false) {
+          if (coin[i].y < paint.canvas.height - bg.height - coin[i].height) {
+            coin[i].updateY(MOVE.coinY);
+          } else {
+            coin[i].isOnLand = true;
+          }
+          coin[i].timer--;
+        } else {
+          ;
+          if (coin[i].timer < 0) {
+            if (coin[i].blink === undefined) {
+              coin[i].blink = 80;
+            } else {
+              if (coin[i].blink % 3 === 0) {
+                coin[i].hide = true;
+              } else {
+                coin[i].hide = false;
+              }
+            }
+            if (coin[i].blink < 0) {
+              coin.splice(i, 1);
+            } else {
+              coin[i].blink--;
+            }
+          } else {
+            coin[i].timer--;
+          }
+        }
+      }
+    }
+
+    function updateFlash() {
+      for (var i = 0; i < flash.length; i++) {
+        if (flash[i].timer < 0) {
+          flash.splice(i, 1);
+        } else {
+          flash[i].update(5);
+        }
+      }
+    }
+
+    function updateScore() {
+      for (var i = 0; i < score.length; i++) {
+        if (score[i].timer <= 0) {
+          score.splice(i, 1);
+        } else {
+          score[i].update(MOVE.scoreY);
+        }
+      }
+    }
+
+    function render() {
+      paint.clear(0, 0, paint.canvas.width, paint.canvas.height - bg.height);
+      for (var i = 0; i < enemy.length; i++) {
+        if (!enemy[i].hide) {
+          paint.renderCH(enemy[i]);
+        }
+      }
+      for (i = 0; i < coin.length; i++) {
+        if (!coin[i].hide) {
+          paint.renderCoin(coin[i]);
+        }
+
+      }
+      for (var i = 0; i < score.length; i++) { paint.renderStompScore(score[i]); }
+      for (var i = 0; i < flash.length; i++) { paint.renderCoin(flash[i]); }
+      paint.renderTotalScore(total, 10, 20);
+      paint.renderCH(mario);
+    }
+
+    function generateEnemy() {
+      var r = Math.floor(Math.random() * 20);
+      if (r === 0) {
+        var i = Math.floor(Math.random() * eSprites.length);
+        var x = Math.floor(Math.random() * paint.canvas.width);
+        var d = Math.floor(Math.random() * 2);
+        d = d === 0 ? -1 : 1;
+        enemy.push(new Character(x, 0, SP_W, SP_H, eSprites[i], 0, d, false));
+      }
+    }
+
+    function generateCoin() {
+      var r = Math.floor(Math.random() * 20);
+      if (r === 0) {
+        var x = Math.floor(Math.random() * paint.canvas.width - CW);
+        coin.push(new Coin(x, 0, CW, CH, cSprite, 100));
+      }
+    }
+
+    function isPressed(kc) {
+      if (pressed[kc]) {
+        return false;
+      } else if (keyState[kc]) {
+        pressed[kc] = true;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    function collisionEnemy() {
+      var mx = mario.x + mario.width / 2, my = mario.y + mario.height / 2;
+
+      for (var i = 0; i < enemy.length; i++) {
+        var e = enemy[i];
+        if (mx >= e.x && mx <= e.x + e.width && mario.y + mario.height >= e.y &&
+          mario.y + mario.height <= e.y + e.height / 2) {
+          if (e.state < E_ST.stomp1) {
+            SOUND.play("stomp");
+            e.state = E_ST.stomp1;
+            e.blink = 20;
+            mario.jump.extend(MOVE.jumpInitFrame);
+            score.push(new Score(e.x, e.y, e.width, e.height, SCORE.stomp, TIMER.score));
+            total += SCORE.stomp;
+          }
+        }
+        else if (mx > e.x && mx < e.x + e.width && my > e.y && my < e.y + e.height) {
+          if (e.state < E_ST.stomp1) {
+            loseAnimation();
+            game = false;
+            return;
+          }
+        }
+      }
+      return true;
+    }
+
+    function collisionCoin() {
+      var mx = mario.x + mario.width / 2, my = mario.y + mario.height / 2;
+      for (var i = 0; i < coin.length; i++) {
+        var c = coin[i];
+        if (mx >= c.x && mx <= c.x + c.width && my >= c.y &&
+          my <= c.y + c.height) {
+          SOUND.play("coin");
+          coin.splice(i, 1);
+          flash.push(new Flash(c.x, c.y, c.width, c.height, c.sprites));
+          score.push(new Score(c.x, c.y, c.width, c.height, SCORE.coin, TIMER.coin));
+          total += SCORE.coin;
+        }
+      }
+    }
+
+    function isOut(o) {
+      if (o.x + o.width < 0 || o.x > paint.canvas.width) {
+        return true;
+      }
+      return false;
+    }
+
+    function loseAnimation() {
+      var f = 0;
+      var flg = true;
+      mario.verticalAction(M_ST.lose, 17, -10);
+      SOUND.play("die");
+      function anim() {
+        if (f % 2 === 0) {
+          mario.jump.update();
+          if (mario.jump.count > mario.jump.bottomEnd) {
+            mario.updateY(mario.jump.vector * MOVE.jumpY);
+          } else {
+            flg = false;
+          }
+          paint.clear(0, 0, paint.canvas.width, paint.canvas.height);
+          paint.renderBG(bg);
+          paint.renderCH(mario);
+          for (var i = 0; i < enemy.length; i++) { paint.renderCH(enemy[i]); }
+        }
+        f++;
+        if (flg) {
+          window.requestAnimationFrame(anim);
+        }
+      }
+      setTimeout(anim, 700);
+    }
+    init();
+
+  </script>
+</body>
+
+</html>
