@@ -7,15 +7,9 @@ interface Prop {
   offset?: string,
 }
 
-export default function Footer({ offset }: Prop) {
+export default function Footer() {
   let contStyle = styles.container;
-  if (offset) {
-    if (offset === "offsetTopS") {
-      contStyle += " " + styles.offsetTopS;
-    } else if (offset === "offsetTopL") {
-      contStyle += " " + styles.offsetTopL;
-    }
-  }
+
   return (
     <div className={contStyle}>
       <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>

@@ -36,7 +36,7 @@ export default function Post({ content, data }: PostProp) {
         dangerouslySetInnerHTML={{ __html: content }}
       ></article>
       <Like></Like>
-      <Footer offset="offsetTopL"></Footer>
+      <Footer></Footer>
       {/* <Footer></Footer> */}
     </>
   );
@@ -47,13 +47,15 @@ function Like() {
   const [isClicked, setClicked] = useState(false);
   const enter = (e: React.MouseEvent<HTMLDivElement>) => setHighLight((isHightLight) => !isHighLight);
   const leave = (e: React.MouseEvent<HTMLDivElement>) => setHighLight((isHightLight) => !isHighLight);
-  const click = (e: React.MouseEvent<HTMLDivElement>) => setClicked(true);
+  const click = (e: React.MouseEvent<HTMLDivElement>) => setClicked((isClicked) => !isClicked);
   let color = styles.primary;
   if (isClicked) {
     color = styles.accent;
   } else {
+    color = styles.primary;
     color = isHighLight ? styles.accent : styles.primary;
   }
+
   return (
     <div className={styles.likeWrapper}>
       <div className={`${styles.thanks} ${color}`}>

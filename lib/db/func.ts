@@ -1,4 +1,5 @@
 import clientPromise, { dbInfo } from "./client";
+import { JST } from "../util";
 import type { MongoClient } from "mongodb";
 
 export interface BlogInfo {
@@ -16,6 +17,10 @@ export interface BlogInfo {
 
 interface DirFilter {
     assetsDir: string,
+}
+
+interface InsertComment {
+    name: string, msg: string,
 }
 
 /**
@@ -115,10 +120,38 @@ async function deleteDuplicateDir(filter: DirFilter) {
     return result;
 }
 
+/**
+ * _app.tsxで使用。遷移するページの訪問数を更新する。
+ * NODE_ENVがproductionの時のみ呼ばれる。
+ * 詳細は_app.tsxを参照
+ * @param dir 更新するpageフィールドの値
+ * @returns 
+ */
+async function updateVisit(dir: string) {
+    const colName = dbInfo["colVisits"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const query = { page: dir };
+    const update = { $inc: { views: 1 } };
+    const opt = { upsert: true };
+    const result = col.updateOne(query, update, opt);
+    return result;
+}
+
+async function insertComment({ name, msg }: InsertComment) {
+    const colName = dbInfo["colComment"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const doc = { name, msg, posted: JST() };
+    console.log(doc.posted);
+}
+
 export {
     findBlogDocs,
     getBlogDirList,
     insertBlogInfo,
     deleteDuplicateDir,
     _migrateBlogInfo,
+    updateVisit,
+    insertComment,
 };

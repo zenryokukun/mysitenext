@@ -56,3 +56,7 @@ export async function toHTMLString(md: string): Promise<string> {
             .process(md)
     return processed.toString();
 }
+
+export function JST(): string {
+    return new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+}

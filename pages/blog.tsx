@@ -1,11 +1,13 @@
 import Link from "next/link";
+import Router from "next/router";
+import { useState, useEffect } from "react";
 import Menu from "../component/Menu";
 import Footer from "../component/Footer";
 import MyHead from "../component/MyHead";
+import Loader from "../component/Loader";
 import { MODE } from "../component/constants";
-import styles from "../styles/Blog.module.css";
-// import { findBlogDocs, init } from "../lib/db/dbclient";
 import { findBlogDocs } from "../lib/db/func"
+import styles from "../styles/Blog.module.css";
 
 interface BlogInfo {
   _id: string,
@@ -20,9 +22,24 @@ interface BlogInfo {
 
 export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
 
+  const [isLoading, setLoading] = useState(false);
+
+  useEffect(() => {
+    Router.events.on("routeChangeStart", () => setLoading(true));
+    Router.events.on("routeChangeComplete", () => setLoading(false));
+    Router.events.on("routeChangeError", () => setLoading(false));
+    // clean up
+    return () => {
+      Router.events.on("routeChangeStart", () => setLoading(true));
+      Router.events.on("routeChangeComplete", () => setLoading(false));
+      Router.events.on("routeChangeError", () => setLoading(false));
+    }
+  }, [Router.events])
+
   return (
     <>
       <MyHead title="記事一覧"></MyHead>
+      {isLoading && <Loader text="ナウ、ローディン..."></Loader>}
       <Menu iniMode={MODE.BLOG}></Menu>
       <main className={styles.container}>
         <div className={styles.content}>

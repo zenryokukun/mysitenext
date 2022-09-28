@@ -54,7 +54,7 @@ export default function Production() {
         <Product {...genki}></Product>
 
       </main>
-      <Footer offset="offsetTopS"></Footer>
+      <Footer></Footer>
     </>
   );
 }

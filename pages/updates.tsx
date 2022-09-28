@@ -1,4 +1,3 @@
-import { compiler } from "markdown-to-jsx"
 import MyHead from "../component/MyHead";
 import Menu from "../component/Menu";
 import Footer from "../component/Footer";
@@ -26,7 +25,7 @@ export default function Updates({ content, data }: PageProp) {
         className={styles.container}
         dangerouslySetInnerHTML={{ __html: content }}
       ></article>
-      <Footer offset="offsetTopS"></Footer>
+      <Footer></Footer>
     </>
   );
 }

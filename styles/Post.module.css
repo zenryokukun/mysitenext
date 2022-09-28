@@ -40,6 +40,13 @@
     margin-bottom: 0.7rem;
 }
 
+.like {
+    transition-duration: 0.5s;
+}
+
+.like:hover {
+    transform: scale(1.2, 1.2);
+}
 
 @media screen and (max-width:950px) {
     .likeWrapper {
@@ -48,17 +55,6 @@
 }
 
 @media screen and (max-width:600px) {
-
-    .container {
-        position: relative;
-        top: 4rem;
-    }
-
-    .likeWrapper {
-        position: relative;
-        top: 5rem;
-    }
-
     .thanks {
         font-size: 1rem;
     }

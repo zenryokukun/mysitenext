@@ -12,7 +12,6 @@ function Main() {
       <Home></Home>
       <TopMessage></TopMessage>
       <Footer></Footer>
-
     </>
   );
 }

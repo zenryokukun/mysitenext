@@ -13,7 +13,7 @@ interface ItemProp {
   id: number,
   cn: string,
   href: string,
-  select: (mode: number) => void,
+  select: () => void,
 }
 
 interface HamProp {
@@ -22,27 +22,28 @@ interface HamProp {
 
 export default function Menu({ iniMode }: MenuProp) {
 
-  const [mode, setMode] = useState(iniMode);
   const [isSpread, setSpread] = useState(false);
 
   // MenuItemをクリックした時のイベント関数
-  const select = (mode: number) => {
+  const select = () => {
     setSpread(false);
-    setMode(mode);
+    // setMode(mode);
+    // setSelected(mode);
   };
   // MenuHamをクリックした時のイベント関数
   const tap = () => setSpread(isSpread => !isSpread);
-
   // 表示データと対応する定数
   const texts = ["home", "about", "blog", "production", "board", "updates"];
   const ids = [MODE.HOME, MODE.ABOUT, MODE.BLOG, MODE.PRODUCTION, MODE.BOARD, MODE.UPDATES];
 
+  const showul = isSpread ? styles.show : styles.hide;
   return (
     <div className={styles.container}>
-      <ol className={styles.myol}>
-        {genItems(texts, ids, mode, select, isSpread)}
-        <MenuHam tap={tap}></MenuHam>
+      <div className={styles.selected}>{texts[iniMode]}</div>
+      <ol className={`${styles.myol} ${showul}`}>
+        {genItems(texts, ids, iniMode, select, isSpread)}
       </ol>
+      <MenuHam tap={tap}></MenuHam>
     </div>
   );
 }
@@ -55,27 +56,29 @@ export default function Menu({ iniMode }: MenuProp) {
 // fn       :メニュークリック時に動作する関数
 function genItems(
   texts: string[], ids: number[], mode: number,
-  fn: (mode: number) => void,
+  fn: () => void,
   isSpread: boolean
 ): JSX.Element[] {
   const jsxElems: JSX.Element[] = [];
   texts.forEach((txt: string, i: number) => {
     const id = ids[i];
+
     let cn = styles.item;
     if (id == mode) {
       //　選択されたメニューにスタイル追加
       cn += " " + styles.active;
     }
-    if (isSpread) {
+    if (isSpread && id !== mode) {
       // hamがタップされた場合のスタイル追加
       cn += " " + styles.spread
+
     }
 
     let href = "/"
+    // homeはlocalhost:3000/ とルート扱いなので設定しない。
     if (id !== MODE.HOME) {
       href += txt;
     }
-
     const menu = <MenuItem text={txt} id={id} cn={cn} select={fn} key={id} href={href}></MenuItem>
     jsxElems.push(menu);
   });
@@ -85,7 +88,7 @@ function genItems(
 function MenuItem({ text, id, cn, select, href }: ItemProp) {
   return (
     <Link href={href}>
-      <li className={cn} onClick={() => select(id)}>
+      <li className={cn} onClick={() => select()}>
         <a className={styles.link}>{text}</a>
       </li>
     </Link>
