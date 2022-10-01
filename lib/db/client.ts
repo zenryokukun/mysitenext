@@ -45,6 +45,7 @@ function onsigint() {
     process.exit();
 }
 
+process.setMaxListeners(2);
 //hot reloadの場合だとイベントがreloadの都度追加されるので消しとく
 process.removeListener("exit", onexit);
 process.removeListener("SIGINT", onsigint);

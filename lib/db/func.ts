@@ -138,12 +138,36 @@ async function updateVisit(dir: string) {
     return result;
 }
 
+/**
+ * /api/board/commentsとboard.tsxのgetServerSidePropsで利用
+ * コメントの一覧を降順で取得。limitが取得上限
+ * @param limit 取得上限
+ * @returns Promise 
+ */
+
+async function getComments(limit: number) {
+    const colName = dbInfo["colComment"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
+    return docs;
+}
+
+/**
+ * /api/board/commentで使用。
+ * コメントをDBにinsert。
+ * @param {name:string,msg:string} 
+ */
 async function insertComment({ name, msg }: InsertComment) {
+    if (!name || !msg) {
+        return;
+    }
     const colName = dbInfo["colComment"];
     const client = await clientPromise;
     const col = getCollection(client, colName);
     const doc = { name, msg, posted: JST() };
-    console.log(doc.posted);
+    const result = col.insertOne(doc);
+    return result;
 }
 
 export {
@@ -153,5 +177,6 @@ export {
     deleteDuplicateDir,
     _migrateBlogInfo,
     updateVisit,
+    getComments,
     insertComment,
 };

@@ -13,5 +13,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(err);
         return res.status(500).send("Something went wrong...Try later!")
     }
-    res.end();
 }
