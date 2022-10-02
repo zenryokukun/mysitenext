@@ -24,18 +24,33 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
 
   const [isLoading, setLoading] = useState(false);
 
+  // useEffect(() => {
+  //   Router.events.on("routeChangeStart", () => setLoading(true));
+  //   Router.events.on("routeChangeComplete", () => setLoading(false));
+  //   Router.events.on("routeChangeError", () => setLoading(false));
+  //   // clean up
+  //   return () => {
+  //     Router.events.off("routeChangeStart", () => setLoading(true));
+  //     Router.events.off("routeChangeComplete", () => setLoading(false));
+  //     Router.events.off("routeChangeError", () => setLoading(false));
+  //   }
+  // }, [Router.events])
+
   useEffect(() => {
+    return () => {
+      Router.events.off("routeChangeStart", () => setLoading(true));
+      Router.events.off("routeChangeComplete", () => setLoading(false));
+      Router.events.off("routeChangeError", () => setLoading(false));
+    };
+  }), [];
+
+  const readClick = () => {
     Router.events.on("routeChangeStart", () => setLoading(true));
     Router.events.on("routeChangeComplete", () => setLoading(false));
     Router.events.on("routeChangeError", () => setLoading(false));
-    // clean up
-    return () => {
-      Router.events.on("routeChangeStart", () => setLoading(true));
-      Router.events.on("routeChangeComplete", () => setLoading(false));
-      Router.events.on("routeChangeError", () => setLoading(false));
-    }
-  }, [Router.events])
+  };
 
+  // console.log(isLoading);
   return (
     <>
       <MyHead title="記事一覧"></MyHead>
@@ -43,7 +58,7 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
       <Menu iniMode={MODE.BLOG}></Menu>
       <main className={styles.container}>
         <div className={styles.content}>
-          {blogDocs.map((blog, i) => blogLink(blog, i))}
+          {blogDocs.map((blog, i) => blogLink(blog, i, readClick))}
         </div>
       </main>
       <Footer></Footer>
@@ -51,7 +66,7 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
   );
 }
 
-function blogLink(props: BlogInfo, i: number) {
+function blogLink(props: BlogInfo, i: number, fn: () => void) {
   const { assetsDir, thumb, posted, title, summary } = props;
   const thumbClass = thumb.length > 0 ? styles.thumb : styles.logo
   //EX:/public/posts/201102_1 
@@ -71,7 +86,7 @@ function blogLink(props: BlogInfo, i: number) {
       </div>
       <Link href={route}>
         <button className={styles.read}>
-          <a className={styles.noDecoration}>Read</a>
+          <a className={styles.noDecoration} onClick={() => fn()}>Read</a>
         </button>
       </Link>
     </div>

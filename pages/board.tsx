@@ -15,10 +15,7 @@ interface CommentProp {
 }
 
 const ENDPOINT_LIST = "/api/board/getlist"; //コメントの一覧を取得するAPI
-
-async function getCommentList() {
-  const data = await fetch(ENDPOINT_LIST).then(v => console.log(v));
-}
+const ENDPOINT_INSERT = "api/board/comment" // コメント挿入するAPI
 
 export default function Board({ comments }: { comments: CommentProp[] }) {
 
@@ -29,15 +26,27 @@ export default function Board({ comments }: { comments: CommentProp[] }) {
   // post commentボタン押下時、モーダルを開く
   const showModal = (e: React.MouseEvent<HTMLDivElement>) => setModal(true);
   // モーダルのcloseボタンを押下時、モーダルを閉じる。Modalコンポーネントで実行する。
-  const hideModal = (e: React.MouseEvent<HTMLDivElement> | null) => setModal(false);
-  // モーダルのpostボタン押下時、loaderを表示させる。Modalコンポーネントで実行する。
-  const showLoader = () => setLoader(true);
-  // Loadingが終わったらLoaderを非表示にする。
-  const hideLoader = () => setLoader(false);
+  const hideModal = () => setModal(false);
   // コメントが新たにポストされたらコメント表示を一新する。Modal コンポーネントで実行する。
   const reload = () => {
     fetch(ENDPOINT_LIST).then(data => data.json()).then(newComments => setComment(newComments));
   };
+  // モーダルのpostボタン押下時処理。Modal コンポーネントで呼ぶ。
+  const postComment = (body: CommentProp) => {
+    setLoader(true); // Loader表示
+    fetch(ENDPOINT_INSERT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .catch(err => alert(err))
+      .finally(() => {
+        setModal(false);  // Modal非表示
+        setLoader(false); // Loader非表示
+        reload();         // コメント再表示
+      });
+  };
+
 
   return (
     <>
@@ -51,7 +60,7 @@ export default function Board({ comments }: { comments: CommentProp[] }) {
         })}
         <div className={styles.commentButton} onClick={showModal}>Post Comment</div>
       </main>
-      {isModal && <Modal hideModal={hideModal} showLoader={showLoader} hideLoader={hideLoader} reload={reload}></Modal>}
+      {isModal && <Modal post={postComment} close={hideModal}></Modal>}
       <Footer></Footer>
     </>
   );

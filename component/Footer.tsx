@@ -3,13 +3,9 @@ import { ICON } from "./constants";
 import styles from "../styles/Footer.module.css";
 import IconLink from "./IconLink";
 
-interface Prop {
-  offset?: string,
-}
 
 export default function Footer() {
   let contStyle = styles.container;
-
   return (
     <div className={contStyle}>
       <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>

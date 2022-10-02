@@ -71,6 +71,12 @@ article>p>img {
   max-width: 100%;
 }
 
+@media screen and (max-width:1200px) {
+  article>* {
+    width: 65%;
+  }
+}
+
 @media screen and (max-width:950px) {
   article>* {
     width: 85%;

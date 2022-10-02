@@ -5,6 +5,17 @@
     align-items: center;
 }
 
+.back {
+    display: block;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+
+.back:last-of-type {
+    margin-bottom: 1rem;
+}
+
 .likeWrapper {
     width: 45%;
     margin-left: auto;
@@ -17,7 +28,6 @@
     margin-top: 1rem;
     font-weight: bold;
     font-size: 1.2rem;
-
 }
 
 .primary {
@@ -44,18 +54,29 @@
     transition-duration: 0.5s;
 }
 
-.like:hover {
-    transform: scale(1.2, 1.2);
+@media screen and (min-width:950px) {
+    .accentOnHover {
+        transform: scale(1.2, 1.2);
+        color: #E91E63;
+    }
 }
 
 @media screen and (max-width:950px) {
+    .accentOnHover {
+        color: lightgray;
+    }
+
     .likeWrapper {
         width: 85%;
+    }
+
+    .thanks {
+        font-size: 1rem;
     }
 }
 
 @media screen and (max-width:600px) {
     .thanks {
-        font-size: 1rem;
+        font-size: 0.8rem;
     }
 }

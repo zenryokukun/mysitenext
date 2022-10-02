@@ -4,7 +4,8 @@ import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import styles from "../../styles/Post.module.css";
 
 
@@ -31,11 +32,17 @@ export default function Post({ content, data }: PostProp) {
     <>
       <MyHead title={title}></MyHead>
       <Menu iniMode={MODE.BLOG}></Menu>
+      <Link href="/blog">
+        <a className={styles.back}>記事一覧に戻る</a>
+      </Link>
       <article
         className={styles.container}
         dangerouslySetInnerHTML={{ __html: content }}
       ></article>
       <Like></Like>
+      <Link href="/blog">
+        <a className={styles.back}>記事一覧に戻る</a>
+      </Link>
       <Footer></Footer>
       {/* <Footer></Footer> */}
     </>
@@ -45,15 +52,15 @@ export default function Post({ content, data }: PostProp) {
 function Like() {
   const [isHighLight, setHighLight] = useState(false);
   const [isClicked, setClicked] = useState(false);
-  const enter = (e: React.MouseEvent<HTMLDivElement>) => setHighLight((isHightLight) => !isHighLight);
-  const leave = (e: React.MouseEvent<HTMLDivElement>) => setHighLight((isHightLight) => !isHighLight);
+  const enter = (e: React.MouseEvent<HTMLDivElement>) => setHighLight(true);
+  const leave = (e: React.MouseEvent<HTMLDivElement>) => setHighLight(false);
   const click = (e: React.MouseEvent<HTMLDivElement>) => setClicked((isClicked) => !isClicked);
   let color = styles.primary;
   if (isClicked) {
     color = styles.accent;
   } else {
     color = styles.primary;
-    color = isHighLight ? styles.accent : styles.primary;
+    color = isHighLight ? styles.accentOnHover : styles.primary;
   }
 
   return (

@@ -96,6 +96,30 @@
   }
 
   .show {
+    animation-name: from-top;
+    animation-duration: 0.5s;
     display: block;
   }
+
+  @keyframes from-top {
+    0% {
+      transform: translateY(-100%);
+    }
+
+    100% {
+      transform: translateY(0%);
+    }
+  }
+
+  @keyframes from-bottom {
+    0% {
+      transform: translateY(0%);
+    }
+
+    100% {
+      transform: translateY(-100%);
+      /* display: none; */
+    }
+  }
+
 }

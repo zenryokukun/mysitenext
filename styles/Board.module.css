@@ -42,9 +42,9 @@
 
 
 .commentButton {
-    position: sticky;
-    top: 20%;
-    right: 15%;
+    position: fixed;
+    top: 10%;
+    right: 7%;
     border-radius: 50%;
     width: 6em;
     height: 6em;
@@ -74,8 +74,11 @@
 
 @media screen and (max-width:1024px) {
     .commentButton {
+        position: relative;
         width: 50%;
         height: 3em;
+        top: 0%;
+        right: 0%;
         border-radius: 0%;
     }
 

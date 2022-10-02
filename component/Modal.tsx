@@ -8,38 +8,22 @@ interface CommentProp {
   posted?: string,
 }
 
-
-const ENDPOINT = "/api/board/comment"
-
-interface Prop {
-  hideModal: (e: React.MouseEvent<HTMLDivElement> | null) => void,
-  showLoader: () => void,
-  hideLoader: () => void,
-  reload: () => void,
+interface ModalProp {
+  post: (body: CommentProp) => void,
+  close: () => void,
 }
 
-
-export default function Modal({ hideModal, showLoader, hideLoader, reload }: Prop) {
+export default function Modal({ post, close }: ModalProp) {
 
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
 
   const submit = () => {
-    // post押下でLoader表示
-    showLoader();
-    // コメント挿入
-    fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      redirect: "follow",
-      body: JSON.stringify({ name: name, msg: msg }),
-    })
-      .catch(err => alert(err))
-      .finally(() => {
-        hideModal(null);
-        hideLoader();
-        reload();
-      });
+    if (msg.length === 0 || name.length === 0) {
+      alert("Nameとコメントは入力必須です。")
+      return;
+    }
+    post({ name, msg })
   };
 
 
@@ -66,7 +50,7 @@ export default function Modal({ hideModal, showLoader, hideLoader, reload }: Pro
           </div>
           <div className={styles.button}>
             <div tabIndex={1} className={styles.post} onClick={submit}>Post</div>
-            <div tabIndex={2} className={styles.close} onClick={hideModal}>X Close</div>
+            <div tabIndex={2} className={styles.close} onClick={close}>X Close</div>
           </div>
         </div>
       </div >
