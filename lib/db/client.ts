@@ -15,6 +15,7 @@ interface DbInfo {
     "colAssets": string,
     "colComment": string,
     "colVisits": string,
+    "colAdmin": string,
 }
 
 

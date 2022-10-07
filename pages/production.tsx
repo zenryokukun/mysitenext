@@ -4,6 +4,13 @@ import Footer from "../component/Footer";
 import { MODE } from "../component/constants";
 import styles from "../styles/Production.module.css";
 
+/**
+ * Description 成果物Page 
+ * TODO
+ *  - 成果物が増えたらデータをベタ打ちでなくDBに登録することを検討。
+ * 
+ */
+
 interface Prop {
   title: string,
   summary: string,

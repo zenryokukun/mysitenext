@@ -9,6 +9,8 @@ import { MODE } from "../component/constants";
 import { findBlogDocs } from "../lib/db/func"
 import styles from "../styles/Blog.module.css";
 
+/**Description ブログ記事の一覧Page */
+
 interface BlogInfo {
   _id: string,
   genre: string,
@@ -42,7 +44,7 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
       Router.events.off("routeChangeComplete", () => setLoading(false));
       Router.events.off("routeChangeError", () => setLoading(false));
     };
-  }), [];
+  }), [Router.events];
 
   const readClick = () => {
     Router.events.on("routeChangeStart", () => setLoading(true));

@@ -4,6 +4,10 @@ import Footer from "../component/Footer";
 import Home, { TopMessage } from "../component/Home";
 import { MODE } from "../component/constants";
 
+/**Description Home Page
+ * エントリポイント。ドメインのルートで表示するページ。
+ */
+
 function Main() {
   return (
     <>

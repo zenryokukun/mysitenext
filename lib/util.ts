@@ -4,7 +4,7 @@ import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
 import remarkGfm from "remark-gfm";
-
+import crypto from "crypto";
 
 
 /**
@@ -59,4 +59,10 @@ export async function toHTMLString(md: string): Promise<string> {
 
 export function JST(): string {
     return new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+}
+
+export function genSessionId({ id, password }: { id: string, password: string }): string {
+    const buf = Buffer.from(id + password);
+    const hash = crypto.createHash("sha256").update(buf).digest("hex");
+    return hash;
 }

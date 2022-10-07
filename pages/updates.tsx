@@ -5,6 +5,8 @@ import { MODE } from "../component/constants";
 import styles from "../styles/Update.module.css";
 import { getUpdateMd, formatMd, toHTMLString } from "../lib/util";
 
+/**Description Update Page */
+
 interface PageProp {
   content: string,
   /**

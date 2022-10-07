@@ -1,5 +1,6 @@
 import Loader from "../component/Loader";
-import { useState } from "react";
+
+/**Description　Testページ。後で削除　*/
 
 export default function test() {
   return (

@@ -2,8 +2,12 @@ import MyHead from "../component/MyHead";
 import Footer from "../component/Footer";
 import styles from "../styles/Admin.module.css";
 import React, { useState, useEffect, useRef, FormEvent } from "react";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { isAdmin } from "../lib/db/func";
 
 /**Description
+ * Blog アップロード用Page
+ * 
  * <input type="file">はuncontrolled Componentと呼ばれるらしく
  * onChange = {e=>e.target.file}でファイルを取得するのは予期せぬ動作をする？可能性がある模様。
  * なのでそこだけ`ref`に入れて置き、submit時にref.current.filesでファイル名を取得している。
@@ -167,7 +171,7 @@ export default function Admin() {
 
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="genre" >ジャンル</label>
-                <select name="genre" className={styles.genre} value={genre} onChange={e => setGenre(e.target.value)}>
+                <select id="genre" name="genre" className={styles.genre} value={genre} onChange={e => setGenre(e.target.value)}>
                   {genres.map((genre, i) => <option key={i}>{genre}</option>)}
                 </select>
               </li>
@@ -175,17 +179,17 @@ export default function Admin() {
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
                 <div className={styles.caution}>ディレクトリは手入力してください。頭の"/"は入れなくてよいです。例：202201_1/。</div>
-                <input type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
+                <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
               </li>
 
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="title">タイトル</label>
-                <input type="text" name="title" value={title} className={styles.blogTitle} onChange={e => setTitle(e.target.value)} />
+                <input id="title" type="text" name="title" value={title} className={styles.blogTitle} onChange={e => setTitle(e.target.value)} />
               </li>
 
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="summary">概要</label>
-                <textarea name="summary" value={summary} className={styles.summary} onChange={e => setSummary(e.target.value)}></textarea>
+                <textarea id="summary" name="summary" value={summary} className={styles.summary} onChange={e => setSummary(e.target.value)}></textarea>
               </li>
 
               <Uploader updateThumb={updateThumb} elemRef={fileInput}></Uploader>
@@ -193,17 +197,17 @@ export default function Admin() {
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="thumb">サムネのファイル名</label>
                 <div className={styles.caution}>ファイル名は手入力してください。アップロードファイル名をクリックすると自動セットされるよ。無い場合は何も入力しないでください。</div>
-                <input type="text" name="thumb" value={thumb} onChange={e => setThumb(e.target.value)} />
+                <input id="thumb" type="text" name="thumb" value={thumb} onChange={e => setThumb(e.target.value)} />
               </li>
 
               <li className={styles.items}>
-                <input type="checkbox" name="force" checked={isForce} onChange={e => setForce((force) => !force)} />
+                <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => setForce((force) => !force)} />
                 <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
               </li>
 
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="submit">送信</label>
-                <input className={styles.submit} type="submit" value="submit" />
+                <input id="submit" className={styles.submit} type="submit" value="submit" />
               </li>
 
               <input type="text" name="md" className={styles.hidden}></input>
@@ -232,7 +236,7 @@ function Uploader(props: ThumbP & RefP) {
 
   return (
     <li className={styles.items}>
-      <label className={styles.label} htmlFor="uploads">アップロードするファイル</label>
+      <label className={styles.label} htmlFor="files">アップロードするファイル</label>
       <div className={styles.caution}>日本語はサーバ側で文字化けしちゃう( ﾉД`)ｼｸｼｸ…</div>
       <input ref={elemRef} className={styles.btn} type="file" name="uploads" multiple onChange={getFileNames} id="files" />
       <FileList data={names} updateThumb={updateThumb}></FileList>
@@ -254,4 +258,22 @@ function FileList(props: { data: string[] } & ThumbP) {
       {data.map((name, i) => <button className={styles.filenames} key={i} onClick={(e) => click(e, name)}>{name}</button>)}
     </div>
   );
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { user } = context.req.cookies;
+  // 認証されていなければログインページへ
+  if (!user || !(await isAdmin(user))) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      }
+    }
+  }
+
+  //認証OK　渡すものは特にないので空。
+  return {
+    props: {},
+  }
 }

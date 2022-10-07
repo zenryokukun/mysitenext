@@ -4,6 +4,7 @@ import Footer from "../component/Footer";
 import About from "../component/About";
 import { MODE } from "../component/constants";
 
+/**Description About Page */
 
 export default function AboutPage() {
   return (

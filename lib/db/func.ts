@@ -1,6 +1,7 @@
 import clientPromise, { dbInfo } from "./client";
 import { JST } from "../util";
-import type { MongoClient } from "mongodb";
+import type { MongoClient, WithId, Document } from "mongodb";
+import { genSessionId } from "../util";
 
 export interface BlogInfo {
     genre: string,
@@ -21,6 +22,12 @@ interface DirFilter {
 
 interface InsertComment {
     name: string, msg: string,
+}
+
+// mongodbｎ.find().toArray()がWithId<Document>というtypeになるのでキャスト。
+interface Auth extends WithId<Document> {
+    id: string,
+    password: string,
 }
 
 /**
@@ -170,6 +177,59 @@ async function insertComment({ name, msg }: InsertComment) {
     return result;
 }
 
+/**
+ * /api/post/like で利用
+ * assetsDirコレクションのlikeを1インクリメント
+ * @param {dir} 更新するassetsDirコレクションのdir フィールド
+ * 
+ * @returns UpdateResult
+ */
+async function updateLike({ dir }: { dir: string }) {
+    if (!dir) {
+        return;
+    }
+    const colName = dbInfo["colAssets"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const result = col.updateOne({ assetsDir: dir }, { $inc: { likes: 1 } });
+    return result;
+}
+
+/**
+ * /api/loginで使用。入力されたuserとpasswordでナンチャッテ認証
+ * @param id string
+ * @param pw string
+ * @returns　Promise<{ ok: boolean, session: string }> 
+ */
+async function authenticate(id: string, pw: string): Promise<{ ok: boolean, session: string }> {
+    const colName = dbInfo["colAdmin"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const result = await col.find({ id: id }).limit(1).toArray() as Auth[];
+    if (Array.isArray(result) && result.length === 0) {
+        return { ok: false, session: "" };
+    }
+    const ok = pw === result[0].password;
+    return { ok: ok, session: genSessionId(result[0]) }
+}
+
+/**
+ * /adminページで行うナンチャッテ認証。
+ * @param testStr cookieに設定された認証用文字列
+ * @returns boolean
+ */
+async function isAdmin(testStr: string) {
+    const colName = dbInfo["colAdmin"];
+    const client = await clientPromise;
+    const col = getCollection(client, colName);
+    const result = await col.find({}).limit(1).toArray() as Auth[];
+    if (Array.isArray(result) && result.length === 0) {
+        return false;
+    }
+    const realStr = genSessionId(result[0]);
+    return testStr === realStr;
+}
+
 export {
     findBlogDocs,
     getBlogDirList,
@@ -179,4 +239,7 @@ export {
     updateVisit,
     getComments,
     insertComment,
+    updateLike,
+    authenticate,
+    isAdmin,
 };
