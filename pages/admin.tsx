@@ -2,7 +2,7 @@ import MyHead from "../component/MyHead";
 import Footer from "../component/Footer";
 import styles from "../styles/Admin.module.css";
 import React, { useState, useEffect, useRef, FormEvent } from "react";
-import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { isAdmin } from "../lib/db/func";
 
 /**Description

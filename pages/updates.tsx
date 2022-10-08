@@ -21,7 +21,9 @@ interface PageProp {
 export default function Updates({ content, data }: PageProp) {
   return (
     <>
-      <MyHead title={data.title}></MyHead>
+      <MyHead
+        title={data.title}
+      ></MyHead>
       <Menu iniMode={MODE.UPDATES}></Menu>
       <article
         className={styles.container}
