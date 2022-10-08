@@ -40,7 +40,6 @@ test/
 
 /lib/db/dbinfo.json
 /pages/api/genkidama/src/conf
-/pages/api/cropp/pics/*.zip
 
 # 後でコメントはずす。初回アプロードjは画像ごと入れたいので、コメントアウトしておく
 /public/posts/
@@ -49,4 +48,4 @@ test/
 __pycache__/
 
 # cropperで作成される.zipファイル 
-pages/api/cropper/pics/*.zip
+/pages/api/cropper/pics/*.zip
