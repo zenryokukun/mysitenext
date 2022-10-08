@@ -1,18 +1,6 @@
 import Head from "next/head";
+import type { HeadProp } from "../types";
 
-interface Title {
-  title: string,
-}
-
-interface HeadProp {
-  title: string,
-  // 以下 twitter card用
-  summary?: string,
-  site?: string,
-  cardTitle?: string,
-  description?: string,
-  imagePath?: string,
-}
 
 function MyHead({
   title, summary, site, cardTitle, description, imagePath
@@ -31,7 +19,7 @@ function MyHead({
       <meta name="twitter:title" content={cardTitle || "空と、海と、大地。そして絶望"} />
       <meta name="twitter:description" content={description || "極音超速で辿り着いた最果ては、あくまでも人の作った世界だった。"} />
       <meta name="twitter:image" content={imagePath || "https://www.zenryoku-kun.com/zen_logo.png"} />
-      <title>{title}</title>
+      <title>{title || "全力君。"}</title>
     </Head>
   );
 }
