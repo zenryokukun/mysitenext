@@ -41,3 +41,6 @@ test/
 /lib/db/dbinfo.json
 /pages/api/genkidama/src/conf
 /pages/api/cropp/pics/*.zip
+
+# 後でコメントはずす。初回アプロードjは画像ごと入れたい
+# /public/posts/*.jpg
