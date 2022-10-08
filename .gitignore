@@ -48,5 +48,5 @@ test/
 # python cache
 __pycache__/
 
-# cropperで作成される.zipファイル
+# cropperで作成される.zipファイル 
 pages/api/cropper/pics/*.zip
