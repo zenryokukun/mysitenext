@@ -43,4 +43,4 @@ test/
 /pages/api/cropp/pics/*.zip
 
 # 後でコメントはずす。初回アプロードjは画像ごと入れたいので、コメントアウトしておく
-/public/posts/
+# /public/posts/
