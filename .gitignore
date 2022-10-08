@@ -44,3 +44,6 @@ test/
 
 # 後でコメントはずす。初回アプロードjは画像ごと入れたいので、コメントアウトしておく
 /public/posts/
+
+# python cache
+__pycache__/
