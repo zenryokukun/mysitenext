@@ -178,7 +178,7 @@ export default function Admin() {
 
               <li className={styles.items}>
                 <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
-                <div className={styles.caution}>ディレクトリは手入力してください。頭の"/"は入れなくてよいです。例：202201_1/。</div>
+                <div className={styles.caution}>ディレクトリは手入力してください。頭の'/'は入れなくてよいです。例：202201_1/。</div>
                 <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
               </li>
 
