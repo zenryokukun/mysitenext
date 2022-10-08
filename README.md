@@ -36,3 +36,15 @@
 ```bash
 npm run dev
 ```
+
+本番環境
+
+```bash
+npx next build # ビルド
+npm run start # 起動
+
+######## PM2と一緒に
+# 初回起動時は名前をつけて起動。startの前に半角スペース必要
+NODE_ENV=production pm2 start npm --name nextblog -- start
+pm2 restart "your file name" # 再起動。環境変数はいらない
+```
