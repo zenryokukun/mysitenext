@@ -17,7 +17,7 @@ export default async function build(): Promise<string> {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const shell = "build.sh";
-    const cmd = "./" + path.join(__dirname, shell);
+    const cmd = path.join(__dirname, shell);
     const proc = spawn(cmd);
     proc.stdout.on("data", data => console.log(data.toString()));
     proc.stderr.on("data", data => console.log(data.toString()));
