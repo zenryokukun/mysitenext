@@ -160,6 +160,13 @@ export default function Admin() {
       .catch(err => alert(err))
   };
 
+  const testBuild = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    fetch("/api/admin/testbuild", {
+      method: "POST"
+    })
+  };
+
   return (
     <>
       <MyHead title="全力ブログ・システム"></MyHead>
@@ -211,7 +218,8 @@ export default function Admin() {
               </li>
 
               <input type="text" name="md" className={styles.hidden}></input>
-              <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button>
+              {/* <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button> */}
+              <button onClick={testBuild}>Buildテスト</button>
             </ol>
           </form>
         </main>
