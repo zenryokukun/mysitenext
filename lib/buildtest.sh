@@ -1,4 +1,7 @@
 #!/bin/bash
 
-echo `whoami`
-echo `npm list`
+echo START:`date` -----------------------------
+echo USER:`whoami`
+npx next build
+pm2 restart nextblog
+echo END: --------------------------------
