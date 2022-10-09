@@ -7,7 +7,9 @@ import { spawn } from "child_process";
 
 export default async function build(): Promise<string> {
     if (process.env.NODE_ENV === "production") {
-        return "Not building! You're on dev mode";
+        const msg = `Not building! You're on dev mode.NODE_ENV:${process.env.NODE_ENV}`;
+        console.log(msg);
+        return msg;
     }
     const cmd = "./build.sh";
     const proc = spawn(cmd);
