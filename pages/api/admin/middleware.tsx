@@ -99,7 +99,7 @@ async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => v
         dislikes: 0,
         views: 0,
     }
-    info["posted"] = new Date().toLocaleString("jp", { timeZone: "Asia/Tokyo" });
+    info["posted"] = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
     insertBlogInfo(info);
     next();
 }

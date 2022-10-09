@@ -49,3 +49,6 @@ __pycache__/
 
 # cropperで作成される.zipファイル 
 /pages/api/cropper/pics/*.zip
+
+# 記事の画像表示等を入れ、プレビューを確認するためのフォルダ
+/posts/
