@@ -4,6 +4,8 @@
  */
 
 import { spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 
 export default async function build(): Promise<string> {
     if (process.env.NODE_ENV !== "production") {
@@ -11,7 +13,11 @@ export default async function build(): Promise<string> {
         console.log(msg);
         return msg;
     }
-    const cmd = "./build.sh";
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const shell = "build.sh";
+    const cmd = "./" + path.join(__dirname, shell);
     const proc = spawn(cmd);
     proc.stdout.on("data", data => console.log(data.toString()));
     proc.stderr.on("data", data => console.log(data.toString()));
