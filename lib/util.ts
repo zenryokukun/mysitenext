@@ -3,6 +3,7 @@ import path from "path";
 import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
+import remarkPrism from "remark-prism";
 import remarkGfm from "remark-gfm";
 import crypto from "crypto";
 
@@ -52,13 +53,19 @@ export async function toHTMLString(md: string): Promise<string> {
     const processed = await
         remark()
             .use(remarkGfm)
-            .use(html)
+            .use(html, { sanitize: false })
+            .use(remarkPrism)
             .process(md)
     return processed.toString();
 }
 
 export function JST(): string {
     return new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+}
+
+export function logger(msg: string): void {
+    const dt = JST();
+    console.log(`${dt}:${msg}`);
 }
 
 export function genSessionId({ id, password }: { id: string, password: string }): string {

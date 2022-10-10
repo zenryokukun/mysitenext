@@ -20,6 +20,17 @@
   padding-left: 1rem;
 }
 
+@media (prefers-color-scheme:dark) {
+  .container {
+    background-color: #333;
+  }
+
+  .title {
+    background-color: #383838;
+  }
+}
+
+
 @media screen and (max-width:850px) {
   .container {
     flex-direction: column;

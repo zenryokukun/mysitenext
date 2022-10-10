@@ -1,7 +1,9 @@
 import type { AppProps } from 'next/app'
 import { useEffect } from "react";
 import Script from 'next/script';
-import '../styles/globals.css'
+import '../styles/globals.css' //　全ページ・コンポーネントに適用されるcss
+import "prismjs/themes/prism-tomorrow.css"; // syntax hightlight用
+import "../styles/prism-overrides.css"; // syntax hightlightをカスタム
 
 
 function MyApp({ Component, pageProps, router }: AppProps) {

@@ -35,7 +35,8 @@ a {
 
   body {
     color: white;
-    background: black;
+    /* background: black; */
+    background-color: #333;
   }
 }
 
@@ -69,6 +70,18 @@ article>p>img {
   display: block;
   margin: 0 auto;
   max-width: 100%;
+}
+
+@media (prefers-color-scheme:dark) {
+
+  /*bodyにbackground-colorつけているので、articleには不要*/
+  article>h1 {
+    background-color: #383838;
+  }
+
+  article>h2 {
+    background-color: #383838;
+  }
 }
 
 @media screen and (max-width:1200px) {
