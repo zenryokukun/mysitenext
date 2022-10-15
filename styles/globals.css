@@ -72,6 +72,12 @@ article>p>img {
   max-width: 100%;
 }
 
+article>blockquote>p {
+  padding: 0.3rem;
+  background-color: #eaeaea;
+  font-style: italic;
+}
+
 @media (prefers-color-scheme:dark) {
 
   /*bodyにbackground-colorつけているので、articleには不要*/
