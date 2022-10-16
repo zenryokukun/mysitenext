@@ -7,7 +7,6 @@
 // 	(48,39,16,16),(64,39,16,16)
 // ]
 
-import { decodedTextSpanIntersectsWith } from "typescript";
 
 // __SMILE_SP = [(0,55,27,26),(27,55,26,26),(52,55,26,26),(78,55,26,26),(104,55,26,26)]
 // __NUMS_SP = [(0,0,13,23),(13,0,13,23),(26,0,13,23),(39,0,13,23),(52,0,13,23),(65,0,13,23),(78,0,13,23),(91,0,13,23),(104,0,13,23),(117,0,13,23),(130,0,13,23)]
@@ -85,10 +84,13 @@ const OPEN = 2;
 // smile state;
 const SMILE = 0;
 const SMILE_PRESSED = 1;
-const LOSE = 2;
-const WIN = 3;
+const SMILE_LOSE = 2;
+const SMILE_WIN = 4;
 
-
+// game state
+const PLAY = 0;
+const LOSE = 1;
+const WIN = 2;
 
 /**
  * 画像のパスを取得し、Image要素を返す。
@@ -138,6 +140,13 @@ function openTile(x: number, y: number, board: Board) {
                 }
             }
         }
+        if (board.isBomb(x, y)) {
+            lose(x, y, board);
+            return;
+        }
+        if (checkWin(board)) {
+            win(board)
+        }
     }
 }
 
@@ -160,6 +169,9 @@ export function rightClick(eventX: number, eventY: number, board: Board) {
     } else if (board.isFlagged(x, y)) {
         board.setTileState(x, y, NOT_OPEN);
         board.guessed(1);
+    }
+    if (checkWin(board)) {
+        win(board)
     }
 }
 
@@ -217,14 +229,60 @@ export function scheduleTick(img: HTMLImageElement, ctx: CanvasRenderingContext2
     return fn;
 }
 
+function lose(x: number, y: number, board: Board) {
+    board.setSmileState(SMILE_LOSE);
+    board.setGameState(LOSE);
+    board.setGroundState(x, y, RED_BOMB);
+    const { tiles, ground, rows, cols } = board;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const ti = tiles[r][c];
+            const gr = ground[r][c];
+            if (ti === NOT_OPEN && gr === BOMB) {
+                tiles[r][c] = OPEN;
+            } else if (ti === FLAGGED && gr !== BOMB) {
+                tiles[r][c] = OPEN;
+                ground[r][c] = NG_BOMB;
+            }
 
+        }
+    }
+}
+
+function checkWin(board: Board) {
+    const { rows, cols, bombs, tiles, ground } = board;
+    let cnt = 0;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const ti = tiles[r][c];
+            const gr = ground[r][c];
+            // 開けていないtileがある場合はNG;
+            if (ti === NOT_OPEN) return false;
+            if (ti === FLAGGED) {
+                if (gr === BOMB) {
+                    cnt++;
+                } else {
+                    // bombじゃない場所にflagがたっていたらNG
+                    return false;
+                }
+            }
+        }
+    }
+    return cnt === bombs;
+}
+
+function win(board: Board) {
+    board.setSmileState(SMILE_WIN);
+    board.setGameState(WIN);
+}
 
 export class Board {
 
     tiles: number[][];
     ground: number[][];
     isGroundSet: boolean;
-    state: number;
+    smileState: number;
+    gameState: number;
     time: number;
     timerID: number;
     cols: number;
@@ -234,14 +292,15 @@ export class Board {
     guess: number;
     offsetTop: number;
     offsetLeft: number;
-    private bombs: number;
+    bombs: number;
 
     constructor({ cols, rows, bombs }: { cols: number, rows: number, bombs: number }) {
 
         this.tiles = [];
         this.ground = [];
         this.isGroundSet = false;
-        this.state = SMILE;
+        this.smileState = SMILE;
+        this.gameState = PLAY;
         this.bombs = bombs;
         this.cols = cols;
         this.rows = rows;
@@ -264,11 +323,19 @@ export class Board {
     }
 
     setSmileState(state: number) {
-        this.state = state;
+        this.smileState = state;
     }
 
     setTileState(x: number, y: number, state: number) {
         this.tiles[y][x] = state;
+    }
+
+    setGameState(state: number) {
+        this.gameState = state;
+    }
+
+    setGroundState(x: number, y: number, state: number) {
+        this.ground[y][x] = state;
     }
 
     // 右クリックでbomb予想数を±1する
@@ -278,7 +345,7 @@ export class Board {
 
     // 時間更新
     tick() {
-        if (this.time >= 1000 || !this.isGroundSet) {
+        if (this.time >= 1000 || !this.isGroundSet || this.gameState !== PLAY) {
             return;
         }
         this.time += 1;
@@ -477,7 +544,7 @@ function clearSmile(ctx: CanvasRenderingContext2D, board: Board) {
 }
 
 function renderSmile(img: HTMLImageElement, ctx: CanvasRenderingContext2D, board: Board) {
-    const { cols, state } = board;
+    const { cols, smileState: state } = board;
     const width = SMILE_SIZE[0];
     const canvasWidth = cols * TILE_SIZE[0] + OFFSET_LEFT * 2;
     const tile = SMILE_SP[state];

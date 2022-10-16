@@ -26,6 +26,7 @@ interface GameProp {
   img: HTMLImageElement,
   board: Board,
   changeLevel: () => void,
+  gameClick: (state: number) => void,
 }
 
 // columns,rows,bombs
@@ -42,9 +43,9 @@ const Page = () => {
   // スプライトシートのImageタグ。読取が完了したら再描写するためuseStateする。
   const [sprite, setSprite] = useState<HTMLImageElement | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
+  const [gameState, setGameState] = useState(0);
 
   // levelの更新はGame内の特定ボタン押下で行う。
-  // const changeLevel = (selectedLevel: number) => setLevel(selectedLevel);
 
   const smileClick = () => {
     setBoard(new Board(LEVEL[level]));
@@ -64,11 +65,29 @@ const Page = () => {
     setLevel(HARD);
     setBoard(new Board(LEVEL[HARD]));
   }
+
+  const gameClick = (state: number) => setGameState(state);
+
   // スプライトシート読み取り処理。初回のみ実行。
   useEffect(() => {
     loadSprite("/minesweeper.png").then(img => setSprite(img));
     setBoard(new Board(LEVEL[level]));
   }, []);
+
+  const getMessage = () => {
+    if (gameState === 0) return "PLAYING...";
+    if (gameState === 1) return "爆弾処理に失敗...";
+    if (gameState === 2) return `おめでとう！${board?.time}秒で全ての爆弾を撤去しました！`;
+    return "";
+  }
+
+  const getLevelStyle = (lv: number) => {
+    if (lv === level) {
+      return style.menu + " " + style.selected;
+    }
+    return style.menu;
+  };
+
 
   return (
     <>
@@ -76,23 +95,30 @@ const Page = () => {
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       <main className={style.container}>
         <div className={style.menuWrapper}>
-          <button className={style.menu} onClick={easyClick}>EASY</button>
-          <button className={style.menu} onClick={mediumClick}>MEDIUM</button>
-          <button className={style.menu} onClick={hardClick}>HARD</button>
+          <button className={getLevelStyle(EASY)} onClick={easyClick}>EASY</button>
+          <button className={getLevelStyle(MEDIUM)} onClick={mediumClick}>MEDIUM</button>
+          <button className={getLevelStyle(HARD)} onClick={hardClick}>HARD</button>
         </div>
         {sprite &&
           <Game img={sprite} board={board as Board}
-            changeLevel={smileClick} />
+            changeLevel={smileClick} gameClick={gameClick} />
         }
+        <div className={style.message}>{getMessage()}</div>
       </main>
       <Footer></Footer>
     </>
   );
 };
 
-const Game = ({ img, board, changeLevel }: GameProp) => {
+const Game = ({ img, board, changeLevel, gameClick }: GameProp) => {
   // useEffect内でcanvasに触れないといけないので。
   const ref = useRef<HTMLCanvasElement>(null);
+  const getCtx = () => {
+    const cvs = ref.current;
+    if (!cvs) return;
+    const ctx = cvs.getContext("2d");
+    return ctx;
+  }
   // ボードを初期化
   // const board = new Board(info);
   // 左クリックイベント
@@ -100,8 +126,8 @@ const Game = ({ img, board, changeLevel }: GameProp) => {
     const x = e.nativeEvent.offsetX;
     const y = e.nativeEvent.offsetY;
     leftClick(x, y, board);
-    // renderer.draw(board);
     draw();
+    gameClick(board.gameState);
   };
 
   // 右クリックイベント
@@ -111,6 +137,7 @@ const Game = ({ img, board, changeLevel }: GameProp) => {
     const y = e.nativeEvent.offsetY;
     rightClick(x, y, board);
     draw();
+    gameClick(board.gameState);
   };
 
   //ダブルクリックイベント
@@ -120,12 +147,11 @@ const Game = ({ img, board, changeLevel }: GameProp) => {
     const y = e.nativeEvent.offsetY;
     doubleClick(x, y, board);
     draw();
+    gameClick(board.gameState);
   };
 
   const mouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const cvs = ref.current;
-    if (!cvs) return;
-    const ctx = cvs.getContext("2d");
+    const ctx = getCtx();
     if (!ctx) return;
     const isDown = smileDown(e.nativeEvent.offsetX, e.nativeEvent.offsetY, board);
     if (isDown) {
@@ -134,9 +160,7 @@ const Game = ({ img, board, changeLevel }: GameProp) => {
   };
 
   const mouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const cvs = ref.current;
-    if (!cvs) return;
-    const ctx = cvs.getContext("2d");
+    const ctx = getCtx();
     if (!ctx) return;
     const isUp = smileUp(e.nativeEvent.offsetX, e.nativeEvent.offsetY, board);
     if (isUp) {
@@ -162,16 +186,11 @@ const Game = ({ img, board, changeLevel }: GameProp) => {
     if (!cvs) return;
     const ctx = cvs.getContext("2d");
     if (!ctx) return;
-
     setSize(cvs, board);
-
     const fn = scheduleTick(img, ctx, board);
     const tid = window.setInterval(fn, 1000);
-
     draw();
-
     return () => window.clearInterval(tid);
-
   });
 
   return (
