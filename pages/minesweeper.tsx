@@ -15,7 +15,6 @@ const EASY = 0;
 const MEDIUM = 1;
 const HARD = 2;
 
-type LevelKey = (0 | 1 | 2);
 type levelInfo = {
   cols: number, rows: number, bombs: number, level: number
 };
@@ -25,9 +24,8 @@ type AllLevels = {
 
 interface GameProp {
   img: HTMLImageElement,
-  info: levelInfo, // [columns,rows,bombs]
-  changeLevel: (selectedLevel: number) => void,
-  level: number
+  board: Board,
+  changeLevel: () => void,
 }
 
 // columns,rows,bombs
@@ -43,34 +41,48 @@ const Page = () => {
   const [level, setLevel] = useState<number>(EASY);
   // スプライトシートのImageタグ。読取が完了したら再描写するためuseStateする。
   const [sprite, setSprite] = useState<HTMLImageElement | null>(null);
-  const [redo, setRedo] = useState<number>(0);
+  const [board, setBoard] = useState<Board | null>(null);
+
   // levelの更新はGame内の特定ボタン押下で行う。
-  const changeLevel = (selectedLevel: number) => setLevel(selectedLevel);
+  // const changeLevel = (selectedLevel: number) => setLevel(selectedLevel);
+
+  const smileClick = () => {
+    setBoard(new Board(LEVEL[level]));
+  }
+
   const easyClick = () => {
-    setLevel(EASY)
-    setRedo(red => redo + 1)
-  };
-  const mediumClick = () => setLevel(MEDIUM);
-  const hardClick = () => setLevel(HARD);
+    setLevel(EASY);
+    setBoard(new Board(LEVEL[EASY]));
+  }
+
+  const mediumClick = () => {
+    setLevel(MEDIUM);
+    setBoard(new Board(LEVEL[MEDIUM]));
+  }
+
+  const hardClick = () => {
+    setLevel(HARD);
+    setBoard(new Board(LEVEL[HARD]));
+  }
   // スプライトシート読み取り処理。初回のみ実行。
   useEffect(() => {
     loadSprite("/minesweeper.png").then(img => setSprite(img));
+    setBoard(new Board(LEVEL[level]));
   }, []);
 
-  const levelInfo = LEVEL[level as LevelKey];
   return (
     <>
       <MyHead title="Minesweeper"></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
-      <div className={style.menuWrapper}>
-        <button className={style.menu} onClick={easyClick}>EASY</button>
-        <button className={style.menu} onClick={mediumClick}>MEDIUM</button>
-        <button className={style.menu} onClick={hardClick}>HARD</button>
-      </div>
-      <main>
+      <main className={style.container}>
+        <div className={style.menuWrapper}>
+          <button className={style.menu} onClick={easyClick}>EASY</button>
+          <button className={style.menu} onClick={mediumClick}>MEDIUM</button>
+          <button className={style.menu} onClick={hardClick}>HARD</button>
+        </div>
         {sprite &&
-          <Game img={sprite} info={levelInfo}
-            changeLevel={changeLevel} level={EASY} />
+          <Game img={sprite} board={board as Board}
+            changeLevel={smileClick} />
         }
       </main>
       <Footer></Footer>
@@ -78,11 +90,11 @@ const Page = () => {
   );
 };
 
-const Game = ({ img, info, changeLevel, level }: GameProp) => {
+const Game = ({ img, board, changeLevel }: GameProp) => {
   // useEffect内でcanvasに触れないといけないので。
   const ref = useRef<HTMLCanvasElement>(null);
   // ボードを初期化
-  const board = new Board(info);
+  // const board = new Board(info);
   // 左クリックイベント
   const click = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const x = e.nativeEvent.offsetX;
@@ -129,7 +141,7 @@ const Game = ({ img, info, changeLevel, level }: GameProp) => {
     const isUp = smileUp(e.nativeEvent.offsetX, e.nativeEvent.offsetY, board);
     if (isUp) {
       changeSmile(img, ctx, board);
-      changeLevel(level);
+      changeLevel();
     }
   };
 

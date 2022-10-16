@@ -1,18 +1,37 @@
+.container {
+    min-height: 80vh;
+    background-color: #d1d1d1
+}
+
 .game {
     display: block;
     margin: auto;
     background-color: #ccc;
+    border-left: solid 5px #e0e0e0;
+    border-top: solid 5px #e0e0e0;
+    border-right: solid 5px #e0e0e0;
+    border-bottom: solid 5px #e0e0e0;
 }
 
 .menuWrapper {
     text-align: center;
-    margin: 10px;
+    padding: 10px;
 }
 
 .menu {
+    background-color: #d1d1d1;
     display: inline-block;
     height: 2rem;
-    width: 5rem;
+    width: 6rem;
     border: none;
     font-size: large;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+@media screen and (min-width:1024px) {
+    .menu:hover {
+        background-color: #E91E63;
+        color: white;
+    }
 }
