@@ -1,0 +1,18 @@
+.game {
+    display: block;
+    margin: auto;
+    background-color: #ccc;
+}
+
+.menuWrapper {
+    text-align: center;
+    margin: 10px;
+}
+
+.menu {
+    display: inline-block;
+    height: 2rem;
+    width: 5rem;
+    border: none;
+    font-size: large;
+}
