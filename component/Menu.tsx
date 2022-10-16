@@ -40,9 +40,13 @@ export default function Menu({ iniMode }: MenuProp) {
   return (
     <div className={styles.container}>
       <div className={styles.selected}>{texts[iniMode]}</div>
-      <ol className={`${styles.myol} ${showul}`}>
-        {genItems(texts, ids, iniMode, select, isSpread)}
-      </ol>
+      <header>
+        <nav>
+          <ol className={`${styles.myol} ${showul}`}>
+            {genItems(texts, ids, iniMode, select, isSpread)}
+          </ol>
+        </nav>
+      </header>
       <MenuHam tap={tap}></MenuHam>
     </div>
   );

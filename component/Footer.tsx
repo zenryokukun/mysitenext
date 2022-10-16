@@ -7,14 +7,16 @@ import IconLink from "./IconLink";
 export default function Footer() {
   let contStyle = styles.container;
   return (
-    <div className={contStyle}>
-      <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>
-      <div className={styles.content}>
-        <AboutFooter></AboutFooter>
-        <IconFooter></IconFooter>
-        <MapFooter></MapFooter>
+    <footer>
+      <div className={contStyle}>
+        <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>
+        <div className={styles.content}>
+          <AboutFooter></AboutFooter>
+          <IconFooter></IconFooter>
+          <MapFooter></MapFooter>
+        </div>
       </div>
-    </div>
+    </footer>
   );
 }
 
