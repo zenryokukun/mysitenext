@@ -112,10 +112,16 @@ const Page = () => {
     return style.menu;
   };
 
+  const headParam = {
+    title: "Minesweeper",
+    cardTitle: "全力RETRO GAME",
+    description: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME.その名は『地雷を撤去せし者』。",
+    imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
+  };
 
   return (
     <>
-      <MyHead title="Minesweeper"></MyHead>
+      <MyHead {...headParam}></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isModal && <Description closeModal={closeModal}></Description>}
       <main className={style.container}>

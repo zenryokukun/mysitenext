@@ -22,6 +22,15 @@ interface Prop {
 
 export default function Production() {
 
+  const minesweeper = {
+    title: "Minesweeper",
+    summary: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME。その名は、、、『地雷を撤去せし者』。\n（スマホ未対応）",
+    href: "/production/minesweeper", // /pages/minesweeper のほう
+    imgClass: styles.fill,
+    imgPath: "/production/minesweeper/ms-prod.png", // /public/production/minesweeper のほう
+    alt: "minesweeper-game",
+  }
+
   const genki = {
     title: "元気玉"
     , summary: "仮想通貨取引所。たとえ見た目はしょぼくても、私の知りうる全てを注ぎ込みました。\
@@ -56,6 +65,7 @@ export default function Production() {
       <MyHead title="作品物"></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       <main className={styles.container}>
+        <Product {...minesweeper}></Product>
         <Product {...marimo}></Product>
         <Product {...cropper}></Product>
         <Product {...genki}></Product>
