@@ -1,14 +1,14 @@
-import MyHead from "../component/MyHead";
-import Menu from "../component/Menu";
-import Footer from "../component/Footer";
-import { MODE } from "../component/constants";
+import MyHead from "../../component/MyHead";
+import Menu from "../../component/Menu";
+import Footer from "../../component/Footer";
+import { MODE } from "../../component/constants";
 import React, { useRef, useState, useEffect } from "react";
 import {
   render, Board, leftClick, rightClick, doubleClick,
   loadSprite, setSize, scheduleTick, smileDown, smileUp,
   changeSmile
-} from "../lib/ms/logic";
-import style from "../styles/Minesweeper.module.css";
+} from "../../lib/ms/logic";
+import style from "../../styles/Minesweeper.module.css";
 
 // game levels
 const EASY = 0;
@@ -33,6 +33,10 @@ interface GameProp {
   gameClick: (state: number) => void,
 }
 
+interface DescProp {
+  closeModal: () => void,
+}
+
 // columns,rows,bombs
 const LEVEL: AllLevels = {
   [EASY]: { cols: 8, rows: 8, bombs: 8, level: EASY },
@@ -41,7 +45,8 @@ const LEVEL: AllLevels = {
 };
 
 const Page = () => {
-
+  // ルール説明モーダルを表示するために使う
+  const [isModal, setModal] = useState<boolean>(false);
   // level変更でGameを再描写する。
   const [level, setLevel] = useState<number>(EASY);
   // スプライトシートのImageタグ。読取が完了したら再描写するためuseStateする。
@@ -50,6 +55,10 @@ const Page = () => {
   const [board, setBoard] = useState<Board | null>(null);
   // 画面下部のメッセージ
   const [gameState, setGameState] = useState(0);
+
+  // 説明ボタンを押したときのモーダル制御関数
+  const showModal = () => setModal(true);
+  const closeModal = () => setModal(false);
 
   // smiley faceをクリックしたら、同じレベルで再プレイ。
   // boardのを現在のlevelで更新。
@@ -108,6 +117,7 @@ const Page = () => {
     <>
       <MyHead title="Minesweeper"></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
+      {isModal && <Description closeModal={closeModal}></Description>}
       <main className={style.container}>
         <div className={style.menuWrapper}>
           <button className={getLevelStyle(EASY)} onClick={easyClick}>EASY</button>
@@ -119,6 +129,7 @@ const Page = () => {
             restart={smileClick} gameClick={gameClick} />
         }
         <div className={style.message}>{getMessage()}</div>
+        <a onClick={showModal} className={style.rule} href="#">ルール説明</a>
       </main>
       <Footer></Footer>
     </>
@@ -235,5 +246,69 @@ const Game = ({ img, board, restart, gameClick }: GameProp) => {
     ></canvas>
   )
 };
+
+/**description */
+function Description({ closeModal }: DescProp) {
+  return (
+    <div className={style.modal}>
+      <div onClick={closeModal} className={style.close}>X CLOSE</div>
+      <div className={style.wrapper}>
+        <section>
+          <h1 className={style.headline}>マインスイーパーとは</h1>
+          <p>1980年代に作成された、１人用コンピュータゲームです。地雷原から全ての地雷を撤去するのが目的です。
+            Windows3.1～7までは標準で付属していたため、知名度が高いゲームです。
+            残念ながらWindows8からはダウンロード形式になりました。
+          </p>
+        </section>
+        <section>
+          <h2 className={style.subHeadline}>ルール</h2>
+          <ul>
+            <li>
+              マスをクリックすると開きます。
+            </li>
+            <li>
+              地雷が隠れているマスをクリックすると負けです。
+            </li>
+            <li>
+              地雷が隠れているマスには旗を立てて印をつけます。
+            </li>
+            <li>
+              全ての地雷マスに旗を立て、それ以外のマスを全て開くと勝ちです。
+            </li>
+            <li>
+              数字のマスは、隣接マスに埋まっている爆弾の数を示しています。
+            </li>
+            <li>
+              左上の数字は、埋まっている爆弾の残数です。旗を立てると、1減ります。間違えていても減ります。
+            </li>
+            <li>
+              右上の数字は経過秒数です。
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h2 className={style.subHeadline}>操作</h2>
+          <ul>
+            <li>
+              左クリックでマスを開きます。
+            </li>
+            <li>
+              右クリックで旗を立てます。
+            </li>
+            <li>
+              数字マスをダブルクリックすると、隣接マスを全て開きます。旗が立っているマスは除外されます。
+              時短に利用してください。
+            </li>
+            <div className={style.imgWrapper}>
+              <img className={style.descImg} src="/production/minesweeper/double-click.png" alt="double-click-explanation" />
+            </div>
+            <li>ニコニコボタンを押すと、同じレベルで再プレイできます</li>
+            <li>上部のEASY MEDIUM HARDを押すと、レベル変更できます</li>
+          </ul>
+        </section>
+      </div>
+    </div >
+  );
+}
 
 export default Page;

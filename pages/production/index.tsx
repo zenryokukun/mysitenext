@@ -1,8 +1,8 @@
-import MyHead from "../component/MyHead";
-import Menu from "../component/Menu";
-import Footer from "../component/Footer";
-import { MODE } from "../component/constants";
-import styles from "../styles/Production.module.css";
+import MyHead from "../../component/MyHead";
+import Menu from "../../component/Menu";
+import Footer from "../../component/Footer";
+import { MODE } from "../../component/constants";
+import styles from "../../styles/Production.module.css";
 
 /**
  * Description 成果物Page 

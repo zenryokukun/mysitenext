@@ -1,6 +1,15 @@
+/*
+ *  GAME版CSS
+ */
 .container {
     min-height: 80vh;
     background-color: #d1d1d1
+}
+
+.rule {
+    /* padding-top: 0.5rem; */
+    display: block;
+    text-align: center;
 }
 
 .game {
@@ -35,7 +44,8 @@
 
 .message {
     margin-top: 1rem;
-    padding-bottom: 1rem;
+    margin-bottom: 0.3rem;
+    /* padding-bottom: 1rem; */
     font-size: large;
     font-weight: bold;
     text-align: center;
@@ -46,5 +56,103 @@
     .menu:hover {
         background-color: #E91E63;
         color: white;
+    }
+}
+
+/* 以下　description用 css */
+.modal {
+    position: fixed;
+    overflow-y: scroll;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    /* background-color: #333; */
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+}
+
+.close {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    right: 50px;
+    top: 20px;
+    width: 9rem;
+    height: 3rem;
+    font-size: 2rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-weight: bold;
+}
+
+.close:hover {
+    background-color: #E91E63;
+}
+
+.hide {
+    display: none;
+}
+
+.wrapper {
+    width: 60%;
+    background-color: #f7f7f7;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    animation-name: slide;
+    animation-duration: 1s;
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(0%);
+    }
+
+}
+
+.headline {
+    text-align: center;
+    border-bottom: solid 3px #E91E63
+}
+
+.subHeadline {
+    padding-left: 0.5rem;
+    border-left: solid 5px #E91E63
+}
+
+.imgWrapper {
+    display: flex;
+    margin: 0;
+    justify-content: center;
+    flex-shrink: 1;
+    width: 100%;
+}
+
+.descImg {
+    width: 40%;
+    height: 100%;
+    object-fit: contain;
+}
+
+
+
+@media screen and (max-width:1024px) {
+    .wrapper {
+        width: 85%;
+    }
+}
+
+@media screen and (max-width:850px) {
+    .descImg {
+        width: 60%;
     }
 }
