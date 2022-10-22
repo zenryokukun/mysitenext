@@ -135,7 +135,7 @@ const Page = () => {
             restart={smileClick} gameClick={gameClick} />
         }
         <div className={style.message}>{getMessage()}</div>
-        <a onClick={showModal} className={style.rule} href="#">ルール説明</a>
+        <a onClick={showModal} className={style.rule} href="#rule">ルール説明</a>
       </main>
       <Footer></Footer>
     </>

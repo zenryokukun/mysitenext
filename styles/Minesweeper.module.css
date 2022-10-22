@@ -10,6 +10,7 @@
     /* padding-top: 0.5rem; */
     display: block;
     text-align: center;
+    user-select: none;
 }
 
 .game {
@@ -89,6 +90,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .close:hover {
