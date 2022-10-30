@@ -12,7 +12,7 @@ import Tile from "./Tile";
  * GameBoard Component
  ************************************************/
 
-// InfoPropとGamePropのマージ版
+// InfoPropとMinesPropのマージ版
 interface GameBoardProp {
   game: Game,       // Gameオブジェクト。useReducerのstate
   handler: Sprites, // spritesheet制御オブジェクト

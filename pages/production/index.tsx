@@ -22,9 +22,18 @@ interface Prop {
 
 export default function Production() {
 
+  const mskai = {
+    title: "マインスイーパー・改",
+    summary: "未到達のレベルを引っ提げて、やつは再び現れる...その名は『地雷を撤去せし者・改』。『極（KI・WA・MI）』レベルを追加し、内部の作りを変えました。スマホ未対応。",
+    href: "/production/minesweeperkai", // /pages/minesweeper のほう
+    imgClass: styles.fill,
+    imgPath: "/production/minesweeper/mskai.png", // /public/production/minesweeper のほう
+    alt: "minesweeper-game",
+  };
+
   const minesweeper = {
     title: "Minesweeper",
-    summary: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME。その名は、、、『地雷を撤去せし者』。\n（スマホ未対応）",
+    summary: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME。その名は、、、『地雷を撤去せし者』。スマホ未対応。",
     href: "/production/minesweeper", // /pages/minesweeper のほう
     imgClass: styles.fill,
     imgPath: "/production/minesweeper/ms-prod.png", // /public/production/minesweeper のほう
@@ -65,6 +74,7 @@ export default function Production() {
       <MyHead title="作品物"></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       <main className={styles.container}>
+        <Product {...mskai}></Product>
         <Product {...minesweeper}></Product>
         <Product {...marimo}></Product>
         <Product {...cropper}></Product>
