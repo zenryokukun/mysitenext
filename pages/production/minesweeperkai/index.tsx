@@ -1,19 +1,20 @@
 import { useEffect, useState, useReducer, useRef } from "react";
-import { loadSprite } from "../../../lib/mskai/loader";
-import type { Sprites } from "../../../lib/mskai/loader";
-import { reducer, iniState, genAction } from "../../../lib/mskai/reducer"
-import {
-  getGroundSpriteIndex, getSmileSpriteIndex, getRemainsSpriteIndices, getTimerSpriteIndices,
-} from "../../../lib/mskai/game";
-import { EASY, MEDIUM, HARD, EXTREME, ACTION } from "../../../lib/mskai/constants";
-import type { LevelKeyType } from "../../../lib/mskai/level";
-import { WIN, LOSE, PLAY } from "../../../lib/mskai/constants";
 import MyHead from "../../../component/MyHead";
 import Footer from "../../../component/Footer";
 import Menu from "../../../component/Menu";
 import Description from "../../../component/minesweeperkai/Description";
+import LevelSelect from "../../../component/minesweeperkai/LevelSelect";
+import GameBoard from "../../../component/minesweeperkai/GameBoard";
+import Result from "../../../component/minesweeperkai/Result";
 import { MODE } from "../../../component/constants";
+import { reducer, iniState, genAction } from "../../../lib/mskai/reducer"
+import { EASY, MEDIUM, HARD, EXTREME, ACTION, PLAY } from "../../../lib/mskai/constants";
+import { loadSprite } from "../../../lib/mskai/loader";
+import type { Sprites } from "../../../lib/mskai/loader";
+import type { LevelKeyType } from "../../../lib/mskai/level";
+import type React from "react";
 import style from "../../../styles/Mskai.module.css";
+
 
 /**
  * levelに応じたclassNameを返す
@@ -41,182 +42,114 @@ function getStyles(level: number) {
   return [infoStyle, boardStyle];
 }
 
-
 export default function Page() {
+  // game state管理。Gameオブジェクトをreducer関数で更新する。
   const [game, dispatch] = useReducer(reducer, iniState(EASY));
+  // sprite handler。load後に描写出来るようにstate管理してる
   const [handler, setHandler] = useState<Sprites | null>(null);
+  // 経過秒数state
   const [timer, setTimer] = useState(0);
+  // 説明用Modalを制御するstate
   const [isModal, setModal] = useState(false);
+  // setIntervalのidを管理するstate。レンダリングの都度別の値にならないように
+  // useRefで管理する。
   const ref = useRef<number | null>(null);
 
-  // level押下
+  // level変更処理。LevelSelectクリック時、InfoSectionのニコニコクリック時に実行
   const changeLevel = (lvl: LevelKeyType) => {
-    setTimer(0);
-    removeTick();
-    ref.current = null;
+    setTimer(0);        // timerを0にリセット
+    removeTick();       // setIntervalを止める
+    ref.current = null; // setIntervalのidを削除
+    // gameをlvlで初期化
     dispatch(genAction(ACTION.INIT, { level: lvl }));
   };
 
-  const leftClick = (i: number) => dispatch(genAction(ACTION.CLICK, { i: i }));
-
-  const rightClick = (e: React.MouseEvent<HTMLImageElement>, i: number) => {
+  // 説明用modalを表示。
+  const showModal = (e: React.MouseEvent) => {
     e.preventDefault();
-    dispatch(genAction(ACTION.CONTEXT, { i: i }))
+    setModal(true)
   };
-
-  const doubleClick = (e: React.MouseEvent<HTMLImageElement>, i: number) => {
-    e.preventDefault();
-    dispatch(genAction(ACTION.DOUBLE, { i: i }));
-  }
-
-  const smilePressed = () => dispatch(genAction(ACTION.SMILE_DOWN, {}));
-  const smileReleased = () => {
-    changeLevel(game.level);
-  };
-
-  const showModal = () => setModal(true);
+  // 説明用modalを非表示にする
   const closeModal = () => setModal(false);
-
+  // 経過秒数を更新する関数
   const tick = () => setTimer(timer => timer += 1);
+  // 経過秒数更新をクリアする館素
   const removeTick = () => {
     const tid = ref.current;
     if (tid !== null) {
       window.clearInterval(tid);
     }
   }
-  const getMessage = () => {
-    if (game.gameState === PLAY) return "PLAYING...";
-    if (game.gameState === LOSE) return "地雷撤去に失敗...";
-    if (game.gameState === WIN) return `おめでとう！${timer}秒で全ての地雷を撤去しました！`;
-    return "";
-  }
-
-  useEffect(() => {
-    const sp = loadSprite("/minesweeper.png");
-    sp.then(handler => setHandler(handler))
-  }, []);
-
-  useEffect(() => {
-    const tid = ref.current;
-    if (game.isGroundSet && game.gameState === PLAY && tid === null) {
-      ref.current = window.setInterval(() => tick(), 1000);
-    } else if (!game.isGroundSet || game.gameState !== PLAY) {
-      removeTick();
-    }
-
-    return () => {
-      if (tid !== null) {
-        window.clearInterval(tid);
-      }
-    };
-  }, [game.gameState, game.isGroundSet]);
-
-  const [infoStyle, boardStyle] = getStyles(game.level);
-
-
-  if (!handler || !game) {
-    return <div>loading...</div>
-  }
-
-  return (
-    <>
-      <MyHead title="マインスイーパー改"></MyHead>
-      <Menu iniMode={MODE.PRODUCTION}></Menu>
-      <main className={style.container}>
-        {isModal && <Description closeModal={closeModal} />}
-        <LevelSelect currentLevel={game.level} changeLevel={changeLevel}></LevelSelect>
-        <div className={style.boardWrapper}>
-          <div className={infoStyle}>
-            <div>
-              {getRemainsSpriteIndices(game).map((spIndex, i) => {
-                const url = handler.number.getUrl(spIndex);
-                return (<img key={i} src={url} />);
-              })}
-            </div>
-            <div>
-              {(() => {
-                const spIndex = getSmileSpriteIndex(game);
-                const url = handler.smile.getUrl(spIndex);
-                return <img src={url} onMouseDown={smilePressed} onMouseUp={smileReleased} />
-              })()}
-            </div>
-            <div>
-              {getTimerSpriteIndices(timer).map((spIndex, i) => {
-                const url = handler.number.getUrl(spIndex);
-                return (<img key={i} src={url} />);
-              })}
-            </div>
-          </div>
-          <div className={boardStyle}>
-            {game.tiles.map((arr, i) => {
-              const spIndex = getGroundSpriteIndex(game, i);
-              const url = handler.layer.getUrl(spIndex);
-              return (
-                <Tile key={i} index={i} src={url}
-                  leftClick={leftClick} rightClick={rightClick} doubleClick={doubleClick}
-                />
-              );
-            })}
-          </div>
-        </div>
-        <div className={style.message}>{getMessage()}</div>
-        <a href="#"
-          className={style.rule}
-          onClick={(e) => {
-            e.preventDefault();
-            showModal();
-          }}
-        >ルール説明</a>
-      </main>
-      <Footer></Footer>
-    </>
-  );
-}
-
-
-interface SelectProp {
-  currentLevel: LevelKeyType,
-  changeLevel: (i: LevelKeyType) => void,
-}
-
-function LevelSelect({ currentLevel, changeLevel }: SelectProp) {
-  const genStyle = (lvl: LevelKeyType) => {
-    if (currentLevel === lvl) {
+  // LevelSelectのstyle取得関数。選択中レベルはunderlineにするため。
+  const getLevelStyle = (lvl: LevelKeyType) => {
+    if (game.level === lvl) {
       return `${style.level} ${style.underline}`;
     }
     return style.level;
   };
 
-  const change = (lvl: LevelKeyType) => {
-    if (lvl === currentLevel) return;
-    changeLevel(lvl);
-  }
+  // spriteのロード処理。初回マウント時のみ実行。
+  useEffect(() => {
+    const sp = loadSprite("/minesweeper.png");
+    sp.then(handler => setHandler(handler));
+  }, []);
 
-  return (<div className={style.levelWrapper}>
-    <span onClick={() => change(EASY)} className={genStyle(EASY)}>EASY</span>
-    <span onClick={() => change(MEDIUM)} className={genStyle(MEDIUM)}>MEDIUM</span>
-    <span onClick={() => change(HARD)} className={genStyle(HARD)}>HARD</span>
-    <span onClick={() => change(EXTREME)} className={genStyle(EXTREME)}>極</span>
-  </div>);
-}
+  // GameのgameState,isGroundSetが変更された時実行。
+  // 負けた時、買ったときに、初クリックしてゲーム版が初期化された時に
+  // 経過秒数をカウントする処理を設定したり、クリアしたりする。
+  useEffect(() => {
+    const tid = ref.current;
+    if (game.isGroundSet && game.gameState === PLAY && tid === null) {
+      // 初クリックされ、PLAY状態で、かつ経過秒数更新処理が設定されていない場合、設定する。
+      ref.current = window.setInterval(() => tick(), 1000);
+    } else if (!game.isGroundSet || game.gameState !== PLAY) {
+      // まだ初クリックされていない、PLAY状態じゃない時は、経過秒数更新処理をクリアする、
+      removeTick();
+    }
+    // unmount時に経過秒数更新処理が設定されていればクリアする。
+    return () => {
+      if (tid !== null) window.clearInterval(tid);
+    };
+  }, [game.gameState, game.isGroundSet]);
 
-interface TileProp {
-  src: string, index: number,
-  leftClick: (i: number) => void,
-  rightClick: (e: React.MouseEvent<HTMLImageElement>, i: number) => void,
-  doubleClick: (e: React.MouseEvent<HTMLImageElement>, i: number) => void,
-}
+  // 難易度に応じたstyleを取得
+  const [infoStyle, boardStyle] = getStyles(game.level);
 
-function Tile(
-  { src, index, leftClick, rightClick, doubleClick }: TileProp
-) {
+  // headerタグのmeta data
+  const headParam = {
+    title: "マインスイーパー改",
+    cardTitle: "全力RETRO GAME",
+    description: "未到達のレベルを引っ提げて、やつは再び現れる...その名は『地雷を撤去せし者・改』。",
+    imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
+  };
+
   return (
-    <img
-      className={style.tile} src={src}
-      onClick={() => leftClick(index)}
-      onContextMenu={(e) => rightClick(e, index)}
-      onDoubleClick={(e) => doubleClick(e, index)}
-    >
-    </img>
+    <>
+      <MyHead {...headParam}></MyHead>
+      <Menu iniMode={MODE.PRODUCTION}></Menu>
+      <main className={style.container}>
+        {/**spriteがまだロードされていない場合、loading...を表示する
+         * ロードされていれば、GameBoardを表示する。
+         */}
+        {(!handler) ? <div className={style.loader}>loading....</div> :
+          <>
+            {isModal && <Description closeModal={closeModal} />}
+            <LevelSelect
+              currentLevel={game.level} changeLevel={changeLevel}
+              getLevelStyle={getLevelStyle} wrapperStyle={style.levelWrapper}
+            />
+            <GameBoard
+              game={game} handler={handler} timer={timer}
+              dispatch={dispatch} changeLevel={changeLevel}
+              wrapperStyle={style.boardWrapper}
+              infoStyle={infoStyle} boardStyle={boardStyle}
+            />
+            <Result game={game} timer={timer} msgStyle={style.message}></Result>
+            <a href="#" className={style.rule} onClick={showModal}>ルール説明</a>
+          </>
+        }
+      </main>
+      <Footer></Footer>
+    </>
   );
 }
