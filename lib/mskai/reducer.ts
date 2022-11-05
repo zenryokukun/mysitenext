@@ -134,6 +134,11 @@ export function reducer(state: Game, action: Action): Game {
 				tiles,
 				ground,
 				isGroundSet: true,
+				// 1105追記...smileState,gameStateはキー名不要だった。
+				// shorthand記法で、変数名：値として設定してくれるため。
+				// (tilesやgroundは、tiles:tiles,ground:groundとして処理されてる)
+				// 忘れたらmdnでobject initializerを検索：https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
+				// あっても害はないけど、tiles,groundは省略しているので。
 				smileState: smileState,
 				gameState: gameState,
 			};
