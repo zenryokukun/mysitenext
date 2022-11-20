@@ -98,6 +98,6 @@ article>blockquote>p {
 
 @media screen and (max-width:950px) {
   article>* {
-    width: 85%;
+    width: 90%;
   }
 }
