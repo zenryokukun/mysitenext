@@ -3,12 +3,14 @@ import type { HeadProp } from "../types";
 
 
 function MyHead({
-  title, summary, site, cardTitle, description, imagePath
+  title, metaDescription, summary, site, cardTitle, description, imagePath
 }: HeadProp) {
 
   return (
     <Head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      {metaDescription && <meta name="description" content={metaDescription} />}
+
       <meta property="og:type" content="website" />
       <meta property="og:title" content="全力君。" />
       <meta property="og:url" content="https://www.zenryoku-kun.com/" />

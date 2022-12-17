@@ -8,7 +8,13 @@
 export interface HeadProp {
     // web pageのタイトル
     title: string,
-    //***** 以下 twitter card用
+    // meta description
+    metaDescription?: string,
+
+    //**************************************************
+    // 以下 twitter card用
+    //**************************************************
+
     // twitter:cardに設定。“summary”、“summary_large_image”、“app”、“player”のいずれか
     // defaultは"summary"
     summary?: string,
