@@ -40,6 +40,14 @@ function MyApp({ Component, pageProps, router }: AppProps) {
     });
 
   }, [router.pathname]);
+
+  // GAで開発中のページも集計されてしまうので追加。
+  // NODE_ENVがproduction以外の場合、GAタグを設定しない。
+  if (process.env.NODE_ENV !== "production") {
+    return <Component {...pageProps} />;
+  }
+
+  // NODE_ENVがproductionの場合はGAタグを設定
   return (
     <>
       <Script
