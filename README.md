@@ -93,3 +93,26 @@ sudo service nginx status
 ```bash
 sudo service nginx restart
 ```
+
+### mongosh
+```bash
+# dbの一覧を表示
+show dbs
+
+# dbを使う
+use `dbname`
+
+# 現在のdbを表示
+db
+
+# collectionの一覧を表示
+show collections
+
+# collectionのdocumentを全表示
+db.`collection-name`.find()
+
+# 条件付き検索
+db.`collection-name`.find({`field-name`:`field-value`})
+db.`collection-name`.find({`field-name`:{$gt:0}},`field-name2`:{$lte:9})
+
+```

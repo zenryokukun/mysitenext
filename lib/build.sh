@@ -14,6 +14,6 @@ echo USER:`whoami`
 npx next build
 
 # Restart server. `nextblog` is the app name set to PM2.
-pm2 restart nextblog
+pm2 restart nextblog --timestamp
 
 echo END:`date`------------------------------------------
