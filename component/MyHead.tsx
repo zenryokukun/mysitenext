@@ -3,11 +3,13 @@ import type { HeadProp } from "../types";
 
 
 function MyHead({
-  title, metaDescription, summary, site, cardTitle, description, imagePath
+  title, metaDescription, breadCrumbsJSON_ld,
+  summary, site, cardTitle, description, imagePath,
 }: HeadProp) {
 
   return (
     <Head>
+      <title>{title || "全力君。"}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       {metaDescription && <meta name="description" content={metaDescription} />}
 
@@ -21,7 +23,14 @@ function MyHead({
       <meta name="twitter:title" content={cardTitle || "空と、海と、大地。そして絶望"} />
       <meta name="twitter:description" content={description || "極音超速で辿り着いた最果ては、あくまでも人の作った世界だった。"} />
       <meta name="twitter:image" content={imagePath || "https://www.zenryoku-kun.com/zen_logo.png"} />
-      <title>{title || "全力君。"}</title>
+
+      {breadCrumbsJSON_ld &&
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: breadCrumbsJSON_ld }}
+        />
+      }
+
     </Head>
   );
 }

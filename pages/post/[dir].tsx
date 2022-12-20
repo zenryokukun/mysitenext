@@ -1,6 +1,7 @@
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
+import breadCrumbsJSON from "../../lib/bread";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
@@ -9,7 +10,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "../../styles/Post.module.css";
 import type { HeadProp } from "../../types";
-
+import type { NextRouter } from "next/router";
 /*
  *　Description ブログ記事Page
  */
@@ -44,7 +45,20 @@ interface LikeProp {
   likeClick: () => void, // いいねをクリックした時の関数
 }
 
+// 「いいね」更新用エンドポイント
 const ENDPOINT = "/api/post/like";
+
+// パンくずjson-ldを取得する関数
+function genJsonLd(router: NextRouter) {
+  const base = router.asPath.split("/").slice(-1)[0];
+  const items = [
+    { name: "home", item: "https://www.zenryoku-kun.com/" },
+    { name: "blog", item: "https://www.zenryoku-kun.com/blog" },
+    { name: base },
+  ];
+  const jsonld = breadCrumbsJSON(items);
+  return jsonld;
+}
 
 /**
  * {content}部分のスタイルシートは全てglobals.cssに記載。
@@ -52,6 +66,10 @@ const ENDPOINT = "/api/post/like";
 export default function Post({ content, data }: PostProp) {
 
   const router = useRouter();
+
+  // パンくずリストJSON-ld
+  const bcJsonLd = genJsonLd(router);
+
   const [likeClicked, setLike] = useState(false);
   const click = () => setLike(() => !likeClicked);
 
@@ -79,7 +97,7 @@ export default function Post({ content, data }: PostProp) {
 
   return (
     <>
-      <MyHead {...data}></MyHead>
+      <MyHead {...data} breadCrumbsJSON_ld={bcJsonLd}></MyHead>
       <Menu iniMode={MODE.BLOG}></Menu>
       <Link href="/blog">
         <a className={styles.back}>記事一覧に戻る</a>

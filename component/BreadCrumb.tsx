@@ -1,3 +1,9 @@
+/**
+ * 現在のルートのディレクトリから生成したパンくずリスト（UI用）
+ * /blog -> /post/202201_1、/production -> /html/marimo/index.html のような遷移があるので、あまり使えない。
+ * そのため未使用。。
+*/
+
 import Link from "next/link";
 import { useRouter } from "next/router";
 import styles from "../styles/BreadCrumb.module.css";

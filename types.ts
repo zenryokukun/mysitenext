@@ -10,6 +10,8 @@ export interface HeadProp {
     title: string,
     // meta description
     metaDescription?: string,
+    // scriptタグに挿入するJSON-ld形式のパンくずリスト。
+    breadCrumbsJSON_ld?: string,
 
     //**************************************************
     // 以下 twitter card用
