@@ -53,5 +53,9 @@ __pycache__/
 # 記事の画像表示等を入れ、プレビューを確認するためのフォルダ
 /posts/
 
-#pwd
+# pwd
 pwd.txt
+
+# コピペ用。md-template。
+# front-matterや目次htmlのテンプレ
+template.md

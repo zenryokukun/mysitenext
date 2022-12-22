@@ -4,3 +4,9 @@
     font-size: 1em;
     margin-bottom: 1rem;
 }
+
+@media screen and (max-width:650px) {
+    .remark-highlight pre {
+        font-size: 0.7em;
+    }
+}

@@ -22,9 +22,16 @@ a {
 }
 
 @media screen and (max-width:600px) {
+
+  /* 何これ？ */
   .test__main {
     position: relative;
     top: 3.5rem;
+  }
+
+  /* スマホの時は少し文字小さく */
+  body {
+    font-size: 0.9rem;
   }
 }
 
@@ -41,6 +48,11 @@ a {
 }
 
 /*for `Update` md file*/
+
+article>* {
+  width: 45%;
+}
+
 article>h1 {
   border-left: solid 5px #E91E63;
   background-color: #f7f7f7;
@@ -64,10 +76,6 @@ article>ul {
 
 article>ul:last-child {
   margin-bottom: 1rem;
-}
-
-article>* {
-  width: 45%;
 }
 
 article>p>img {
@@ -102,6 +110,55 @@ article>blockquote>p {
 
 @media screen and (max-width:950px) {
   article>* {
+    width: 90%;
+  }
+}
+
+@media screen and (max-width:600px) {
+  article>* {
+    width: 95%;
+  }
+}
+
+/*mdに直HTMLで作った目次に適用*/
+.table-of-contents {
+  background-color: #f9f5f5;
+  width: 40%;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.table__wrapper {
+  margin-block-start: 0;
+}
+
+.table__title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.table__custom-link {
+  text-decoration: none;
+  color: #8b0598;
+}
+
+@media screen and (max-width:1200px) {
+  .table-of-contents {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width:950px) {
+  .table-of-contents {
+    width: 70%;
+  }
+}
+
+@media screen and (max-width:650px) {
+  .table-of-contents {
     width: 90%;
   }
 }
