@@ -1,6 +1,8 @@
 .container {
   background-color: #333;
   overflow: hidden;
+  position: sticky;
+  top: 0px;
 }
 
 .myol {

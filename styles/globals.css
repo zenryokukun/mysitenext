@@ -49,6 +49,16 @@ a {
 
 /*for `Update` md file*/
 
+/* syntax-highlightのフォントに揃える */
+code {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  background-color: #f1f1f1;
+}
+
+blockquote {
+  margin: 0;
+}
+
 article>* {
   width: 45%;
 }
@@ -91,6 +101,9 @@ article>blockquote>p {
 }
 
 @media (prefers-color-scheme:dark) {
+  article {
+    color: #e0e0e0;
+  }
 
   /*bodyにbackground-colorつけているので、articleには不要*/
   article>h1 {
@@ -99,6 +112,10 @@ article>blockquote>p {
 
   article>h2 {
     background-color: #383838;
+  }
+
+  code {
+    background-color: #707070;
   }
 }
 
@@ -138,11 +155,12 @@ article>blockquote>p {
   font-weight: bold;
   text-align: center;
   margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 .table__custom-link {
   text-decoration: none;
-  color: #8b0598;
+  color: #2c921a;
 }
 
 @media screen and (max-width:1200px) {
@@ -160,5 +178,11 @@ article>blockquote>p {
 @media screen and (max-width:650px) {
   .table-of-contents {
     width: 90%;
+  }
+}
+
+@media (prefers-color-scheme:dark) {
+  .table-of-contents {
+    background-color: #383838;
   }
 }
