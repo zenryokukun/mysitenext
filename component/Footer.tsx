@@ -7,7 +7,7 @@ import IconLink from "./IconLink";
 export default function Footer() {
   let contStyle = styles.container;
   return (
-    <footer>
+    <div>
       <div className={contStyle}>
         <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>
         <div className={styles.content}>
@@ -16,7 +16,7 @@ export default function Footer() {
           <MapFooter></MapFooter>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }
 
