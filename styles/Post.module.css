@@ -1,82 +1,76 @@
-.container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  /* test */
+  min-width: 65%;
+}
+
+.articleContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 70%;
 }
 
 .back {
-    display: block;
-    margin-top: 1rem;
-    text-align: center;
+  display: block;
+  margin-top: 1rem;
+  text-align: center;
 }
-
 
 .back:last-of-type {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
-.likeWrapper {
-    width: 45%;
-    margin-left: auto;
-    margin-right: auto;
-    border-top: 2px solid #eaeaea;
-    text-align: center;
+
+@media screen and (max-width:1200px) {
+  .articleContainer {
+    width: 90%;
+  }
 }
 
-.thanks {
-    margin-top: 1rem;
-    font-weight: bold;
-    font-size: 1.2rem;
+@media screen and (max-width:1024px) {
+  .articleContainer {
+    width: 90%;
+  }
 }
 
-.primary {
-    color: lightgray;
-}
+/* 
+@media screen and (max-width:1024px) {
+  .wrapper {
+    flex-direction: column;
+  }
 
-.accent {
-    color: #E91E63;
-}
-
-.iconWrapper {
-    width: 32px;
-    height: 32px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.iconWrapper,
-.thanks {
-    margin-bottom: 0.7rem;
-}
-
-.like {
-    transition-duration: 0.5s;
-}
-
-@media screen and (min-width:950px) {
-    .accentOnHover {
-        transform: scale(1.2, 1.2);
-        color: #E91E63;
-    }
-}
+  .sideBarContainer {
+    width: 100%;
+  }
+} */
 
 @media screen and (max-width:950px) {
-    .accentOnHover {
-        color: lightgray;
-    }
+  /* .articleContainer {
+    width: 90%;
+  } */
 
-    .likeWrapper {
-        width: 85%;
-    }
+  .wrapper {
+    flex-direction: column;
+  }
 
-    .thanks {
-        font-size: 1rem;
-    }
+  .sideBarContainer {
+    width: 100%;
+  }
 }
 
 @media screen and (max-width:600px) {
-    .thanks {
-        font-size: 0.8rem;
-    }
+  .articleContainer {
+    width: 95%;
+  }
 }

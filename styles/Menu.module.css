@@ -3,6 +3,7 @@
   overflow: hidden;
   position: sticky;
   top: 0px;
+  z-index: 1;
 }
 
 .myol {
@@ -51,6 +52,8 @@
   .container {
     /* position: absolute; */
     width: 100%;
+    /* モバイルの場合、メニューのstickyはずす。うまく制御できないのと、コンテンツ表示エリアを増やすため */
+    position: static;
   }
 
   .myol {

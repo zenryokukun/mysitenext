@@ -1,16 +1,20 @@
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
-import breadCrumbsJSON from "../../lib/bread";
+import SideBar from "../../component/Post/SideBar";
+import Like from "../../component/Post/Like";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
+import breadCrumbsJSON from "../../lib/bread";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import styles from "../../styles/Post.module.css";
-import type { HeadProp } from "../../types";
 import type { NextRouter } from "next/router";
+import Link from "next/link";
+
+import type { HeadProp } from "../../types";
+import styles from "../../styles/Post.module.css";
+
 /*
  *　Description ブログ記事Page
  */
@@ -37,12 +41,6 @@ interface PostProp {
 // dynamic routeのファイル名:dir
 interface PathProp {
   params: { dir: string }
-}
-
-// like component
-interface LikeProp {
-  isClicked: boolean, // いいねがクリックされているか
-  likeClick: () => void, // いいねをクリックした時の関数
 }
 
 // 「いいね」更新用エンドポイント
@@ -99,51 +97,24 @@ export default function Post({ content, data }: PostProp) {
     <>
       <MyHead {...data} breadCrumbsJSON_ld={bcJsonLd}></MyHead>
       <Menu iniMode={MODE.BLOG}></Menu>
-      <Link href="/blog">
-        <a className={styles.back}>記事一覧に戻る</a>
-      </Link>
-      <article
-        className={styles.container}
-        dangerouslySetInnerHTML={{ __html: content }}
-      ></article>
-      <Like isClicked={likeClicked} likeClick={click}></Like>
-      <Link href="/blog">
-        <a className={styles.back}>記事一覧に戻る</a>
-      </Link>
+      <div className={styles.wrapper}>
+        <main className={styles.mainContainer}>
+          <Link href="/blog">
+            <a className={styles.back}>記事一覧に戻る</a>
+          </Link>
+          <article
+            className={styles.articleContainer}
+            dangerouslySetInnerHTML={{ __html: content }}
+          ></article>
+          <Like isClicked={likeClicked} likeClick={click}></Like>
+          <Link href="/blog">
+            <a className={styles.back}>記事一覧に戻る</a>
+          </Link>
+        </main>
+        <SideBar />
+      </div>
       <Footer></Footer>
     </>
-  );
-}
-
-// いいねComponent
-function Like({ isClicked, likeClick }: LikeProp) {
-  const [isHighLight, setHighLight] = useState(false);
-  const [color, setColor] = useState(styles.primary);
-  // mousehoverをcssでなくjsで再現
-  const enter = (e: React.MouseEvent<HTMLDivElement>) => setHighLight(true);
-  const leave = (e: React.MouseEvent<HTMLDivElement>) => setHighLight(false);
-  const click = (e: React.MouseEvent<HTMLDivElement>) => likeClick();
-
-  // mount時、unmount時、mousehover時に実行。iconの色反転に使う
-  useEffect(() => {
-    if (isClicked) {
-      setColor(styles.accent);
-    } else {
-      let _color = styles.primary;
-      _color = isHighLight ? styles.accentOnHover : styles.primary;
-      setColor(_color);
-    }
-  }, [isClicked, isHighLight]);
-
-  return (
-    <div className={styles.likeWrapper}>
-      <div className={`${styles.thanks} ${color}`}>
-        {isClicked ? '"いいね"ありがとうございます！！' : '最後までありがとうございます。"いいね"も下さい。'}
-      </div>
-      <div className={styles.iconWrapper} onMouseEnter={enter} onMouseLeave={leave} onClick={click}>
-        <i className={`fa-solid fa-heart fa-2x ${styles.like} ${color}`}></i>
-      </div>
-    </div>
   );
 }
 
