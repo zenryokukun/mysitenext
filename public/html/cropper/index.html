@@ -5,9 +5,17 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="スマートフォンで撮影した縦長の写真を、横長に切り取るサービスです。アスペクト比は9:16、2:3、3:4、1:1から選べ、リサイズにも対応しています。" />
   <link href="/html/cropper/main.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <title>スマホ写真切取君</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9TR64QDHY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-V9TR64QDHY');
+  </script>
 </head>
 
 <body>
@@ -20,60 +28,95 @@
     </div>
     <!--header-->
     <div class="description">縦長写真を所望の縦横比で切取るサービス</div>
-    <!--content-->
-    <div class="content">
-      <form class="form__self" action="/api/cropper/upload" method="post" target="_self" enctype="multipart/form-data">
-        <fieldset class="form__wrapper">
-          <legend class="legend__text">画像選択</legend>
-          <label class="label__text" for="pics"></label>
-          <input type="file" name="pics" accept="image/*" multiple>
-        </fieldset>
-        <fieldset class="form__wrapper ratio__wrapper">
-          <legend class="legend__text">縦横比を選択</legend>
-          <div><input id="widest" type="radio" name="ratio" checked value="0.5625">
-            <label class="label__text" for="widest">9:16</label>
+    <div class="container">
+      <!--content-->
+      <div class="content">
+        <form class="form__self" action="/api/cropper/upload" method="post" target="_self"
+          enctype="multipart/form-data">
+          <fieldset class="form__wrapper">
+            <legend class="legend__text">画像選択</legend>
+            <label class="label__text" for="pics"></label>
+            <input type="file" name="pics" accept="image/*" multiple>
+          </fieldset>
+          <fieldset class="form__wrapper ratio__wrapper">
+            <legend class="legend__text">縦横比を選択</legend>
+            <div><input id="widest" type="radio" name="ratio" checked value="0.5625">
+              <label class="label__text" for="widest">9:16</label>
+            </div>
+            <div><input id="wider" type="radio" name="ratio" value="0.667">
+              <label class="label__text" for="wider">2:3</label>
+            </div>
+            <div><input id="wide" type="radio" name="ratio" value="0.75">
+              <label class="label__text" for="wide">3:4</label>
+            </div>
+            <div><input id="square" type="radio" name="ratio" value="1">
+              <label class="label__text" for="square">1:1</label>
+            </div>
+          </fieldset>
+          <fieldset class="form__wrapper">
+            <legend class="legend__text">リサイズ後の横幅のピクセル数を入力</legend>
+            <input class="no-resize" id="default" type="radio" name="resize" value="default" checked>
+            <label class="label__text" for="default">default</label>
+            <input class="new-width__radio" id="new-width" type="radio" name="resize" value="custom">
+            <input class="new-width__input" type="number" name="width" min=1 max="9999">
+            <label class="label__text" for="new-width">px</label>
+          </fieldset>
+          <div class="form__wrapper">
+            <input class="submit__button" type="submit" value="submit">
           </div>
-          <div><input id="wider" type="radio" name="ratio" value="0.667">
-            <label class="label__text" for="wider">2:3</label>
-          </div>
-          <div><input id="wide" type="radio" name="ratio" value="0.75">
-            <label class="label__text" for="wide">3:4</label>
-          </div>
-          <div><input id="square" type="radio" name="ratio" value="1">
-            <label class="label__text" for="square">1:1</label>
-          </div>
-        </fieldset>
-        <fieldset class="form__wrapper">
-          <legend class="legend__text">リサイズ後の横幅のピクセル数を入力</legend>
-          <input class="no-resize" id="default" type="radio" name="resize" value="default" checked>
-          <label class="label__text" for="default">default</label>
-          <input class="new-width__radio" id="new-width" type="radio" name="resize" value="custom">
-          <input class="new-width__input" type="number" name="width" min=1 max="9999">
-          <label class="label__text" for="new-width">px</label>
-        </fieldset>
-        <div class="form__wrapper">
-          <input class="submit__button" type="submit" value="submit">
-        </div>
-      </form>
-      <div class="disclaimer">※注意事項
-        <p class="disclaimer__message">
-          画像はサーバにアップロードされ、切取り後に圧縮の上ダウンロードを行います。
-          通信はHTTPSで暗号化され、安心安全の日本企業のVPSを利用しておりますが、ご了承の上ご利用下さい。
-        </p>
-      </div>
-      <div class="example">
-        <div class="example__description">
-          <h3 class="example__title">
-            スマホで撮影した縦長の画像を、選択した縦横比に基づいて切り取ります.
-          </h3>
-          <p class="example__explanation">下の赤枠のように、縦方向は中央部分を切り取ります。切り取り後の画像の
-            大きさを変えたい場合は、リサイズ後の横幅をピクセル数で入力してください。
+        </form>
+        <div class="disclaimer">※注意事項
+          <p class="disclaimer__message">
+            画像はサーバにアップロードされ、切取り後に圧縮の上ダウンロードを行います。
+            通信はHTTPSで暗号化され、安心安全の日本企業のVPSを利用しておりますが、ご了承の上ご利用下さい。
           </p>
         </div>
-        <div class="image__wrapper">
-          <img class="example__image" src="/html/cropper/view.jpg" alt="example-image">
+        <div class="example">
+          <div class="example__description">
+            <h3 class="example__title">
+              スマホで撮影した縦長の画像を、選択した縦横比に基づいて切り取ります.
+            </h3>
+            <p class="example__explanation">下の赤枠のように、縦方向は中央部分を切り取ります。切り取り後の画像の
+              大きさを変えたい場合は、リサイズ後の横幅をピクセル数で入力してください。
+            </p>
+          </div>
+          <div class="image__wrapper">
+            <img class="example__image" src="/html/cropper/view.jpg" alt="example-image">
+          </div>
         </div>
       </div>
+      <aside class="sidebar">
+        <div class="author">
+          <div class="sidebar__itemrow">
+            <div class="sidebar__field">
+              <div class="sidebar__icon">
+                <i class="fa-solid fa-person"></i>
+              </div>
+              <div class="sidebar__field--text">作成者</div>
+            </div>
+            <div>全力君</div>
+          </div>
+          <div class="sidebar__itemrow">
+            <div class="sidebar__field">
+              <div class="sidebar__icon">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+              <div class="sidebar__field--text">作成日</div>
+            </div>
+            <div>2022/9/18</div>
+          </div>
+          <div class="sidebar__itemrow">
+            <div class="sidebar__field">
+              <div class="sidebar__icon">
+                <i class="fa-brands fa-twitter"></i>
+              </div>
+              <div class="sidebar__field--text">連絡先</div>
+            </div>
+            <div><a href="https://twitter.com/zenryoku_kun0">twitter</a></div>
+          </div>
+          <div class="sidebar__text">不具合、不明点、要望などは上記連絡先までお願いします。</div>
+        </div>
+      </aside>
     </div>
   </div>
   <!--footer-->

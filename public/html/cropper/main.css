@@ -3,20 +3,76 @@ body {
 }
 
 .description {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     background-color: #333;
     color: #f2f2f2;
     text-align: center;
-    width: 100%;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    font-size: 20px;
+    height: 3rem;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
 }
 
 .content {
     min-height: 80vh;
-    width: 100%;
+    /* width: 100%; */
+    min-width: 80%;
     background: linear-gradient(90deg, #91eae4, #86a8e7, #7f7fd5);
     color: #222;
+
+    display: flex;
+    flex-direction: column;
 }
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 320px;
+    background-color: #c0c0c0;
+}
+
+.author {
+    margin-top: 1rem;
+    width: 80%;
+    box-shadow: 0 2px 5px 0 rgb(0 0 0 / 16%), 0 2px 10px 0 rgb(0 0 0 / 12%);
+    background-color: #fff;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.sidebar__itemrow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    border-bottom: solid 1px darkgrey;
+}
+
+.sidebar__icon {
+    display: inline-block;
+    min-width: 1rem;
+}
+
+.sidebar__field {
+    color: #777;
+}
+
+.sidebar__field--text {
+    display: inline-block;
+}
+
+.sidebar__text {
+    font-size: 0.8rem;
+}
+
 
 .form__self,
 .example,
@@ -26,7 +82,7 @@ body {
     justify-content: space-evenly;
     gap: 1.5rem;
     margin: 0 auto;
-    width: 40%;
+    width: 55%;
 }
 
 .form__wrapper:first-child {
@@ -73,6 +129,7 @@ body {
 }
 
 .image__wrapper {
+    align-self: center;
     margin-bottom: 1.5rem;
 }
 
@@ -93,31 +150,55 @@ body {
     font-size: 12px;
 }
 
+@media screen and (max-width:1200px) {
+
+    .content {
+        min-width: 70%;
+    }
+
+    .form__self,
+    .example,
+    .disclaimer {
+        width: 70%;
+    }
+}
+
 @media screen and (max-width:1000px) {
 
+    .container {
+        flex-direction: column;
+    }
+
     .form__self,
     .example,
     .disclaimer {
-        width: 50%;
+        width: 90%;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .author {
+        width: 350px;
+        margin-bottom: 1rem;
     }
 }
 
+@media screen and (max-width:600px) {
 
-@media screen and (max-width:800px) {
-
-    .form__self,
-    .example,
-    .disclaimer {
-        width: 60%;
+    .description {
+        font-size: 17px;
     }
-}
 
-@media screen and (max-width:650px) {
-
-    .form__self,
-    .example,
-    .disclaimer {
+    .author {
         width: 80%;
+    }
+
+    .form__self,
+    .example,
+    .disclaimer {
+        width: 95%;
     }
 }
 
