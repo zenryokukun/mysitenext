@@ -102,6 +102,19 @@ article>blockquote>p {
   font-style: italic;
 }
 
+/* ページ内リンクの飛び先の位置調整 */
+article a {
+  scroll-margin-top: 1rem;
+}
+
+/*601px以上でメニューを固定しているため、ページ内リンクがメニューの高さ分ずれてしまうので、調整*/
+@media screen and (min-width:601px) {
+  article a {
+    scroll-margin-top: 4rem;
+  }
+}
+
+/* mdから読み取った部分のダークテーマ */
 @media (prefers-color-scheme:dark) {
   article {
     color: #e0e0e0;

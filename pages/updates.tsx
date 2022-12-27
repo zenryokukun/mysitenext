@@ -25,10 +25,12 @@ export default function Updates({ content, data }: PageProp) {
         title={data.title}
       ></MyHead>
       <Menu iniMode={MODE.UPDATES}></Menu>
-      <article
-        className={styles.container}
-        dangerouslySetInnerHTML={{ __html: content }}
-      ></article>
+      <main className={styles.mainContainer}>
+        <article
+          className={styles.articleContainer}
+          dangerouslySetInnerHTML={{ __html: content }}
+        ></article>
+      </main>
       <Footer></Footer>
     </>
   );

@@ -1,9 +1,17 @@
-.container {
+.mainContainer {
     display: flex;
     flex-direction: column;
-    /* background-color: #f3f3f3; */
-    padding-left: 1rem;
+    align-items: center;
 }
+
+.articleContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+}
+
+
 
 @media (prefers-color-scheme:dark) {
     .container {
@@ -11,4 +19,14 @@
     }
 }
 
-@media screen and (max-width:600px) {}
+@media screen and (max-width:1024px) {
+    .articleContainer {
+        width: 80%;
+    }
+}
+
+@media screen and (max-width:600px) {
+    .articleContainer {
+        width: 95%;
+    }
+}
