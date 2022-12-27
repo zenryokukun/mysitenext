@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import style from "./SideBar.module.css";
 
-export default function SideBar() {
+export interface AuthorProp {
+  author: string,
+  postedDate: string,
+}
+
+export default function SideBar({ author, postedDate }: AuthorProp) {
 
   useEffect(() => {
     // twitterタイムラインのウィジェットのscriptタグを読み取る。
@@ -14,13 +19,13 @@ export default function SideBar() {
 
   return (
     <aside className={style.sideBarContainer}>
-      <Author />
+      <Author author={author} postedDate={postedDate} />
       <TwitterTL />
     </aside >
   );
 }
 
-function Author() {
+function Author({ author, postedDate }: AuthorProp) {
   return (
     <div className={`${style.content} ${style.contentAuthor}`}>
       <div className={style.itemRow}>
@@ -30,7 +35,7 @@ function Author() {
           </div>
           <div className={style.fieldText}>Author</div>
         </div>
-        <div >全力君</div>
+        <div >{author}</div>
       </div>
       <div className={style.itemRow}>
         <div className={style.field}>
@@ -39,7 +44,7 @@ function Author() {
           </div>
           <div className={style.fieldText}>Posted</div>
         </div>
-        <div>2022/12/24</div>
+        <div>{postedDate}</div>
       </div>
       <div className={style.itemRow}>
         <div className={style.field}>
@@ -66,7 +71,7 @@ function Author() {
 function TwitterTL() {
   return (
     <div className={`${style.content} ${style.contentTweets}`}>
-      <a className="twitter-timeline" data-width="270" data-height="700" data-theme="light" href="https://twitter.com/zenryoku_kun0?ref_src=twsrc%5Etfw">Tweets by zenryoku_kun0</a>
+      <a className="twitter-timeline" data-width="300" data-height="700" data-theme="light" href="https://twitter.com/zenryoku_kun0?ref_src=twsrc%5Etfw">Tweets by zenryoku_kun0</a>
     </div>
   );
 }

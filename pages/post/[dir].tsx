@@ -20,7 +20,8 @@ import styles from "../../styles/Post.module.css";
  */
 
 interface DataProp extends HeadProp {
-  author: string,
+  author?: string, // 作者名。サイドバーに表示
+  postedDate?: string, // 投稿日YYYY/MM/DD。サイドバーに表示
 }
 
 /**
@@ -71,6 +72,10 @@ export default function Post({ content, data }: PostProp) {
   const [likeClicked, setLike] = useState(false);
   const click = () => setLike(() => !likeClicked);
 
+  let { author, postedDate } = data;
+  author = author || "全力君";
+  postedDate = postedDate || "2022年";
+
   // いいね　が押されていたらDBを更新。ページを離れる時に呼び出す。
   const updateLike = () => {
     if (likeClicked) {
@@ -111,7 +116,7 @@ export default function Post({ content, data }: PostProp) {
             <a className={styles.back}>記事一覧に戻る</a>
           </Link>
         </main>
-        <SideBar />
+        <SideBar author={author} postedDate={postedDate} />
       </div>
       <Footer></Footer>
     </>
