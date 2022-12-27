@@ -66,7 +66,7 @@ function Author() {
 function TwitterTL() {
   return (
     <div className={`${style.content} ${style.contentTweets}`}>
-      <a className="twitter-timeline" data-width="270" data-height="550" data-theme="light" href="https://twitter.com/zenryoku_kun0?ref_src=twsrc%5Etfw">Tweets by zenryoku_kun0</a>
+      <a className="twitter-timeline" data-width="270" data-height="700" data-theme="light" href="https://twitter.com/zenryoku_kun0?ref_src=twsrc%5Etfw">Tweets by zenryoku_kun0</a>
     </div>
   );
 }
