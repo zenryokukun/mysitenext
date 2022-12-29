@@ -9,8 +9,14 @@
   justify-content: center;
   align-items: center;
 
-  /* test */
-  min-width: 65%;
+  /* width: 100%; */
+  /* test 
+     サイドバーが一瞬ずれて表示されるため、sidebarの大きさを指定し、
+     mainのほうを可変にした。flex-boxはデフォルトではコンテンツより小さいサイズに縮小しないため、
+     縮小しないようにmin-widthを指定。画面幅を小さくした時に、サイドバーが見切れる場合、min-widthの
+     値を小さくして調整すること。別に0でも問題はない。
+  */
+  min-width: 50%;
 }
 
 .articleContainer {
