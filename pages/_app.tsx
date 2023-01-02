@@ -41,6 +41,12 @@ function MyApp({ Component, pageProps, router }: AppProps) {
 
   }, [router.pathname]);
 
+  // /login /admin等、自分がアクセスするサイトはGA除外する。
+  if (router.pathname === "/login" || router.pathname === "/admin") {
+    console.log("admin or login")
+    return <Component {...pageProps} />;
+  }
+
   // GAで開発中のページも集計されてしまうので追加。
   // NODE_ENVがproduction以外の場合、GAタグを設定しない。
   if (process.env.NODE_ENV !== "production") {
