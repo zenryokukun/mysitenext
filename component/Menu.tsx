@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link.js";
 import { MODE } from "./constants.js";
 import styles from "../styles/Menu.module.css";
@@ -21,8 +21,14 @@ interface HamProp {
 }
 
 export default function Menu({ iniMode }: MenuProp) {
-
+  // mobileのときの、メニューリストの展開判定に使う
   const [isSpread, setSpread] = useState(false);
+
+  const mobileSelector = useRef<HTMLAnchorElement>(null)
+
+  // 表示データと対応する定数
+  const texts = ["home", "about", "blog", "production", "board", "updates"];
+  const ids = [MODE.HOME, MODE.ABOUT, MODE.BLOG, MODE.PRODUCTION, MODE.BOARD, MODE.UPDATES];
 
   // MenuItemをクリックした時のイベント関数
   const select = () => {
@@ -30,16 +36,35 @@ export default function Menu({ iniMode }: MenuProp) {
     // setMode(mode);
     // setSelected(mode);
   };
+
   // MenuHamをクリックした時のイベント関数
   const tap = () => setSpread(isSpread => !isSpread);
-  // 表示データと対応する定数
-  const texts = ["home", "about", "blog", "production", "board", "updates"];
-  const ids = [MODE.HOME, MODE.ABOUT, MODE.BLOG, MODE.PRODUCTION, MODE.BOARD, MODE.UPDATES];
 
+  // mobileの時、選択されたURLを生成する関数
+  const genLinkOnMobile = () => {
+    const ref = mobileSelector.current;
+    if (!ref) return;
+    let href = "/"
+    if (iniMode !== MODE.HOME) {
+      // HOMEはルートなので除外してよい。
+      // メニューのテキスト == ページのディレクトリとしているので、ルートにテキスト追加でOK
+      href = "/" + texts[iniMode];
+    }
+    // aタグにリンク設定
+    ref.href = href;
+  }
+
+  // mobileのときの、メニューリストの展開状態に応じたスタイルをセット
   const showul = isSpread ? styles.show : styles.hide;
+
+  // 現在のメニューのテキスト
+  const currentText = texts[iniMode]
+
   return (
     <div className={styles.container}>
-      <div className={styles.selected}>{texts[iniMode]}</div>
+      <div className={styles.selected}>
+        <a ref={mobileSelector} className={styles.selectedLink} onClick={genLinkOnMobile}>{currentText}</a>
+      </div>
       <header>
         <nav>
           <ol className={`${styles.myol} ${showul}`}>

@@ -48,6 +48,18 @@
   display: none;
 }
 
+.selectedLink {
+  /* 
+  mobileで現在いるページへのリンクが効かなかった（divで表示していた）ため、中にaタグ入れた。
+  例えば、/production/md-convertにいるとき、mobileだと/productionに戻れない。
+  そのaタグに適用するスタイル。
+  */
+  display: inline-block;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
 @media screen and (max-width:600px) {
   .container {
     /* position: absolute; */
