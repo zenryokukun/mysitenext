@@ -22,6 +22,15 @@ interface Prop {
 
 export default function Production() {
 
+  const mdCvt = {
+    title: "MD-Converter",
+    summary: "MDを簡単に見やすくするために、簡易なCSS込みでHTMLに変換するサービス。",
+    href: "/production/md-converter", // /pages/minesweeper のほう
+    imgClass: styles.fill,
+    imgPath: "/production/markdown.svg", // /public/production/minesweeper のほう
+    alt: "markdown-logo",
+  };
+
   const mskai = {
     title: "マインスイーパー・改",
     summary: "未到達のレベルを引っ提げて、やつは再び現れる...その名は『地雷を撤去せし者・改』。『極（KI・WA・MI）』レベルを追加し、内部の作りを変えました。スマホ未対応。",
@@ -74,6 +83,7 @@ export default function Production() {
       <MyHead title="作品物"></MyHead>
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       <main className={styles.container}>
+        <Product {...mdCvt}></Product>
         <Product {...mskai}></Product>
         <Product {...minesweeper}></Product>
         <Product {...marimo}></Product>

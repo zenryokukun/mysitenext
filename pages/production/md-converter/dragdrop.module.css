@@ -1,0 +1,203 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+    min-height: 80vh;
+    align-self: center;
+}
+
+.mainWrapper {
+    width: 52%;
+}
+
+.mainHeader {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+.mainAppeal {
+    font-size: 0.9rem;
+}
+
+/* 600px以下では表示される */
+/* .mobile {
+    display: none;
+} */
+
+/* 常に非表示 */
+.hidden {
+    display: none;
+}
+
+.dropTarget {
+    /* width: 50%; */
+    /* height: 450px; */
+    /* height: 80%; */
+    margin: auto;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    /* padding-left: 1rem; */
+    padding-right: 1rem;
+    border: dashed 1px;
+    color: #777;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropTarget>*:not(.manual) {
+    /* dragleaveイベントが子要素でも発火してしまうのを防ぐために必要 */
+    /* ボタンクリックも無効化されてしまうので、ボタン要素のみ除外*/
+    pointer-events: none;
+}
+
+.enter {
+    background-color: #AAA;
+    color: white;
+    border: dashed 2px;
+}
+
+.manual {
+    border: none;
+    color: inherit;
+    background-color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+
+
+.articleWrapper {
+    width: 60%;
+}
+
+.articleWrapper>nav {
+    margin: auto;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.util {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.back {
+    color: darkblue;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.back:hover {
+    color: #555;
+    text-decoration: none;
+}
+
+.themeItem {
+    display: inline-block;
+    margin-top: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    cursor: pointer;
+}
+
+.themeItem:hover {
+    color: #555;
+    text-decoration: underline;
+}
+
+.selected {
+    color: blue;
+    text-decoration: underline;
+}
+
+.listContainer {
+    font-size: 0.9rem;
+}
+
+.otherInfos p {
+    font-size: 0.9rem;
+}
+
+.section:first-of-type {
+    border-top: #AAA 1px solid;
+}
+
+/* :hoverはスマホの時、タップした時に発動し、もう1回タップしないと解除されない。
+ * めんどうなのでスマホの時は無効にする。
+ */
+@media screen and (min-width:601px) {
+    .manual:hover {
+        color: turquoise;
+    }
+}
+
+@media screen and (max-width:1024px) {
+
+    /* .dropTarget {
+        width: 80%;
+    } */
+    .mainWrapper {
+        width: 80%;
+    }
+
+    .articleWrapper {
+        width: 80%;
+    }
+}
+
+@media screen and (max-width:600px) {
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* .mobile {
+        display: block;
+        margin-top: 2rem;
+    } */
+
+    .dropTarget {
+        /* display: none; */
+        margin-top: 1rem;
+        /* width: 95%; */
+    }
+
+    .mainWrapper {
+        width: 95%;
+    }
+
+    .hideOnMobile {
+        display: none;
+    }
+
+    .articleWrapper {
+        width: 95%;
+    }
+
+    .mainAppeal {
+        margin-block-start: 0.3rem;
+    }
+
+
+    .listContainer {
+        font-size: 0.7rem;
+    }
+
+    .listContainer>li:not(:last-child) {
+        margin-bottom: 0.5rem;
+    }
+}
