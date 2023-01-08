@@ -29,7 +29,8 @@ APIを使ったFXの自動取引の仕方について、初心者向けに解説
 当サイトがようやくGoogleによってインデックス登録されました。今のところ、サイト内の一部ページが登録されている状況ですが、感慨深いです。他方で、Google Analyticsを見る限り、訪問者は極めて少なく、私が開発環境からアクセスした件数や、某国からのダイレクトアクセスがほとんどの割合を占めているようです。今後もコンテンツは精進しなくてはなりません。
 
 ## <a name="releases">リリース</a>
-- 2022-12-27: 記事ページにサイドバーを追加しました。
+- 2023-01-08: Productionに[MD-CONVERTER](/production/md-converter)を追加
+- 2022-12-27: 記事ページにサイドバーを追加
 - 2022-11-05: Productionに[マインスイーパー改](/production/minesweeperkai)を追加
 - 2022-10-22: Prodcutionに[Minesweeper](/production/minesweeper)を追加
 - 2022-10-08: Next.jsにマイグレート完了
