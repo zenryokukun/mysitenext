@@ -18,7 +18,7 @@ import DOMPurify from "dompurify";
 import genDocString from "../../../lib/mdconv/download";
 
 import type React from "react";
-import styles from "./dragdrop.module.css";
+import styles from "../../../styles/Dragdrop.module.css";
 
 // meta description用文字列
 const DESCR = `MDを見やく、簡易なCSS込みでHTMLに変換するサービスです。GitHub-Flavored-MarkDownに対応しています。`
