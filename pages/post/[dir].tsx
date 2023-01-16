@@ -53,7 +53,8 @@ function genJsonLd(router: NextRouter) {
   const items = [
     { name: "home", item: "https://www.zenryoku-kun.com/" },
     { name: "blog", item: "https://www.zenryoku-kun.com/blog" },
-    { name: base },
+    // 最後のitemにもurl追加。そうしたほうが良いとのこと（chatGPT）。
+    { name: base, item: "https://www.zenryoku-kun.com/post/" + base },
   ];
   const jsonld = breadCrumbsJSON(items);
   return jsonld;
