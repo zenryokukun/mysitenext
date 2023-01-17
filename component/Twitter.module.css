@@ -1,0 +1,11 @@
+/* 
+ * [Responsive対応] 
+ * max-widthは、SideBarLayoutのflex-direction切替の
+ * max-widthと揃える必要あり 
+ */
+
+@media screen and (max-width:950px) {
+    .container {
+        display: none;
+    }
+}
