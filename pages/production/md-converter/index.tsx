@@ -94,7 +94,6 @@ export default function Page() {
   // onDragOver event handler
   const dragover = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    console.log(e.target);
     e.stopPropagation();
     // setEnter(true);
   };
@@ -138,6 +137,7 @@ export default function Page() {
       .then(res => res.text())
       .then(htmlString => {
         setResString(htmlString);
+        window.scrollTo({ top: 0 }) // scrollをトップに戻す。
       })
       .catch(e => alert(e))
       .finally(() => {
