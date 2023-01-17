@@ -1,6 +1,6 @@
 import React from "react";
 import { ICON } from "./constants";
-import styles from "../styles/Footer.module.css";
+import styles from "./Footer.module.css";
 import IconLink from "./IconLink";
 
 

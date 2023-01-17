@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import styles from "../styles/Modal.module.css";
+import styles from "./Modal.module.css";
 
 interface CommentProp {
   name: string,

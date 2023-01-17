@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link.js";
 import { MODE } from "./constants.js";
-import styles from "../styles/Menu.module.css";
+import styles from "./Menu.module.css";
 
 interface MenuProp {
   iniMode: number,

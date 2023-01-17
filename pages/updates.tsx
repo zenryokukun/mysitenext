@@ -2,7 +2,7 @@ import MyHead from "../component/MyHead";
 import Menu from "../component/Menu";
 import Footer from "../component/Footer";
 import { MODE } from "../component/constants";
-import styles from "../styles/Update.module.css";
+import styles from "../styles/Updates.module.css";
 import { getUpdateMd, formatMd, toHTMLString } from "../lib/util";
 
 /**Description Update Page */

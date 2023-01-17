@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/router";
-import styles from "../styles/BreadCrumb.module.css";
+import styles from "./BreadCrumb.module.css";
 
 interface CrumbType {
   crumb: string, href: string, char?: string
