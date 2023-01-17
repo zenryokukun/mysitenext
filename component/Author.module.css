@@ -1,0 +1,70 @@
+.container {
+  /* margin-top: 2rem; */
+  /* width: 90%; */
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
+  background-color: #fff;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-bottom: solid 1px darkgray;
+}
+
+.field {
+  color: #8F8F8F;
+}
+
+.iconWrapper {
+  display: inline-block;
+  text-align: center;
+  min-width: 1rem;
+}
+
+.fieldText {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.itemColumn {
+  margin-top: 10px;
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-bottom: solid 1px darkgray;
+  font-size: 0.9rem;
+}
+
+.itemColumnText {
+  margin-left: 1rem;
+  font-size: 0.8rem;
+}
+
+.item:last-of-type {
+  margin-bottom: 10px;
+}
+
+/* 
+ * [Responsive対応] 
+ * max-widthは、SideBarLayoutのflex-direction切替の
+ * max-widthと揃える必要あり 
+ */
+/* @media screen and (max-width:950px) {
+  .container {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    width: 45%;
+  }
+}
+
+@media screen and (max-width:600px) {
+  .container {
+    width: 80%;
+  }
+} */
