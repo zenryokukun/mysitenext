@@ -1,0 +1,46 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 1px solid darkgray;
+  background-color: #eaeaea;
+
+  min-width: 320px;
+}
+
+/* sidebarコンテンツのwidthやmarginはここで一括して指定してしまう */
+.container>section,
+.container>div {
+  width: 90%;
+  margin-bottom: 1.5rem;
+}
+
+.container>section:first-of-type,
+.container>div:first-of-type {
+  margin-top: 1.5rem;
+}
+
+/* .container>section:not([style*='display:none']):last-of-type {
+  margin-bottom: 1.5rem;
+} */
+
+/* 
+ * [Responsive対応] 
+ * max-widthは、SideBarLayoutのflex-direction切替の
+ * max-widthと揃える必要あり 
+ */
+@media screen and (max-width:950px) {
+
+  .container>section,
+  .container>div {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width:600px) {
+
+  .container>section,
+  .container>div {
+    width: 80%;
+  }
+}
