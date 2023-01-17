@@ -12,7 +12,7 @@ public/postsのフォルダ構成とDBの値は一致している必要がある
 ## フォルダ構成
 
 - **/component**  
-  pagesで使うReact Componentを格納。
+  pagesで使うReact Componentを格納。Component内で使うcssはここに保存する。
 
 - **/data**  
 
@@ -21,7 +21,7 @@ public/postsのフォルダ構成とDBの値は一致している必要がある
   サーバ側の、api以外の処理を入れる。mongodbを使った処理など。  
 
 - **/pages,/styles**    
-  Next.js標準のフォルダ
+  Next.js標準のフォルダ。page内で使うcssは/stylesに保存する。
 
 - **pages/api/_フォルダ名_**  
   直下のフォルダは各ページごとに利用しているapiを入れてる。
@@ -33,13 +33,17 @@ public/postsのフォルダ構成とDBの値は一致している必要がある
 - **/pages/post/**  
   ブログ記事のdynamicルート
 
-
-
 - **/public/_フォルダ名_**
   各ページで使う画像とか。  
 
   - **html**フォルダにはNext.js外の自作サイトのクライアント側（html,css,js）を格納。
   - **posts**フォルダにはブログのmdファイルや画像ファイルを格納。
+
+## ファイル名規則
+- /Component直下のComponentはPascal Case
+- /Component直下のcss名は、Component名.(module).css
+- /page　直下のページComponentは、lowercase-with-hyphen
+- /styles　直下のcss名は、対応するページのdefault Component名.(module).css、もしくはページ名の大文字.(module).css...あまり統一されていない、、、、
 
 ## コマンド
 
