@@ -1,4 +1,5 @@
 import { useEffect, useState, useReducer, useRef } from "react";
+import { useRouter } from "next/router";
 import MyHead from "../../../component/MyHead";
 import Footer from "../../../component/Footer";
 import Menu from "../../../component/Menu";
@@ -10,11 +11,14 @@ import { MODE } from "../../../component/constants";
 import { reducer, iniState, genAction } from "../../../lib/mskai/reducer"
 import { EASY, MEDIUM, HARD, EXTREME, ACTION, PLAY } from "../../../lib/mskai/constants";
 import { loadSprite } from "../../../lib/mskai/loader";
+import { breadCrumbFromPath } from "../../../lib/bread";
+
 import type { Sprites } from "../../../lib/mskai/loader";
 import type { LevelKeyType } from "../../../lib/mskai/level";
+import type { HeadProp } from "../../../types";
 import type React from "react";
-import style from "../../../styles/Mskai.module.css";
 
+import style from "../../../styles/Mskai.module.css";
 
 /**
  * levelに応じたclassNameを返す
@@ -54,6 +58,8 @@ export default function Page() {
   // setIntervalのidを管理するstate。レンダリングの都度別の値にならないように
   // useRefで管理する。
   const ref = useRef<number | null>(null);
+  // breadcrumb生成に必要
+  const router = useRouter();
 
   // level変更処理。LevelSelectクリック時、InfoSectionのニコニコクリック時に実行
   const changeLevel = (lvl: LevelKeyType) => {
@@ -116,16 +122,18 @@ export default function Page() {
   const [infoStyle, boardStyle] = getStyles(game.level);
 
   // headerタグのmeta data
-  const headParam = {
+  const headParam: HeadProp = {
     title: "マインスイーパー改",
     cardTitle: "全力RETRO GAME",
     description: "未到達のレベルを引っ提げて、やつは再び現れる...その名は『地雷を撤去せし者・改』。",
     imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
+    breadCrumbsJSON_ld: breadCrumbFromPath(router),
+    metaDescription: "React流にMinesweeperを作りました。レベルはEASY、MEDIUM、HARD、極の4種類から選べます。極みは48×68のマスに777の地雷が埋まっており、前代未聞の難易度です。全ての地雷マスに旗を立て、他のマスを全て開けば勝ちです。",
   };
 
   return (
     <>
-      <MyHead {...headParam}></MyHead>
+      <MyHead {...headParam} />
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       <main className={style.container}>
         {/**spriteがまだロードされていない場合、loading...を表示する

@@ -13,6 +13,8 @@ import Footer from "../../../component/Footer";
 import Loader from "../../../component/Loader";
 import { MODE } from "../../../component/constants";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import { breadCrumbFromPath } from "../../../lib/bread";
 
 import DOMPurify from "dompurify";
 import genDocString from "../../../lib/mdconv/download";
@@ -22,6 +24,7 @@ import styles from "../../../styles/Md-converter.module.css";
 
 // meta description用文字列
 const DESCR = `MDを見やく、簡易なCSS込みでHTMLに変換するサービスです。GitHub-Flavored-MarkDownに対応しています。`
+
 
 export default function Page() {
   // formのnameにつける。
@@ -34,6 +37,8 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   // 変換html文字列。
   const [resString, setResString] = useState("");
+  // NextRouter. breadcrumb用
+  const router = useRouter();
 
   // click meをクリックした時の処理。
   const manualSelect = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -148,7 +153,10 @@ export default function Page() {
 
   return (
     <>
-      <MyHead title="MD-CONVERTER" metaDescription={DESCR}></MyHead>
+      <MyHead
+        title="MD-CONVERTER" metaDescription={DESCR}
+        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+      />
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}
       <main className={styles.container}
@@ -245,14 +253,14 @@ interface ArticleProp {
   back: (e: React.MouseEvent<HTMLDivElement>) => void,
 }
 
-// type ThemeType = "dark" | "light" | "fancy";
 
 /********************************************
  *  TODO
  *  <style jsx></style>を使ったテーマの切替
  * htmlをinnerHTMLで入れているせいか、切替が実装出来ず。
  * いったん無しでリリース
- ********************************************/
+********************************************/
+// type ThemeType = "dark" | "light" | "fancy";
 function Article({ html, back }: ArticleProp) {
   // sanitize dirty html
   const cleanHtml = DOMPurify.sanitize(html);
@@ -284,11 +292,6 @@ function Article({ html, back }: ArticleProp) {
 
   return (
     <>
-      {/* <div className={styles.theme}>
-        <div className={getStyle("light")} onClick={() => click("light")}>light</div>
-        <div className={getStyle("dark")} onClick={() => click("dark")}>dark</div>
-        <div className={getStyle("fancy")} onClick={() => click("fancy")}>fancy</div>
-      </div > */}
       <div className={styles.util}>
         <div className={styles.back} onClick={back}>アップロード画面に戻る</div>
         <div>

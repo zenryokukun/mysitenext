@@ -6,7 +6,8 @@ import Like from "../../component/Post/Like";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
-import breadCrumbsJSON from "../../lib/bread";
+// import breadCrumbsJSON from "../../lib/bread";
+import { breadCrumbFromPath } from "../../lib/bread";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import type { NextRouter } from "next/router";
@@ -15,9 +16,9 @@ import Link from "next/link";
 import type { HeadProp } from "../../types";
 import styles from "../../styles/Post.module.css";
 
-/*
+/* ***************************************************
  *　Description ブログ記事Page
- */
+ * **************************************************/
 
 interface DataProp extends HeadProp {
   author?: string, // 作者名。サイドバーに表示
@@ -47,18 +48,24 @@ interface PathProp {
 // 「いいね」更新用エンドポイント
 const ENDPOINT = "/api/post/like";
 
+// *********************************************************
+// 20230118:breadCrumbFromPathで動的にパンくずリストを生成するようにしたためコメントアウト
+// /blog -> /post/dirnameと変則的な遷移をするため、場合によってはベタ打ちに戻すかもしれないので、一応残す。
+// *********************************************************
 // パンくずjson-ldを取得する関数
-function genJsonLd(router: NextRouter) {
-  const base = router.asPath.split("/").slice(-1)[0];
-  const items = [
-    { name: "home", item: "https://www.zenryoku-kun.com/" },
-    { name: "blog", item: "https://www.zenryoku-kun.com/blog" },
-    // 最後のitemにもurl追加。そうしたほうが良いとのこと（chatGPT）。
-    { name: base, item: "https://www.zenryoku-kun.com/post/" + base },
-  ];
-  const jsonld = breadCrumbsJSON(items);
-  return jsonld;
-}
+// function genJsonLd(router: NextRouter) {
+//   const base = router.asPath.split("/").slice(-1)[0];
+//   const items = [
+//     { name: "home", item: "https://www.zenryoku-kun.com/" },
+//     { name: "blog", item: "https://www.zenryoku-kun.com/blog" },
+//     // 最後のitemにもurl追加。そうしたほうが良いとのこと（chatGPT）。
+//     { name: base, item: "https://www.zenryoku-kun.com/post/" + base },
+//   ];
+//   const jsonld = breadCrumbsJSON(items);
+//   return jsonld;
+// }
+// *********************************************************
+
 
 /**
  * {content}部分のスタイルシートは全てglobals.cssに記載。
@@ -68,7 +75,7 @@ export default function Post({ content, data }: PostProp) {
   const router = useRouter();
 
   // パンくずリストJSON-ld
-  const bcJsonLd = genJsonLd(router);
+  const bcJsonLd = breadCrumbFromPath(router);
 
   const [likeClicked, setLike] = useState(false);
   const click = () => setLike(() => !likeClicked);

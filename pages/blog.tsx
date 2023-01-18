@@ -1,16 +1,18 @@
 import Link from "next/link";
 import Router from "next/router";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import Menu from "../component/Menu";
 import Footer from "../component/Footer";
 import MyHead from "../component/MyHead";
 import Loader from "../component/Loader";
 import { MODE } from "../component/constants";
 import { findBlogDocs } from "../lib/db/func"
+import { breadCrumbFromPath } from "../lib/bread";
+
 import styles from "../styles/Blog.module.css";
 
 /**Description ブログ記事の一覧Page */
-
 interface BlogInfo {
   _id: string,
   genre: string,
@@ -23,6 +25,9 @@ interface BlogInfo {
 }
 
 export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
+
+  // breadcrumb生成用
+  const router = useRouter();
 
   const [isLoading, setLoading] = useState(false);
 
@@ -52,10 +57,13 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
     Router.events.on("routeChangeError", () => setLoading(false));
   };
 
-  // console.log(isLoading);
   return (
     <>
-      <MyHead title="記事一覧"></MyHead>
+      <MyHead
+        metaDescription="ブログ記事の一覧です。主に、プログラム関係の記事や、一人旅に関する記事を公開しています。"
+        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        title="記事一覧"
+      />
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}
       <Menu iniMode={MODE.BLOG}></Menu>
       <main className={styles.container}>
