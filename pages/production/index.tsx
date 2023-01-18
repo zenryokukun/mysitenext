@@ -72,7 +72,7 @@ export default function Production() {
   const cropper = {
     title: "スマホ画像切取君"
     , summary: "スマホの縦長画像を9:16,2:3,3:2,1:1いずれかのアスペクト比で適当に切り取ってくれます。"
-    , href: "html//cropper/index.html"
+    , href: "/production/cropper"
     , imgClass: styles.fill
     , imgPath: "/production/cropper.png"
     , alt: "cropper"
