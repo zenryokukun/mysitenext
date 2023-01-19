@@ -11,7 +11,7 @@ import MyHead from "../../../component/MyHead";
 import Menu from "../../../component/Menu";
 import Footer from "../../../component/Footer";
 import Loader from "../../../component/Loader";
-import { MODE } from "../../../component/constants";
+import { MODE, LINK } from "../../../component/constants";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { breadCrumbFromPath } from "../../../lib/bread";
@@ -209,7 +209,7 @@ export default function Page() {
             <aside className={styles.otherInfos}>
               <section className={styles.section}>
                 <h4>お問い合わせ</h4>
-                <p>不具合、要望などは<a href="mailto:zenryokukun@gmail.com">メール</a>でお問い合わせください。</p>
+                <p>不具合、要望などは<a href={"mailto:" + LINK.MAIL}>メール</a>でお問い合わせください。</p>
               </section>
               <section className={styles.section}>
                 <h4>アップロードファイルについて</h4>

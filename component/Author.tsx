@@ -4,7 +4,7 @@
  * レイアウトから切り離したため、レスポンシブ対応発動時の幅を変更する場合は、
  * レイアウトとこのComponentのcssそれぞれ修正が必要になるので留意。
  */
-
+import { LINK } from "./constants";
 import styles from "./Author.module.css";
 
 interface AuthorP {
@@ -43,7 +43,7 @@ export default function Author({ name, postedDate, containerStyle }: AuthorP) {
           </div>
           <div className={styles.fieldText}>Contact</div>
         </div>
-        <div><a href="https://twitter.com/zenryoku_kun0">twitter</a></div>
+        <div><a href={LINK.TWITTER}>twitter</a></div>
       </div>
       <div className={`${styles.item} ${styles.itemColumn}`}>
         <div className={styles.field}>
