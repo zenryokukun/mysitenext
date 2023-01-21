@@ -9,7 +9,11 @@ export default function Footer() {
   return (
     <div>
       <div className={contStyle}>
-        <div className={`${styles.message} ${styles.large}`}>Brought to you by Zenryokukun, with love.</div>
+        <div className={`${styles.message} ${styles.large}`}>
+          <div className={styles.messageItem}>全力君より、愛を込めて。</div>
+          <div className={styles.messageItem}><i className="fa-regular fa-copyright"></i>
+            2022 全力君</div>
+        </div>
         <div className={styles.content}>
           <AboutFooter></AboutFooter>
           <IconFooter></IconFooter>
@@ -27,8 +31,8 @@ function AboutFooter() {
         ABOUT
       </div>
       <div className={`${styles.light} ${styles.small}`}>
-        <div>ありとあらゆる集団からはじき出される不適合者。</div>
-        <div>同じ境遇の人に、少しでも憩いの場を。</div>
+        <div>削り削って研ぎ澄ませ、最先端の感性を。</div>
+        <div>そしてLANケーブルに、注ぎ込め！</div>
       </div>
     </div >
   );
@@ -59,13 +63,16 @@ function MapFooter() {
   return (
     <div className={`${styles.light} ${styles.flexOne}`}>
       <div className={`${styles.underline} ${styles.large}`}>
-        <IconLink a={`${styles.noDecoration} ${styles.sidePadding}`}
+        {/* <IconLink a={`${styles.noDecoration} ${styles.sidePadding}`}
           fa={ICON.MAP.STYLE}
-          href={ICON.MAP.LINK} />
+          href={ICON.MAP.LINK} /> */}
 
-        <span >Unemployed Inc.</span>
+        <a className={styles.noDecoration} href="/about/policy">
+          <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span>
+          <span>Site Policy</span>
+        </a>
       </div>
-      <div className={`${styles.small} ${styles.topPadding}`}>The Greater Metropolitan Tokyo,JP.</div>
+      {/* <div className={`${styles.small} ${styles.topPadding}`}>The Greater Metropolitan Tokyo,JP.</div> */}
     </div>
   );
 }

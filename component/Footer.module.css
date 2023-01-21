@@ -12,8 +12,15 @@
   text-align: center;
   padding: 1rem 1rem;
   text-decoration: none;
-  font-style: italic;
+  /* font-style: italic; */
   font-size: 1rem;
+
+  display: flex;
+  justify-content: center;
+}
+
+.messageItem {
+  margin-right: 1rem;
 }
 
 .content {
@@ -23,7 +30,8 @@
   align-items: center;
   justify-content: space-evenly;
   border-top: 1px solid #f3f3f3;
-  padding: 0.5rem 0;
+  /* padding: 0.5rem 0; */
+  padding-bottom: 0.5rem;
 }
 
 .light {
@@ -84,4 +92,10 @@
   }
 }
 
-@media screen and (max-width:600px) {}
+@media screen and (max-width:600px) {
+  .message {
+    flex-direction: column;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.5rem;
+  }
+}
