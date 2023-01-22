@@ -7,9 +7,7 @@
  * !importantを付ける必要あるかも。
  * 
  * [使い方]
- * import Layout from "./Layout"
- * import Main from "./MainPart"
- * import Side from "./Side"
+ * import Layout,{Main,Side} from "./Layout"
  * export function Page(){
  *   return(
  *     <Layout>
@@ -22,7 +20,8 @@
 
 import { getStyle } from "../../common";
 import styles from "./SLayout.module.css";
-
+import Main from "./MainPart";
+import Side from "./SidePart";
 import type { ChildrenWithStyle } from "../../common";
 
 export default function Layout({ children, addStyle, replaceStyle }: ChildrenWithStyle) {
@@ -32,3 +31,10 @@ export default function Layout({ children, addStyle, replaceStyle }: ChildrenWit
     </div>
   );
 }
+
+/**
+ * Main,Sideはimportしてこのモジュールからexportするだけ。
+ * 利用するときに、import Layout from "./layout"; import Main from "./MainPart"; import ... と続くのが面倒。
+ * import Layout,{Main,Side} from "./Layout"　とできるようにした。
+ */
+export { Main, Side };

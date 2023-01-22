@@ -2,9 +2,7 @@ import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
 import Loader from "../../component/Loader";
-import Layout from "../../component/layouts/sidebar/Layout";
-import Main from "../../component/layouts/sidebar/MainPart"
-import Side from "../../component/layouts/sidebar/SidePart"
+import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import Twitter from "../../component/Twitter";
 import React, { useState, useRef, useEffect } from "react";
