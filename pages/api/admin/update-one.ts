@@ -1,5 +1,4 @@
-import { isAdmin } from "../../../lib/db/func";
-import { updateBlogInfo } from "../../../lib/db/func";
+import { isAdmin, updateBlogInfo } from "../../../lib/db/func";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { UpdateItemRequest } from "../../../types";
 
@@ -29,5 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!blogs) {
         return res.status(500).send("something went wrong...Try later!")
     }
+    // 新しいブログのリストをクライアントに返す。
     res.status(200).json(blogs);
 }
