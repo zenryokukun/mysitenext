@@ -5,6 +5,9 @@ import React, { useState, useEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { isAdmin } from "../lib/db/func";
 
+import type { BlogInfo } from "../lib/db/func";
+import type { UpdateItem, UpdateItemRequest } from "../types";
+
 /**Description
  * Blog アップロード用Page
  * 
@@ -20,6 +23,9 @@ interface ThumbP {
 interface RefP {
   elemRef: React.RefObject<HTMLInputElement>,
 }
+
+// blog: 記事登録モード keyword: キーワード登録モード
+type Mode = "blog" | "update";
 
 /**
  * 拡張子をチェックする。画像系の拡張子（小文字）、mdファイル以外の拡張死はエラーにする。
@@ -75,6 +81,12 @@ function doesThumbMatch(thumb: string, fnames: string[]): boolean {
   return false;
 }
 
+/**
+ * [ファイル名]の配列から.mdで終わるファイル名を返す。
+ * .mdは1つしか想定していないため、複数ある場合は最初の.mdを返す
+ * @param fnames : string[]
+ * @returns 最初の.mdファイルのファイル名
+ */
 function getMdFile(fnames: string[]): string {
   for (const name of fnames) {
     if (name.slice(-3) === ".md") {
@@ -93,6 +105,7 @@ export default function Admin() {
   const [summary, setSummary] = useState("");
   const [title, setTitle] = useState("");
   const [isForce, setForce] = useState(false);
+  const [mode, setMode] = useState<Mode>("blog");
 
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -167,61 +180,80 @@ export default function Admin() {
     })
   };
 
+  const modeClicked = (e: React.MouseEvent<HTMLButtonElement>, selectedMode: Mode) => setMode(selectedMode);
+
   return (
     <>
       <MyHead title="全力ブログ・システム"></MyHead>
       <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
       <div className={styles.dummyBody}>
         <main className={styles.container}>
-          <form action="/api/admin/upload" method="post" encType="multipart/form-data" onSubmit={onsubmit}>
-            <ol className={styles.listContainer}>
+          <div className={styles.modeContainer}>
+            <button
+              onClick={e => modeClicked(e, "blog")}
+              className={mode === "blog" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
+              ブログ登録
+            </button>
+            <button
+              onClick={e => modeClicked(e, "update")}
+              className={mode === "update" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
+              更新
+            </button>
+          </div>
+          {mode === "blog" &&
+            <form action="/api/admin/upload" method="post" encType="multipart/form-data" onSubmit={onsubmit}>
+              <ol className={styles.listContainer}>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="genre" >ジャンル</label>
-                <select id="genre" name="genre" className={styles.genre} value={genre} onChange={e => setGenre(e.target.value)}>
-                  {genres.map((genre, i) => <option key={i}>{genre}</option>)}
-                </select>
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="genre" >ジャンル</label>
+                  <select id="genre" name="genre" className={styles.genre} value={genre} onChange={e => setGenre(e.target.value)}>
+                    {genres.map((genre, i) => <option key={i}>{genre}</option>)}
+                  </select>
+                </li>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
-                <div className={styles.caution}>ディレクトリは手入力してください。頭の&quot/&quotは入れなくてよいです。例：202201_1/。</div>
-                <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
+                  <div className={styles.caution}>ディレクトリは手入力してください。頭の&quot/&quotは入れなくてよいです。例：202201_1/。</div>
+                  <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
+                </li>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="title">タイトル</label>
-                <input id="title" type="text" name="title" value={title} className={styles.blogTitle} onChange={e => setTitle(e.target.value)} />
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="title">タイトル</label>
+                  <input id="title" type="text" name="title" value={title} className={styles.blogTitle} onChange={e => setTitle(e.target.value)} />
+                </li>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="summary">概要</label>
-                <textarea id="summary" name="summary" value={summary} className={styles.summary} onChange={e => setSummary(e.target.value)}></textarea>
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="summary">概要</label>
+                  <textarea id="summary" name="summary" value={summary} className={styles.summary} onChange={e => setSummary(e.target.value)}></textarea>
+                </li>
 
-              <Uploader updateThumb={updateThumb} elemRef={fileInput}></Uploader>
+                <Uploader updateThumb={updateThumb} elemRef={fileInput}></Uploader>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="thumb">サムネのファイル名</label>
-                <div className={styles.caution}>ファイル名は手入力してください。アップロードファイル名をクリックすると自動セットされるよ。無い場合は何も入力しないでください。</div>
-                <input id="thumb" type="text" name="thumb" value={thumb} onChange={e => setThumb(e.target.value)} />
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="thumb">サムネのファイル名</label>
+                  <div className={styles.caution}>ファイル名は手入力してください。アップロードファイル名をクリックすると自動セットされるよ。無い場合は何も入力しないでください。</div>
+                  <input id="thumb" type="text" name="thumb" value={thumb} onChange={e => setThumb(e.target.value)} />
+                </li>
 
-              <li className={styles.items}>
-                <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => setForce((force) => !force)} />
-                <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
-              </li>
+                <li className={styles.items}>
+                  <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => setForce((force) => !force)} />
+                  <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
+                </li>
 
-              <li className={styles.items}>
-                <label className={styles.label} htmlFor="submit">送信</label>
-                <input id="submit" className={styles.submit} type="submit" value="submit" />
-              </li>
+                <li className={styles.items}>
+                  <label className={styles.label} htmlFor="submit">送信</label>
+                  <input id="submit" className={styles.submit} type="submit" value="submit" />
+                </li>
 
-              <input type="text" name="md" className={styles.hidden}></input>
-              {/* <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button> */}
-              <button onClick={testBuild}>Buildテスト</button>
-            </ol>
-          </form>
+                <input type="text" name="md" className={styles.hidden}></input>
+                {/* <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button> */}
+                <button onClick={testBuild}>Buildテスト</button>
+              </ol>
+            </form>
+          }
+          {mode === "update" &&
+            <UpdateMode genres={genres} />
+          }
         </main>
       </div>
       <Footer></Footer>
@@ -268,6 +300,233 @@ function FileList(props: { data: string[] } & ThumbP) {
   );
 }
 
+
+
+let _blogs: BlogInfo[] | null // dbから取得したblogのdocuments。memoization;
+function UpdateMode({ genres }: { genres: string[] }) {
+
+  const [isLoaded, setIsLoaded] = useState<boolean>(false)
+  const [currentBlogs, setCurrentBlogs] = useState<BlogInfo[] | null>(_blogs);
+
+  const reload = function (newBlogs: BlogInfo[]) {
+    console.log(newBlogs);
+    setCurrentBlogs(newBlogs);
+  }
+
+  useEffect(() => {
+    if (_blogs) return;
+    console.log("useEffect called!", _blogs)
+    fetch("/api/admin/blogs", {
+      method: "GET",
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const emsg = await res.text();
+          throw new Error(emsg);
+        }
+        return res.json()
+      })
+      .then((data: BlogInfo[]) => {
+        _blogs = data;
+        setIsLoaded(true);
+        setCurrentBlogs(data);
+      })
+      .catch(err => alert(err));
+  }, []);
+
+  return (
+    <>
+      <h1 style={{ "textAlign": "center" }}>更新モードの解説</h1>
+      <p>
+        ブログページに表示されるタイトルとサマリの更新モード。キーワードの追加と更新もここで行う。記事単位で更新が可能。
+        キーワードはカンマ区切りで入力し、"["と"]"で囲う必要はない。
+        まとめての更新は今は非対応。後日追加するかも。
+      </p>
+      {
+        currentBlogs
+          ?
+          <ol className={styles.listContainer}>
+            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} key={i} />)}
+          </ol>
+          :
+          <div style={{ "textAlign": "center" }}>LOADING...</div>
+      }
+    </>
+  );
+}
+
+interface BlogItemProp extends BlogInfo {
+  genres: string[],
+  reload: (b: BlogInfo[]) => void,
+}
+
+function Blog({
+  assetsDir, title, summary, genre, genres, keywords, reload,
+}: BlogItemProp) {
+  // ["a","b"] => "a,b"に変換。[]なら""に変換
+  const keywordsStr = keywords ? keywords.join(",") : "";
+  // from controllのために使う
+  const [titleInput, setTitleInput] = useState<string>(title);
+  const [summaryInput, setSummaryInput] = useState<string>(summary);
+  const [genreInput, setGenreInput] = useState<string>(genre);
+  const [keywordsInput, setKeywrodsInput] = useState<string>(keywordsStr);
+  // 変更判別用
+  const [isTitleChanged, setIsTitleChanged] = useState<boolean>(false);
+  const [isSummaryChanged, setIsSummaryChanged] = useState<boolean>(false);
+  const [isGenreChanged, setIsGenreChanged] = useState<boolean>(false);
+  const [isKeywordsChanged, setIsKeywordsChanged] = useState<boolean>(false);
+
+  // タイトルを変更した時に呼び出される
+  const titleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // controll input element
+    setTitleInput(e.target.value);
+    // 入力値がDB値と一致していればfalse、不一致ならtrue
+    setIsTitleChanged(e.target.value !== title);
+  };
+
+  // サマリを変更した時に呼び出される
+  const summaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // controll textarea element
+    setSummaryInput(e.target.value);
+    // 入力値がDB値と一致していればfalse、不一致ならtrue
+    setIsSummaryChanged(e.target.value !== summary);
+  }
+
+  // ジャンルを変更した時に呼び出される
+  const genreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setGenreInput(e.target.value);
+    setIsGenreChanged(e.target.value !== genre);
+  }
+
+  const keywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeywrodsInput(e.target.value);
+    setIsKeywordsChanged(e.target.value !== keywordsStr);
+  }
+
+  // 値を戻す
+  const undo = () => {
+    setTitleInput(title);
+    setSummaryInput(summary);
+    setGenreInput(genre);
+    setKeywrodsInput(keywordsStr);
+    // 色も戻す
+    defaultColor();
+  };
+
+  // 変更色を戻す
+  const defaultColor = () => {
+    setIsTitleChanged(false);
+    setIsSummaryChanged(false);
+    setIsGenreChanged(false);
+    setIsKeywordsChanged(false);
+  };
+
+  const commit = async () => {
+    const data: UpdateItem = {};
+    // 変更が無い場合は何もしない。
+    if (!isSummaryChanged && !isTitleChanged
+      && !isGenreChanged && !isKeywordsChanged
+    ) {
+      alert("何も変更されていません。")
+      return;
+    }
+    if (isSummaryChanged) {
+      data["summary"] = summaryInput;
+    }
+    if (isTitleChanged) {
+      data["title"] = titleInput;
+    }
+    if (isGenreChanged) {
+      data["genre"] = genreInput;
+    }
+    if (isKeywordsChanged) {
+      data["keywords"] = keywordsInput.split(",");
+    }
+    // サーバ送信
+    const requestData: UpdateItemRequest = {
+      updateKey: { assetsDir },
+      data: data,
+    };
+    try {
+      const resp = await fetch("/api/admin/update-one", {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify(requestData),
+      })
+      if (!resp.ok) {
+        const msg = await resp.text();
+        throw new Error(msg)
+      }
+      const blogs = await resp.json();
+      alert("Update succeeded!")
+      reload(blogs);
+      defaultColor(); // 色戻す
+    } catch (err) {
+      alert(err);
+    }
+  };
+
+  // 入力値の変更あり・なしに応じたstyleを返す関数。
+  const resolveStyle = (defaultStyle: string, isChanged: boolean) => {
+    if (!isChanged) {
+      return defaultStyle;
+    }
+    return `${defaultStyle} ${styles.changed}`;
+  };
+
+  return (
+    <li className={styles.items}>
+      <div className={styles.updateItem}>
+        <div className={styles.label}>ジャンル</div>
+        <select
+          className={resolveStyle(styles.genre, isGenreChanged)}
+          onChange={genreChange}
+          value={genreInput}
+        >
+          {genres.map((v, i) => <option key={i}>{v}</option>)}
+        </select>
+      </div>
+      <div className={styles.updateItem}>
+        <div className={styles.label}>タイトル</div>
+        <input
+          className={resolveStyle(styles.blogTitle, isTitleChanged)}
+          type="text" value={titleInput}
+          onChange={titleChange}
+        />
+      </div>
+      <div className={styles.updateItem}>
+        <div className={styles.label}>サマリ</div>
+        <textarea
+          className={resolveStyle(styles.summary, isSummaryChanged)}
+          onChange={summaryChange}
+          value={summaryInput}
+        />
+      </div>
+      <div className={styles.updateItem}>
+        <div className={styles.label}>キーワード</div>
+        <input
+          className={resolveStyle(styles.blogTitle, isKeywordsChanged)}
+          type="text"
+          value={keywordsInput}
+          onChange={keywordsChange}
+        />
+      </div>
+      <div className={styles.updateItem}>
+        <div>保存先: {assetsDir}</div>
+      </div>
+      <div className={styles.right}>
+        <button className={styles.listBtn} onClick={undo}>undo</button>
+        <button className={styles.listBtn} onClick={commit}>commit</button>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * SSR　サーバ側の処理な点に留意。
+ * @param context リクエストを操作するためのオブジェクト
+ * @returns 
+ */
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { user } = context.req.cookies;
   // 認証されていなければログインページへ

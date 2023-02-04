@@ -6,6 +6,32 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+:root {
+  /* background-color */
+  --dark: #333;
+  --light: #eaeaea;
+  --accent: #E91E63;
+  /* font-color */
+  --font-light: #f2f2f2;
+}
+
+.dark-bg {
+  /* background-color: var(dark-bg); */
+  background-color: var(--dark);
+}
+
+.light-bg {
+  background-color: var(--light);
+}
+
+.accent-bg {
+  background-color: var(--accent);
+}
+
+.font-light {
+  color: var(--font-light);
+}
+
 /*
 a {
   color: inherit;
@@ -47,9 +73,9 @@ a {
   }
 }
 
-/*
+/************************************************
  * Blogや更新ページのmdファイルに適用されるスタイル
- */
+ ************************************************/
 
 article>p>code,
 article>code {
@@ -136,9 +162,9 @@ article a {
 }
 
 
-/*
+/*********************************************
  * mdに直HTMLで作った目次に適用されるスタイル
- */
+ *********************************************/
 .table-of-contents {
   background-color: #f9f5f5;
   width: 80% !important;
