@@ -62,3 +62,6 @@ template.md
 
 # メモ用。pwdもここに移した。
 /memo/
+
+# dbのバックアップ
+/backup-*.json

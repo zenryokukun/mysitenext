@@ -1,7 +1,10 @@
+import { writeFile } from "fs/promises";
 import clientPromise, { dbInfo } from "./client";
 import { JST } from "../util";
-import type { MongoClient, WithId, Document } from "mongodb";
 import { genSessionId } from "../util";
+
+import type { MongoClient, WithId, Document } from "mongodb";
+import type { UpdateItemRequest } from "../../types";
 
 export interface BlogInfo {
     genre: string,
@@ -14,6 +17,8 @@ export interface BlogInfo {
     dislikes?: number,
     posted?: string,
     views?: number,
+    // keyword追加
+    keywords?: string[],
 }
 
 interface DirFilter {
@@ -31,7 +36,31 @@ interface Auth extends WithId<Document> {
 }
 
 /**
- * 内部関数
+ * dbを返す関数
+ * @param client 呼び出し元でclientPromiseをawaitしたもの
+ * @returns db
+ */
+function getDB(client: MongoClient) {
+    const name = dbInfo["db"];
+    const db = client.db(name);
+    return db;
+}
+
+/**
+ * 記事一覧collectionを返す関数。
+ * getCollectionの特定版。型有にするために分離。
+ * @param client 呼び出し元でclientPromiseをawaitしたもの
+ * @param colName collectionの名前
+ * @returns Collection<BlogInfo[]>
+ */
+function getAssetsCollection(client: MongoClient, colName: string) {
+    const db = getDB(client);
+    const collection = db.collection<BlogInfo>(colName);
+    return collection;
+}
+
+/**
+ * 内部関数。colパラメタに応じたcollectionを返す汎用関数。型設定が出来ない。
  * mongodbからCollectionを取得し返す。
  * @param client 呼び出し元でclientPromiseをawaitしたもの
  * @param col 取得するコレクション名
@@ -67,7 +96,8 @@ function getCollection(client: MongoClient, col: string) {
 async function findBlogDocs(limit: number) {
     const colName = dbInfo["colAssets"];
     const client = await clientPromise;
-    const col = getCollection(client, colName);
+    // const col = getCollection(client, colName);
+    const col = getAssetsCollection(client, colName);
     const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
     return docs;
 }
@@ -80,7 +110,8 @@ async function findBlogDocs(limit: number) {
 async function getBlogDirList() {
     const colName = dbInfo["colAssets"];
     const client = await clientPromise;
-    const col = getCollection(client, colName);
+    // const col = getCollection(client, colName);
+    const col = getAssetsCollection(client, colName);
     const docs = await col.find({}, { projection: { assetsDir: 1, _id: 0 } }).toArray();
     return docs;
 }
@@ -107,9 +138,35 @@ async function _migrateBlogInfo(info: BlogInfo) {
 async function insertBlogInfo(info: BlogInfo) {
     const colName = dbInfo["colAssets"];
     const client = await clientPromise;
-    const col = getCollection(client, colName);
+    // const col = getCollection(client, colName);
+    const col = getAssetsCollection(client, colName);
     const result = col.insertOne(info);
     return result;
+}
+
+/**
+ * /api/admin/update-oneで使用。登録済ブログ情報を一部更新可能
+ * 更新が成功した場合、更新後のブログ一覧を返す。
+ * @param reqBody 更新キーと更新データをもったオブジェクト
+ * @returns Promise
+ * 
+ */
+async function updateBlogInfo(reqBody: UpdateItemRequest) {
+    const { updateKey, data } = reqBody;
+    const colName = dbInfo["colAssets"];
+    const client = await clientPromise;
+    // const col = getCollection(client, colName);
+    const col = getAssetsCollection(client, colName);
+    const query = { ...updateKey };
+    const update = { $set: { ...data } };
+    const ret = await col.updateOne(query, update);
+    // 変更が無い場合は何もしない
+    if (!ret || !ret["modifiedCount"] || ret["modifiedCount"] === 0) {
+        return;
+    }
+    // 更新があった場合は更新後のブログ一覧を返す.
+    const blogs = await findBlogDocs(999);
+    return blogs;
 }
 
 /**
@@ -122,9 +179,17 @@ async function insertBlogInfo(info: BlogInfo) {
 async function deleteDuplicateDir(filter: DirFilter) {
     const colName = dbInfo["colAssets"];
     const client = await clientPromise;
-    const col = getCollection(client, colName);
+    // const col = getCollection(client, colName);
+    const col = getAssetsCollection(client, colName);
     const result = col.deleteMany(filter);
     return result;
+}
+
+// assetsDirコレクションをバックアップ
+async function backupAssetsCollection() {
+    const docs = await findBlogDocs(999);
+    const jstr = JSON.stringify(docs, null, 2);
+    writeFile("./backup-assetsDir.json", jstr, { encoding: "utf-8" });
 }
 
 /**
@@ -151,7 +216,6 @@ async function updateVisit(dir: string) {
  * @param limit 取得上限
  * @returns Promise 
  */
-
 async function getComments(limit: number) {
     const colName = dbInfo["colComment"];
     const client = await clientPromise;
@@ -235,7 +299,9 @@ export {
     getBlogDirList,
     insertBlogInfo,
     deleteDuplicateDir,
+    updateBlogInfo,
     _migrateBlogInfo,
+    backupAssetsCollection,
     updateVisit,
     getComments,
     insertComment,
