@@ -2,6 +2,7 @@ import type { WithId } from "mongodb";
 
 /**
  * サーバでblog一覧保持するグローバル変数をexport。
+ * 20230204時点でまだ使われていない。。。。
  */
 
 import { findBlogDocs } from "./func";
