@@ -17,6 +17,14 @@
   /* rgba(255, 0, 0, 1) 100%); */
 }
 
+.load {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  text-align: center;
+  height: 100%;
+}
+
 .header {
   width: 100%;
   /* background-color: #E91E63; */

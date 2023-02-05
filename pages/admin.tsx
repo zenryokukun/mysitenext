@@ -96,6 +96,22 @@ function getMdFile(fnames: string[]): string {
   return "";
 }
 
+/**
+ * ブログ一覧からキーワード（重複なし）を抽出して返す関数
+ * @param docs 
+ * @returns 
+ */
+function keywordList(docs: BlogInfo[]) {
+  const kw: string[] = [];
+  for (const doc of docs) {
+    if (!doc.keywords) continue;
+    kw.push(...doc.keywords)
+  }
+  const kwSet = new Set(kw);
+  const kwArr = Array.from(kwSet);
+  return kwArr.sort();
+}
+
 export default function Admin() {
 
   const [genre, setGenre] = useState("");
@@ -106,6 +122,9 @@ export default function Admin() {
   const [title, setTitle] = useState("");
   const [isForce, setForce] = useState(false);
   const [mode, setMode] = useState<Mode>("blog");
+
+  // KeywordListのstateをliftしたもの。入力チェックのため。
+  const [keywords, setKeywords] = useState<string[] | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -180,13 +199,36 @@ export default function Admin() {
     })
   };
 
+  // モード切替用関数
   const modeClicked = (e: React.MouseEvent<HTMLButtonElement>, selectedMode: Mode) => setMode(selectedMode);
+
+  // 新しいkeyword登録を判定する関数
+  const checkNewKeyword = (newKeywords: string[]) => {
+    // nullならまだfetchが終わっていないのでエラーにしとく。
+    if (!keywords) throw new Error("keywords list is null! Wait 'til it loads!");
+    // keywordsリストに存在しなければtrue（新しいkeywrod）を返す。
+
+    // newKeywords.forEach(w => {
+    //   if (!keywords.includes(w)) {
+    //     return true;
+    //   }
+    // });
+    for (let i = 0; i < newKeywords.length; i++) {
+      const w = newKeywords[i];
+      if (!keywords.includes(w)) {
+        return true;
+      }
+    }
+    // ここまでくれば新キーワードは全て既存のもの。
+    return false;
+  }
 
   return (
     <>
       <MyHead title="全力ブログ・システム"></MyHead>
       <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
       <div className={styles.dummyBody}>
+        {mode === "update" && <KeywordList list={keywords} update={setKeywords} />}
         <main className={styles.container}>
           <div className={styles.modeContainer}>
             <button
@@ -252,7 +294,7 @@ export default function Admin() {
             </form>
           }
           {mode === "update" &&
-            <UpdateMode genres={genres} />
+            <UpdateMode genres={genres} checkNewKeyword={checkNewKeyword} update={setKeywords} />
           }
         </main>
       </div>
@@ -301,15 +343,18 @@ function FileList(props: { data: string[] } & ThumbP) {
 }
 
 
-
+interface UpdateModeProp {
+  genres: string[],
+  checkNewKeyword(c: string[]): boolean,
+  update: React.Dispatch<React.SetStateAction<string[] | null>>
+}
 let _blogs: BlogInfo[] | null // dbから取得したblogのdocuments。memoization;
-function UpdateMode({ genres }: { genres: string[] }) {
+function UpdateMode({ genres, checkNewKeyword, update }: UpdateModeProp) {
 
   const [isLoaded, setIsLoaded] = useState<boolean>(false)
   const [currentBlogs, setCurrentBlogs] = useState<BlogInfo[] | null>(_blogs);
 
   const reload = function (newBlogs: BlogInfo[]) {
-    console.log(newBlogs);
     setCurrentBlogs(newBlogs);
   }
 
@@ -330,6 +375,9 @@ function UpdateMode({ genres }: { genres: string[] }) {
         _blogs = data;
         setIsLoaded(true);
         setCurrentBlogs(data);
+        // keyword一覧も更新
+        const kwlist = keywordList(data);
+        update(kwlist);
       })
       .catch(err => alert(err));
   }, []);
@@ -346,10 +394,10 @@ function UpdateMode({ genres }: { genres: string[] }) {
         currentBlogs
           ?
           <ol className={styles.listContainer}>
-            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} key={i} />)}
+            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} checkNewKeyword={checkNewKeyword} update={update} key={i} />)}
           </ol>
           :
-          <div style={{ "textAlign": "center" }}>LOADING...</div>
+          <div style={{ textAlign: "center", height: "500px", fontSize: "2rem", color: "white" }}>LOADING...</div>
       }
     </>
   );
@@ -358,10 +406,13 @@ function UpdateMode({ genres }: { genres: string[] }) {
 interface BlogItemProp extends BlogInfo {
   genres: string[],
   reload: (b: BlogInfo[]) => void,
+  checkNewKeyword(c: string[]): boolean,
+  update: React.Dispatch<React.SetStateAction<string[] | null>>
 }
 
 function Blog({
   assetsDir, title, summary, genre, genres, keywords, reload,
+  checkNewKeyword, update
 }: BlogItemProp) {
   // ["a","b"] => "a,b"に変換。[]なら""に変換
   const keywordsStr = keywords ? keywords.join(",") : "";
@@ -430,6 +481,16 @@ function Blog({
       alert("何も変更されていません。")
       return;
     }
+
+    const kwArr = keywordsInput.split(",");
+    // 入力ミス確認のため、新キーワードの場合は確認ダイアログを表示
+
+    if (checkNewKeyword(kwArr)) {
+      if (!confirm("新しいパスワードが含まれます。登録して良いですか？")) {
+        return;
+      }
+    }
+
     if (isSummaryChanged) {
       data["summary"] = summaryInput;
     }
@@ -440,7 +501,7 @@ function Blog({
       data["genre"] = genreInput;
     }
     if (isKeywordsChanged) {
-      data["keywords"] = keywordsInput.split(",");
+      data["keywords"] = kwArr;
     }
     // サーバ送信
     const requestData: UpdateItemRequest = {
@@ -459,8 +520,13 @@ function Blog({
       }
       const blogs = await resp.json();
       alert("Update succeeded!")
+      // ブログを更新
       reload(blogs);
-      defaultColor(); // 色戻す
+      // keyword更新
+      const kwlist = keywordList(blogs);
+      update(kwlist);
+      // 色戻す
+      defaultColor();
     } catch (err) {
       alert(err);
     }
@@ -522,11 +588,51 @@ function Blog({
   );
 }
 
-/**
+interface KeywordListProp {
+  list: string[] | null;
+  update: React.Dispatch<React.SetStateAction<string[] | null>>
+}
+function KeywordList({ list, update }: KeywordListProp) {
+  // const [keywords, setKeywords] = useState<string[] | null>(null);
+  // useEffect(() => {
+  //   fetch("/api/admin/keyword-list")
+  //     .then(res => {
+  //       if (!res || !res.ok) {
+  //         throw new Error("Something went wrong...Could not get keyword list!")
+  //       }
+  //       return res.json()
+  //     })
+  //     .then((data: string[]) => update(data.sort()))
+  //     .catch(err => alert(err))
+  // }, []);
+
+  return (
+    <aside
+      style={{
+        "backgroundColor": "#333", "color": "white",
+        "paddingRight": "1rem", "position": "fixed", "alignSelf": "flex-start", "top": "0px",
+        "height": "100vh", "paddingTop": "3rem"
+      }}
+    >
+      <div style={{ textAlign: "center" }}>キーワード一覧</div>
+      {
+        list
+          ?
+          <ul>
+            {list.map((kw, i) => <li key={i}>{kw}</li>)}
+          </ul>
+          :
+          <div>loading...</div>
+      }
+    </aside>
+  );
+}
+
+/*************************************************
  * SSR　サーバ側の処理な点に留意。
  * @param context リクエストを操作するためのオブジェクト
  * @returns 
- */
+ **************************************************/
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { user } = context.req.cookies;
   // 認証されていなければログインページへ
