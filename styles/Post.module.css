@@ -27,6 +27,20 @@
   width: 70%;
 }
 
+/* 
+flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）分
+取らる。広く感じるので狭める。 
+ */
+.articleContainer>p {
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+/* 最後の要素は広めにmargin設定 */
+.articleContainer>p:last-of-type {
+  margin-bottom: 1rem;
+}
+
 .back {
   display: block;
   margin-top: 1rem;
