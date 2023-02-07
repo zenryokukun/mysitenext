@@ -6,7 +6,8 @@
 .mainContainer {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* mdのコンテンツが少ない場合、縦真ん中に表示されるためコメントアウト */
+  /* justify-content: center; */
   align-items: center;
 
   /* width: 100%; */
@@ -17,6 +18,9 @@
      値を小さくして調整すること。別に0でも問題はない。
   */
   min-width: 50%;
+  /* バグFIX。コンテンツ量が少なく、min-widthとなる場合、flex-direction方向に余白が出来てしまう。
+  flex-grow:1とすることで余白を埋めるように伸びてもらう。min-widthの指定は必要。はずすとページ幅を狭めた時に縮まなくなる場合あり。 */
+  flex-grow: 1;
 }
 
 .articleContainer {

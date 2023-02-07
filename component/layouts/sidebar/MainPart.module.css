@@ -4,4 +4,11 @@
   align-items: center;
   /* sidebarとmainが半分までを想定50以下ならmainとside逆やで */
   min-width: 50%;
+
+  /* TODO
+     コンテンツ量が少なく、min-widthとなる場合、flex-direction方向に余白が出来てしまう。
+     以下の対応で対処可能。検証の上実装すること。Post.module.cssでは実装済。min-widthは必要。ページ幅を狭めた時に縮まなくなる場合がある。
+       追加：flex-grow:1;
+  */
+  flex-grow: 1;
 }
