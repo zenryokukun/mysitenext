@@ -35,6 +35,25 @@ export interface HeadProp {
 }
 
 /**
+ * Blog情報。DBのassetsDirコレクションに投入する型。
+ * Adminページでアップロードする時にも使用する。
+ */
+export interface BlogInfo {
+    genre: string,
+    assetsDir: string,
+    title: string,
+    summary: string,
+    thumb: string,
+    md: string,
+    likes?: number,
+    dislikes?: number,
+    posted?: string,
+    views?: number,
+    // keyword追加
+    keywords?: string[],
+}
+
+/**
  * Adminページの更新モードで使用。一度登録したblog情報で更新可能な項目。
  * BlogInfo型（/lib/db/funcにある、、、いずれここに移したい）とキー名は揃えること。
  */

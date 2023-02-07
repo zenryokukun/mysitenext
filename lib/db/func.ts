@@ -5,21 +5,7 @@ import { genSessionId } from "../util";
 
 import type { MongoClient, WithId, Document } from "mongodb";
 import type { UpdateItemRequest } from "../../types";
-
-export interface BlogInfo {
-    genre: string,
-    assetsDir: string,
-    title: string,
-    summary: string,
-    thumb: string,
-    md: string,
-    likes?: number,
-    dislikes?: number,
-    posted?: string,
-    views?: number,
-    // keyword追加
-    keywords?: string[],
-}
+import type { BlogInfo } from "../../types";
 
 interface DirFilter {
     assetsDir: string,

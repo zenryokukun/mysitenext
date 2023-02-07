@@ -1,6 +1,6 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { BlogInfo } from "../../../lib/db/func";
+import type { BlogInfo } from "../../../types";
 import multer from "multer";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";

@@ -6,7 +6,7 @@ import type { WithId } from "mongodb";
  */
 
 import { findBlogDocs } from "./func";
-import type { BlogInfo } from "./func";
+import type { BlogInfo } from "../../types";
 
 // blogを保持するグローバル変数。memoization
 let blogMemo: WithId<BlogInfo>[] | null = null;
