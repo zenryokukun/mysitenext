@@ -39,7 +39,7 @@ export default function Policy() {
           </section>
           <section className={styles.postit}>
             <h2><i className="fa-solid fa-copyright"></i>著作権</h2>
-            <p>当サイト上のコンテンツは、特段の記載が限り、サイト運営者が所有・管理しているものです。著作権法による認められる場合を除き、サイト運営者に無断で複製・改変することは禁止されています。</p>
+            <p>当サイト上のコンテンツは、特段の記載がない限り、サイト運営者が所有・管理しているものです。著作権法による認められる場合を除き、サイト運営者に無断で複製・改変することは禁止されています。</p>
           </section>
           <section className={styles.postit}>
             <h2><i className="fa-solid fa-triangle-exclamation"></i>免責事項</h2>
