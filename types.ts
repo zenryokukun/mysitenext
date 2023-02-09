@@ -71,3 +71,19 @@ export interface UpdateItemRequest {
     updateKey: { assetsDir: string }, // db更新のキー
     data: UpdateItem,
 }
+
+/**
+ * 関連記事データの型。/post/[dir]や他のコンポーネントで利用。
+ */
+export interface BlogLinkItem {
+    // 関連記事のリンク
+    url: string;
+    // リンクに表示させる文字列
+    title: string;
+    // 概要
+    summary?: string;
+    // サムネ
+    thumb?: string;
+    // 投稿日
+    posted?: string;
+}

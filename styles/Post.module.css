@@ -55,6 +55,10 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
   margin-bottom: 1rem;
 }
 
+.rowGap {
+  row-gap: 2rem;
+}
+
 
 @media screen and (max-width:1200px) {
   .articleContainer {

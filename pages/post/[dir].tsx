@@ -1,28 +1,38 @@
+// import SideBar from "../../component/Post/SideBar";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
-import SideBar from "../../component/Post/SideBar";
-import Like from "../../component/Post/Like";
+import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
+import Author from "../../component/Author";
+import Twitter from "../../component/Twitter";
+import { FancyBlogLinks } from "../../component/BlogLinks";
+import Like from "../../component/Like";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
-// import breadCrumbsJSON from "../../lib/bread";
 import { breadCrumbFromPath } from "../../lib/bread";
 import { useState, useEffect } from "react";
+import { filterBlogMemo } from "../../lib/db/blog-memo";
+
 import { useRouter } from "next/router";
-import type { NextRouter } from "next/router";
 import Link from "next/link";
 
-import type { HeadProp } from "../../types";
+import type { HeadProp, BlogLinkItem, BlogInfo } from "../../types";
+
 import styles from "../../styles/Post.module.css";
+import { relatedBlogs, newBlogs } from "../../lib/db/extract";
 
 /* ***************************************************
  *　Description ブログ記事Page
  * **************************************************/
 
+/**
+ * gray-matterのfront-matter部分の型。
+ * HeadPropにauthorとpostedDateを追加している。
+ */
 interface DataProp extends HeadProp {
-  author?: string, // 作者名。サイドバーに表示
-  postedDate?: string, // 投稿日YYYY/MM/DD。サイドバーに表示
+  author?: string; // 作者名。サイドバーに表示
+  postedDate?: string; // 投稿日YYYY/MM/DD。サイドバーに表示
 }
 
 /**
@@ -32,11 +42,10 @@ interface DataProp extends HeadProp {
  * props.data:HeadProp -> front-matter部分のデータ  
  */
 interface PostProp {
-  content: string,
-  data: DataProp,
-  // data: {
-  //   [key: string]: string,
-  // }
+  content: string;
+  data: DataProp;
+  related: BlogLinkItem[];
+  latest: BlogLinkItem[];
 }
 
 // getStaticPropsの引数。
@@ -48,32 +57,11 @@ interface PathProp {
 // 「いいね」更新用エンドポイント
 const ENDPOINT = "/api/post/like";
 
-// *********************************************************
-// 20230118:breadCrumbFromPathで動的にパンくずリストを生成するようにしたためコメントアウト
-// /blog -> /post/dirnameと変則的な遷移をするため、場合によってはベタ打ちに戻すかもしれないので、一応残す。
-// *********************************************************
-// パンくずjson-ldを取得する関数
-// function genJsonLd(router: NextRouter) {
-//   const base = router.asPath.split("/").slice(-1)[0];
-//   const items = [
-//     { name: "home", item: "https://www.zenryoku-kun.com/" },
-//     { name: "blog", item: "https://www.zenryoku-kun.com/blog" },
-//     // 最後のitemにもurl追加。そうしたほうが良いとのこと（chatGPT）。
-//     { name: base, item: "https://www.zenryoku-kun.com/post/" + base },
-//   ];
-//   const jsonld = breadCrumbsJSON(items);
-//   return jsonld;
-// }
-// *********************************************************
-
-
 /**
  * {content}部分のスタイルシートは全てglobals.cssに記載。
  */
-export default function Post({ content, data }: PostProp) {
-
+export default function Post({ content, data, related, latest }: PostProp) {
   const router = useRouter();
-
   // パンくずリストJSON-ld
   const bcJsonLd = breadCrumbFromPath(router);
 
@@ -110,8 +98,10 @@ export default function Post({ content, data }: PostProp) {
     <>
       <MyHead {...data} breadCrumbsJSON_ld={bcJsonLd}></MyHead>
       <Menu iniMode={MODE.BLOG}></Menu>
-      <div className={styles.wrapper}>
-        <main className={styles.mainContainer}>
+      {/* <div className={styles.wrapper}> */}
+      <Layout>
+        <Main>
+          {/* <main className={styles.mainContainer}> */}
           <Link href="/blog">
             <a className={styles.back}>記事一覧に戻る</a>
           </Link>
@@ -123,22 +113,58 @@ export default function Post({ content, data }: PostProp) {
           <Link href="/blog">
             <a className={styles.back}>記事一覧に戻る</a>
           </Link>
-        </main>
-        <SideBar author={author} postedDate={postedDate} />
-      </div>
+        </Main>
+        <Side addStyle={styles.rowGap}>
+          <Author name={author} postedDate={postedDate}></Author>
+          {/* <BlogLinks data={related} headline="関連記事"></BlogLinks> */}
+          <FancyBlogLinks data={related} headline="関連記事"></FancyBlogLinks>
+          <FancyBlogLinks data={latest} headline="最新記事"></FancyBlogLinks>
+          <Twitter></Twitter>
+        </Side>
+        {/* </main> */}
+        {/* <SideBar author={author} postedDate={postedDate} /> */}
+      </Layout>
+      {/* </div> */}
       <Footer></Footer>
     </>
   );
 }
 
 export async function getStaticProps({ params }: PathProp) {
+
   const { dir } = params;
+  // mdファイルの中身を抽出
   const mdData = await getBlogMd(dir);
+  // gray-matterでmdDataをyaml部分とそれ以外に分離
   const fmtData = formatMd(mdData);
+  // fmtDataのコンテンツ部分をhtml化
   const content = await toHTMLString(fmtData.content);
-  const { data } = fmtData; // mdのyamlメタデータ部分
+  // yaml部分
+  const data = fmtData.data as DataProp;
+
+  // 処理対象となるblog抽出
+  const targetBlog = await filterBlogMemo(dir);
+
+  // targetBlogのキーワードから関連記事を抽出
+  const _rels = await relatedBlogs(targetBlog);
+  // 最新記事を3つ
+  const _news = await newBlogs(3);
+  // mapのコールバック関数
+  const genBlogLinkItem = (b: BlogInfo): BlogLinkItem => {
+    return {
+      url: `/post/${b.assetsDir}`,
+      title: b.title,
+      summary: b.summary,
+      // サムネは/public/postsにある。。。/postはPageで異なるので注意。
+      thumb: b.thumb ? `/posts/${b.assetsDir}/${b.thumb}` : "",
+      posted: b.posted || "",
+    }
+  }
+
+  const related: BlogLinkItem[] = _rels.map(genBlogLinkItem);
+  const latest = _news.map(genBlogLinkItem);
   return {
-    props: { content, data },
+    props: { content, data, related, latest },
   }
 }
 
