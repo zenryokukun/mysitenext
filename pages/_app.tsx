@@ -43,7 +43,6 @@ function MyApp({ Component, pageProps, router }: AppProps) {
 
   // /login /admin等、自分がアクセスするサイトはGA除外する。
   if (router.pathname === "/login" || router.pathname === "/admin") {
-    console.log("admin or login")
     return <Component {...pageProps} />;
   }
 
