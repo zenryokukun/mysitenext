@@ -147,8 +147,8 @@ export async function getStaticProps({ params }: PathProp) {
 
   // targetBlogのキーワードから関連記事を抽出
   const _rels = await relatedBlogs(targetBlog);
-  // 最新記事を3つ
-  const _news = await newBlogs(3);
+  // 最新記事を3つ。自分自身は除外。
+  const _news = await newBlogs(3, { discludeDir: dir });
   // mapのコールバック関数
   const genBlogLinkItem = (b: BlogInfo): BlogLinkItem => {
     return {
