@@ -39,11 +39,17 @@ function getDB(client: MongoClient) {
  * @param colName collectionの名前
  * @returns Collection<BlogInfo[]>
  */
-function getAssetsCollection(client: MongoClient, colName: string) {
+async function getAssetsCollection() {
+    const client = await clientPromise;
     const db = getDB(client);
-    const collection = db.collection<BlogInfo>(colName);
+    const collection = db.collection<BlogInfo>(dbInfo["colAssets"]);
     return collection;
 }
+// function getAssetsCollection(client: MongoClient, colName: string) {
+//     const db = getDB(client);
+//     const collection = db.collection<BlogInfo>(colName);
+//     return collection;
+// }
 
 /**
  * 内部関数。colパラメタに応じたcollectionを返す汎用関数。型設定が出来ない。
@@ -80,10 +86,7 @@ function getCollection(client: MongoClient, col: string) {
   },]
  */
 async function findBlogDocs(limit: number) {
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    // const col = getCollection(client, colName);
-    const col = getAssetsCollection(client, colName);
+    const col = await getAssetsCollection();
     const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
     return docs;
 }
@@ -94,10 +97,7 @@ async function findBlogDocs(limit: number) {
  * 一覧で返す
  */
 async function getBlogDirList() {
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    // const col = getCollection(client, colName);
-    const col = getAssetsCollection(client, colName);
+    const col = await getAssetsCollection();
     const docs = await col.find({}, { projection: { assetsDir: 1, _id: 0 } }).toArray();
     return docs;
 }
@@ -122,10 +122,7 @@ async function _migrateBlogInfo(info: BlogInfo) {
  * @returns Promise
  */
 async function insertBlogInfo(info: BlogInfo) {
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    // const col = getCollection(client, colName);
-    const col = getAssetsCollection(client, colName);
+    const col = await getAssetsCollection();
     const result = col.insertOne(info);
     return result;
 }
@@ -139,10 +136,7 @@ async function insertBlogInfo(info: BlogInfo) {
  */
 async function updateBlogInfo(reqBody: UpdateItemRequest) {
     const { updateKey, data } = reqBody;
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    // const col = getCollection(client, colName);
-    const col = getAssetsCollection(client, colName);
+    const col = await getAssetsCollection();
     const query = { ...updateKey };
     const update = { $set: { ...data } };
     const ret = await col.updateOne(query, update);
@@ -163,10 +157,7 @@ async function updateBlogInfo(reqBody: UpdateItemRequest) {
  * @retunrs Promise
  */
 async function deleteDuplicateDir(filter: DirFilter) {
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    // const col = getCollection(client, colName);
-    const col = getAssetsCollection(client, colName);
+    const col = await getAssetsCollection();
     const result = col.deleteMany(filter);
     return result;
 }
@@ -177,6 +168,22 @@ async function backupAssetsCollection() {
     const jstr = JSON.stringify(docs, null, 2);
     writeFile("./backup-assetsDir.json", jstr, { encoding: "utf-8" });
 }
+
+/**
+ * /api/post/like で利用
+ * assetsDirコレクションのlikeを1インクリメント
+ * @param {dir} 更新するassetsDirコレクションのdir フィールド
+ * @returns UpdateResult
+ */
+async function updateLike({ dir }: { dir: string }) {
+    if (!dir) {
+        return;
+    }
+    const col = await getAssetsCollection();
+    const result = col.updateOne({ assetsDir: dir }, { $inc: { likes: 1 } });
+    return result;
+}
+
 
 /**
  * _app.tsxで使用。遷移するページの訪問数を更新する。
@@ -227,23 +234,6 @@ async function insertComment({ name, msg }: InsertComment) {
     return result;
 }
 
-/**
- * /api/post/like で利用
- * assetsDirコレクションのlikeを1インクリメント
- * @param {dir} 更新するassetsDirコレクションのdir フィールド
- * 
- * @returns UpdateResult
- */
-async function updateLike({ dir }: { dir: string }) {
-    if (!dir) {
-        return;
-    }
-    const colName = dbInfo["colAssets"];
-    const client = await clientPromise;
-    const col = getCollection(client, colName);
-    const result = col.updateOne({ assetsDir: dir }, { $inc: { likes: 1 } });
-    return result;
-}
 
 /**
  * /api/loginで使用。入力されたuserとpasswordでナンチャッテ認証
