@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, FormEvent } from "react";
 import { GetServerSidePropsContext } from "next";
 import { isAdmin } from "../lib/db/func";
 
-import type { BlogInfo } from "../lib/db/func";
+import type { BlogInfo } from "../types";
 import type { UpdateItem, UpdateItemRequest } from "../types";
 
 /**Description
@@ -112,6 +112,10 @@ function keywordList(docs: BlogInfo[]) {
   return kwArr.sort();
 }
 
+
+let _blogs: BlogInfo[] | null // dbから取得したblogのdocuments。memoization;
+
+
 export default function Admin() {
 
   const [genre, setGenre] = useState("");
@@ -122,11 +126,39 @@ export default function Admin() {
   const [title, setTitle] = useState("");
   const [isForce, setForce] = useState(false);
   const [mode, setMode] = useState<Mode>("blog");
-
   // KeywordListのstateをliftしたもの。入力チェックのため。
   const [keywords, setKeywords] = useState<string[] | null>(null);
-
+  // 現時点のブログ一覧
+  const [currentBlogs, setCurrentBlogs] = useState<BlogInfo[] | null>(_blogs);
+  // file inputのrefを保持する変数
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // 初回ロードのみ実行
+  useEffect(() => {
+    if (_blogs) return; // memoが存在する場合はリターン
+    console.log("useEffect called!", _blogs)
+    // blog一覧をfetch
+    fetch("/api/admin/blogs", {
+      method: "GET",
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          // 200系以外はエラー→.catchへ
+          const emsg = await res.text();
+          throw new Error(emsg);
+        }
+        return res.json()
+      })
+      .then((data: BlogInfo[]) => {
+        _blogs = data;
+        setCurrentBlogs(data);
+        // keyword一覧も更新
+        const kwlist = keywordList(data);
+        setKeywords(kwlist);
+      })
+      .catch(err => alert(err));
+  }, [])
+
 
   useEffect(() => {
     fetch("/api/admin")
@@ -207,12 +239,6 @@ export default function Admin() {
     // nullならまだfetchが終わっていないのでエラーにしとく。
     if (!keywords) throw new Error("keywords list is null! Wait 'til it loads!");
     // keywordsリストに存在しなければtrue（新しいkeywrod）を返す。
-
-    // newKeywords.forEach(w => {
-    //   if (!keywords.includes(w)) {
-    //     return true;
-    //   }
-    // });
     for (let i = 0; i < newKeywords.length; i++) {
       const w = newKeywords[i];
       if (!keywords.includes(w)) {
@@ -228,7 +254,7 @@ export default function Admin() {
       <MyHead title="全力ブログ・システム"></MyHead>
       <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
       <div className={styles.dummyBody}>
-        {mode === "update" && <KeywordList list={keywords} update={setKeywords} />}
+        <KeywordList list={keywords} update={setKeywords} />
         <main className={styles.container}>
           <div className={styles.modeContainer}>
             <button
@@ -294,7 +320,13 @@ export default function Admin() {
             </form>
           }
           {mode === "update" &&
-            <UpdateMode genres={genres} checkNewKeyword={checkNewKeyword} update={setKeywords} />
+            <UpdateMode
+              genres={genres}
+              checkNewKeyword={checkNewKeyword}
+              updateKeywords={setKeywords}
+              reload={setCurrentBlogs}
+              currentBlogs={currentBlogs}
+            />
           }
         </main>
       </div>
@@ -346,42 +378,13 @@ function FileList(props: { data: string[] } & ThumbP) {
 interface UpdateModeProp {
   genres: string[],
   checkNewKeyword(c: string[]): boolean,
-  update: React.Dispatch<React.SetStateAction<string[] | null>>
+  currentBlogs: BlogInfo[] | null,
+  reload: React.Dispatch<React.SetStateAction<BlogInfo[] | null>>,
+  updateKeywords: React.Dispatch<React.SetStateAction<string[] | null>>
 }
-let _blogs: BlogInfo[] | null // dbから取得したblogのdocuments。memoization;
-function UpdateMode({ genres, checkNewKeyword, update }: UpdateModeProp) {
-
-  const [isLoaded, setIsLoaded] = useState<boolean>(false)
-  const [currentBlogs, setCurrentBlogs] = useState<BlogInfo[] | null>(_blogs);
-
-  const reload = function (newBlogs: BlogInfo[]) {
-    setCurrentBlogs(newBlogs);
-  }
-
-  useEffect(() => {
-    if (_blogs) return;
-    console.log("useEffect called!", _blogs)
-    fetch("/api/admin/blogs", {
-      method: "GET",
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const emsg = await res.text();
-          throw new Error(emsg);
-        }
-        return res.json()
-      })
-      .then((data: BlogInfo[]) => {
-        _blogs = data;
-        setIsLoaded(true);
-        setCurrentBlogs(data);
-        // keyword一覧も更新
-        const kwlist = keywordList(data);
-        update(kwlist);
-      })
-      .catch(err => alert(err));
-  }, []);
-
+function UpdateMode({
+  genres, checkNewKeyword, updateKeywords, currentBlogs, reload
+}: UpdateModeProp) {
   return (
     <>
       <h1 style={{ "textAlign": "center" }}>更新モードの解説</h1>
@@ -394,7 +397,7 @@ function UpdateMode({ genres, checkNewKeyword, update }: UpdateModeProp) {
         currentBlogs
           ?
           <ol className={styles.listContainer}>
-            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} checkNewKeyword={checkNewKeyword} update={update} key={i} />)}
+            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} checkNewKeyword={checkNewKeyword} updateKeywords={updateKeywords} key={i} />)}
           </ol>
           :
           <div style={{ textAlign: "center", height: "500px", fontSize: "2rem", color: "white" }}>LOADING...</div>
@@ -405,14 +408,14 @@ function UpdateMode({ genres, checkNewKeyword, update }: UpdateModeProp) {
 
 interface BlogItemProp extends BlogInfo {
   genres: string[],
-  reload: (b: BlogInfo[]) => void,
+  reload: React.Dispatch<React.SetStateAction<BlogInfo[] | null>>,
   checkNewKeyword(c: string[]): boolean,
-  update: React.Dispatch<React.SetStateAction<string[] | null>>
+  updateKeywords: React.Dispatch<React.SetStateAction<string[] | null>>
 }
 
 function Blog({
   assetsDir, title, summary, genre, genres, keywords, reload,
-  checkNewKeyword, update
+  checkNewKeyword, updateKeywords,
 }: BlogItemProp) {
   // ["a","b"] => "a,b"に変換。[]なら""に変換
   const keywordsStr = keywords ? keywords.join(",") : "";
@@ -524,7 +527,7 @@ function Blog({
       reload(blogs);
       // keyword更新
       const kwlist = keywordList(blogs);
-      update(kwlist);
+      updateKeywords(kwlist);
       // 色戻す
       defaultColor();
     } catch (err) {
