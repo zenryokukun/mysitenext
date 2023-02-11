@@ -66,5 +66,6 @@ export async function newBlogs(cnt: number, opt: { discludeDir: string } | undef
             newBlogs.push(blog);
         }
     }
-    return newBlogs;
+    // 全てマッチした場合cnt+1分返ってしまうのでslice.
+    return newBlogs.slice(0, cnt);
 }
