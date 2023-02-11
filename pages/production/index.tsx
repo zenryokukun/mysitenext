@@ -2,8 +2,7 @@ import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
-import { useRouter } from "next/router";
-import { breadCrumbFromPath } from "../../lib/bread";
+
 import styles from "../../styles/Production.module.css";
 
 /**
@@ -23,8 +22,6 @@ interface Prop {
 }
 
 export default function Production() {
-  // breadcrumb生成に必要
-  const router = useRouter();
 
   const mdCvt = {
     title: "MD-Converter",
@@ -86,7 +83,7 @@ export default function Production() {
     <>
       <MyHead
         metaDescription="私が作成したゲームやサービスのリンク集です。ローカルで動かしていたプログラムやゲームをWeb化して公開したり、あったら便利だと思うサービスを随時追加していきます。"
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
         title="作品物"
       />
       <Menu iniMode={MODE.PRODUCTION}></Menu>

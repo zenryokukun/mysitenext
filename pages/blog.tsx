@@ -1,14 +1,12 @@
 import Link from "next/link";
 import Router from "next/router";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import Menu from "../component/Menu";
 import Footer from "../component/Footer";
 import MyHead from "../component/MyHead";
 import Loader from "../component/Loader";
 import { MODE } from "../component/constants";
 import { findBlogDocs } from "../lib/db/func"
-import { breadCrumbFromPath } from "../lib/bread";
 
 import styles from "../styles/Blog.module.css";
 
@@ -25,9 +23,6 @@ interface BlogInfo {
 }
 
 export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
-
-  // breadcrumb生成用
-  const router = useRouter();
 
   const [isLoading, setLoading] = useState(false);
 
@@ -61,7 +56,7 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
     <>
       <MyHead
         metaDescription="ブログ記事の一覧です。主に、プログラム関係の記事や、一人旅に関する記事を公開しています。"
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
         title="記事一覧"
       />
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}

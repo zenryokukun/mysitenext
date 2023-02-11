@@ -1,20 +1,17 @@
-import { useRouter } from "next/router";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
-import { breadCrumbFromPath } from "../../lib/bread";
 
 import styles from "../../styles/Policy.module.css";
 
 export default function Policy() {
-  const router = useRouter(); // breadCrumbの動的生成に必要
   return (
     <>
       <MyHead
         metaDescription="プライバシーポリシーや免責事項、サイト利用の動作環境についての説明です。"
         title="Site Policy"
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
       />
       <Menu iniMode={MODE.ABOUT}></Menu>
       <div className={styles.container}>

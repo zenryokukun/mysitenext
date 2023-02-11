@@ -13,8 +13,6 @@ import Footer from "../../../component/Footer";
 import Loader from "../../../component/Loader";
 import { MODE, LINK } from "../../../component/constants";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
-import { breadCrumbFromPath } from "../../../lib/bread";
 
 import DOMPurify from "dompurify";
 import genDocString from "../../../lib/mdconv/download";
@@ -37,8 +35,6 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   // 変換html文字列。
   const [resString, setResString] = useState("");
-  // NextRouter. breadcrumb用
-  const router = useRouter();
 
   // click meをクリックした時の処理。
   const manualSelect = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -155,7 +151,7 @@ export default function Page() {
     <>
       <MyHead
         title="MD-CONVERTER" metaDescription={DESCR}
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
       />
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}

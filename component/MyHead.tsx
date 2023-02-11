@@ -1,11 +1,16 @@
 import Head from "next/head";
 import type { HeadProp } from "../types";
-
+import { useRouter } from "next/router";
+import { breadCrumbFromPath } from "../lib/bread";
 
 function MyHead({
-  title, metaDescription, breadCrumbsJSON_ld,
+  title, metaDescription, useBreadCrumb,
   summary, site, cardTitle, description, imagePath,
 }: HeadProp) {
+
+  // bread-crumb用json-ldを生成
+  const router = useRouter();
+  const breadCrumb = breadCrumbFromPath(router);
 
   return (
     <Head>
@@ -23,11 +28,11 @@ function MyHead({
       <meta name="twitter:title" content={cardTitle || "空と、海と、大地。そして絶望"} />
       <meta name="twitter:description" content={description || "極音超速で辿り着いた最果ては、あくまでも人の作った世界だった。"} />
       <meta name="twitter:image" content={imagePath || "https://www.zenryoku-kun.com/zen_logo.png"} />
-
-      {breadCrumbsJSON_ld &&
+      {/* useBreadCrumbがtrueかつbreadCrumbが正常に生成できた場合、パンくずリストをセット */}
+      {(useBreadCrumb && breadCrumb) &&
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: breadCrumbsJSON_ld }}
+          dangerouslySetInnerHTML={{ __html: breadCrumb }}
         />
       }
 

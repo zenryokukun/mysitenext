@@ -1,5 +1,4 @@
 import { useEffect, useState, useReducer, useRef } from "react";
-import { useRouter } from "next/router";
 import MyHead from "../../../component/MyHead";
 import Footer from "../../../component/Footer";
 import Menu from "../../../component/Menu";
@@ -11,7 +10,6 @@ import { MODE } from "../../../component/constants";
 import { reducer, iniState, genAction } from "../../../lib/mskai/reducer"
 import { EASY, MEDIUM, HARD, EXTREME, ACTION, PLAY } from "../../../lib/mskai/constants";
 import { loadSprite } from "../../../lib/mskai/loader";
-import { breadCrumbFromPath } from "../../../lib/bread";
 
 import type { Sprites } from "../../../lib/mskai/loader";
 import type { LevelKeyType } from "../../../lib/mskai/level";
@@ -58,8 +56,6 @@ export default function Page() {
   // setIntervalのidを管理するstate。レンダリングの都度別の値にならないように
   // useRefで管理する。
   const ref = useRef<number | null>(null);
-  // breadcrumb生成に必要
-  const router = useRouter();
 
   // level変更処理。LevelSelectクリック時、InfoSectionのニコニコクリック時に実行
   const changeLevel = (lvl: LevelKeyType) => {
@@ -127,7 +123,7 @@ export default function Page() {
     cardTitle: "全力RETRO GAME",
     description: "未到達のレベルを引っ提げて、やつは再び現れる...その名は『地雷を撤去せし者・改』。",
     imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
-    breadCrumbsJSON_ld: breadCrumbFromPath(router),
+    useBreadCrumb: true,
     metaDescription: "React流にMinesweeperを作りました。レベルはEASY、MEDIUM、HARD、極の4種類から選べます。極みは48×68のマスに777の地雷が埋まっており、前代未聞の難易度です。全ての地雷マスに旗を立て、他のマスを全て開けば勝ちです。",
   };
 

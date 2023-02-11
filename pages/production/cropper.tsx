@@ -6,9 +6,7 @@ import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import Twitter from "../../component/Twitter";
 import React, { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/router";
 import { MODE } from "../../component/constants"
-import { breadCrumbFromPath } from "../../lib/bread";
 
 import styles from "../../styles/Cropper.module.css";
 
@@ -39,9 +37,6 @@ export default function Page() {
 
   // アップロード中のLoader制御用
   const [isLoading, setLoading] = useState<boolean>(false);
-
-  // breadcrumb生成に必要
-  const router = useRouter();
 
   // アスペクト比のラジオボタン切り替え時、ratioを更新[controlled Component]
   const changeRatio = (e: React.ChangeEvent<HTMLInputElement>) => setRatio(e.target.value);
@@ -130,7 +125,7 @@ export default function Page() {
       <MyHead
         title="スマホ画像切取君"
         description={DESC}
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
       />
       <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}

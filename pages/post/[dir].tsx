@@ -1,4 +1,3 @@
-// import SideBar from "../../component/Post/SideBar";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
@@ -10,7 +9,6 @@ import Like from "../../component/Like";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
-import { breadCrumbFromPath } from "../../lib/bread";
 import { useState, useEffect } from "react";
 import { filterBlogMemo } from "../../lib/db/blog-memo";
 
@@ -62,8 +60,6 @@ const ENDPOINT = "/api/post/like";
  */
 export default function Post({ content, data, related, latest }: PostProp) {
   const router = useRouter();
-  // パンくずリストJSON-ld
-  const bcJsonLd = breadCrumbFromPath(router);
 
   const [likeClicked, setLike] = useState(false);
   const click = () => setLike(() => !likeClicked);
@@ -96,7 +92,7 @@ export default function Post({ content, data, related, latest }: PostProp) {
 
   return (
     <>
-      <MyHead {...data} breadCrumbsJSON_ld={bcJsonLd}></MyHead>
+      <MyHead {...data} useBreadCrumb={true}></MyHead>
       <Menu iniMode={MODE.BLOG}></Menu>
       {/* <div className={styles.wrapper}> */}
       <Layout>

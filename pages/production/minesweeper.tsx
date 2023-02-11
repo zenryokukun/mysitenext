@@ -3,13 +3,11 @@ import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 import React, { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import {
   render, Board, leftClick, rightClick, doubleClick,
   loadSprite, setSize, scheduleTick, smileDown, smileUp,
   changeSmile
 } from "../../lib/ms/logic";
-import { breadCrumbFromPath } from "../../lib/bread";
 
 import type { HeadProp } from "../../types";
 import style from "../../styles/Minesweeper.module.css";
@@ -59,8 +57,6 @@ const Page = () => {
   const [board, setBoard] = useState<Board | null>(null);
   // 画面下部のメッセージ
   const [gameState, setGameState] = useState(0);
-  // breadcrumb生成に必要
-  const router = useRouter();
 
   // 説明ボタンを押したときのモーダル制御関数
   const showModal = () => setModal(true);
@@ -124,7 +120,7 @@ const Page = () => {
     description: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME.その名は『地雷を撤去せし者』。",
     imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
     metaDescription: "懐かしのマインスイーパーです。地雷が埋まっているマスに旗を立て、それ以外のマスを全て開けば勝ちです。EASY,MEDIUM,HARDから難易度を選べます。楽しんで下さい。",
-    breadCrumbsJSON_ld: breadCrumbFromPath(router),
+    useBreadCrumb: true,
   };
 
   return (

@@ -1,8 +1,6 @@
-import { useRouter } from "next/router";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
-import { breadCrumbFromPath } from "../../lib/bread";
 import { MODE, LINK } from "../../component/constants";
 
 import styles from "../../styles/About.module.css";
@@ -10,14 +8,13 @@ import styles from "../../styles/About.module.css";
 /**Description About Page */
 
 export default function AboutPage() {
-  const router = useRouter(); // breadCrumb生成に必要
 
   return (
     <>
       <MyHead
         title="このサイトについて"
         metaDescription="このサイトの目的や作者情報、連絡先について記載します。"
-        breadCrumbsJSON_ld={breadCrumbFromPath(router)}
+        useBreadCrumb={true}
       />
       <Menu iniMode={MODE.ABOUT}></Menu>
       <About></About>
@@ -126,23 +123,3 @@ function About() {
     </>
   );
 }
-
-// function textContent(title: string, text: string) {
-//   return (
-//     <div className={`${styles.wrapper} ${styles.textContent}`}>
-//       <h3 className={styles.title}>{title}</h3>
-//       <p>{text}</p>
-//     </div>
-//   );
-// }
-
-// function likeContent(title: string, lists: string[]) {
-//   return (
-//     <div className={`${styles.wrapper} ${styles.textContent}`}>
-//       <h3 className={styles.title}>{title}</h3>
-//       <ul>
-//         {lists.map((txt, i) => <li key={i}>{txt}</li>)}
-//       </ul>
-//     </div>
-//   );
-// }
