@@ -3,11 +3,23 @@ github repo: mysitenext  [link](https://github.com/zenryokukun/mysitenext)
 github repo: mysiteのNext.js移行版
 
 ## 記事更新方法
-
-/adminページでアップロードすると、サーバ側に自動アップロードされる。ローカルでも同じファイルが置かれるように、記事は
+/adminページでアップロードすると、サーバ側に自動アップロードされ、ビルドも実行される。ローカルでも同じファイルが置かれるように、記事は
 **/public/posts**に格納すること。  
 アップロード時、DBにサムネファイルやフォルダのパス等の情報を挿入している。/blogページはこの情報からSSGしているので、
 public/postsのフォルダ構成とDBの値は一致している必要がある。表示がおかしくなったらここを疑うこと。
+
+## アプリの更新方法
+1. pm2を止める（任意？）
+2. git pull
+3. ビルド
+4. pm2再起動
+
+```bash
+git pull
+# ビルド＆pm2 restart `app-name` --time
+./lib/build.sh
+```
+
 
 ## フォルダ構成
 
