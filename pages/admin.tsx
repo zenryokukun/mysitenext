@@ -1,13 +1,17 @@
 import MyHead from "../component/MyHead";
 import Footer from "../component/Footer";
 import styles from "../styles/Admin.module.css";
-import React, { useState, useEffect, useRef, FormEvent } from "react";
+import React, { useState, useRef, useReducer, FormEvent, useEffect } from "react";
 import { GetServerSidePropsContext } from "next";
 import { isAdmin } from "../lib/db/func";
+import { useBlogs } from "../lib/admin/use-blogs";
+import { ACTIONS, blogItemReducer } from "../lib/admin/blog-reducer";
+import { useBlogForm, ACTIONS as FORM_ACTIONS } from "../lib/admin/use-blog-form";
 
+import type { Target } from "../lib/admin/use-blog-form";
 import type { BlogInfo } from "../types";
 import type { UpdateItem, UpdateItemRequest } from "../types";
-
+import type { WithId } from "mongodb";
 /**Description
  * Blog アップロード用Page
  * 
@@ -17,15 +21,12 @@ import type { UpdateItem, UpdateItemRequest } from "../types";
  */
 
 interface ThumbP {
-  updateThumb: (name: string) => void,
+  updateThumb: (key: "thumb", name: string) => void,
 }
 
 interface RefP {
   elemRef: React.RefObject<HTMLInputElement>,
 }
-
-// blog: 記事登録モード keyword: キーワード登録モード
-type Mode = "blog" | "update";
 
 /**
  * 拡張子をチェックする。画像系の拡張子（小文字）、mdファイル以外の拡張死はエラーにする。
@@ -97,142 +98,43 @@ function getMdFile(fnames: string[]): string {
 }
 
 /**
- * ブログ一覧からキーワード（重複なし）を抽出して返す関数
- * @param docs 
- * @returns 
+ * 頭と末尾の不要な区切り文字を削除する。"a,b,c,,," -> "a,b,c"
+ * @param s 
  */
-function keywordList(docs: BlogInfo[]) {
-  const kw: string[] = [];
-  for (const doc of docs) {
-    if (!doc.keywords) continue;
-    kw.push(...doc.keywords)
+function moldKeywords(s: string, delims: string = ",") {
+  while (s.slice(-1) === delims) {
+    s = s.slice(0, -1);
   }
-  const kwSet = new Set(kw);
-  const kwArr = Array.from(kwSet);
-  return kwArr.sort();
+  while (s.slice(0, 1) === delims) {
+    s = s.slice(1);
+  }
+  return s;
 }
 
+/***********************************************************************
+ * Admin : 最上位Component。Component
+ * `mode` stateによってInsertMode Component、UpdateMode Componentを表示。
+ * KeywordList Componentはどちらのモードでも利用するため、Adminで表示する。
+ ***********************************************************************/
 
-let _blogs: BlogInfo[] | null // dbから取得したblogのdocuments。memoization;
-
+type Mode = "insert" | "update"
 
 export default function Admin() {
+  const [mode, setMode] = useState<Mode>("insert");
+  const [genreList, setGenreList] = useState<string[]>([]);
+  // blog一覧とキーワード一覧を取得する。
+  // blogモード、updateモードで共有するstateな点に留意。
+  const { currentBlogs, setCurrentBlogs, keywords, setKeywords } = useBlogs();
 
-  const [genre, setGenre] = useState("");
-  const [genres, setGenres] = useState([]);
-  const [dir, setDir] = useState("");
-  const [thumb, setThumb] = useState("");
-  const [summary, setSummary] = useState("");
-  const [title, setTitle] = useState("");
-  const [isForce, setForce] = useState(false);
-  const [mode, setMode] = useState<Mode>("blog");
-  // KeywordListのstateをliftしたもの。入力チェックのため。
-  const [keywords, setKeywords] = useState<string[] | null>(null);
-  // 現時点のブログ一覧
-  const [currentBlogs, setCurrentBlogs] = useState<BlogInfo[] | null>(_blogs);
-  // file inputのrefを保持する変数
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  // 初回ロードのみ実行
-  useEffect(() => {
-    if (_blogs) return; // memoが存在する場合はリターン
-    console.log("useEffect called!", _blogs)
-    // blog一覧をfetch
-    fetch("/api/admin/blogs", {
-      method: "GET",
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          // 200系以外はエラー→.catchへ
-          const emsg = await res.text();
-          throw new Error(emsg);
-        }
-        return res.json()
-      })
-      .then((data: BlogInfo[]) => {
-        _blogs = data;
-        setCurrentBlogs(data);
-        // keyword一覧も更新
-        const kwlist = keywordList(data);
-        setKeywords(kwlist);
-      })
-      .catch(err => alert(err));
-  }, [])
-
+  const switchMode = (newMode: Mode) => setMode(newMode);
 
   useEffect(() => {
     fetch("/api/admin")
       .then(res => res.json())
-      .then(data => {
-        setGenres(data["genre"]);
-        setGenre(data["genre"][0]);
-      });
-  }, []);
-
-  const updateThumb = (name: string) => setThumb(name);
-
-  const onsubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); //defaultのformイベントを無効か
-
-    //チェック開始***********************
-    if (fileInput.current === null) {
-      return;
-    }
-    const files = fileInput.current.files;
-    if (files === null || files.length === 0) {
-      alert("ファイルが選択されていない？")
-      return;
-    }
-
-    const fnames = Array.from(files).map(file => file.name);
-    if (!checkExt(fnames) || !hasMd(fnames) || !doesThumbMatch(thumb, fnames)) {
-      return;
-    }
-
-    if (dir === "" || title === "" || summary === "") {
-      alert("保存先、タイトル、概要はすべて入力必要です");
-      return;
-    }
-
-    //チェック終了。ここから下はエラーなし**********
-    const formData = new FormData();
-    // file以外のformを設定
-    const md = getMdFile(fnames);
-    const data = {
-      "genre": genre,
-      "dir": dir,
-      "thumb": thumb,
-      "title": title,
-      "summary": summary,
-      "md": md,
-      "isForce": isForce.toString(),
-    };
-
-    for (const [key, val] of Object.entries(data)) {
-      formData.append(key, val);
-    }
-
-    // fileをformDataに設定
-    Array.from(files).map(file => formData.append("uploads", file, file.name))
-
-    fetch("/api/admin/upload", {
-      method: "POST",
-      body: formData,
-    })
-      .then(res => res.text())
-      .then(data => alert(data))
-      .catch(err => alert(err))
-  };
-
-  const testBuild = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    fetch("/api/admin/testbuild", {
-      method: "POST"
-    })
-  };
-
-  // モード切替用関数
-  const modeClicked = (e: React.MouseEvent<HTMLButtonElement>, selectedMode: Mode) => setMode(selectedMode);
+      .then((data) => {
+        setGenreList(data["genre"]);
+      })
+  }, [])
 
   // 新しいkeyword登録を判定する関数
   const checkNewKeyword = (newKeywords: string[]) => {
@@ -251,79 +153,34 @@ export default function Admin() {
 
   return (
     <>
-      <MyHead title="全力ブログ・システム"></MyHead>
+      <MyHead title="全力ブログ・システム" useBreadCrumb={false}></MyHead>
       <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
       <div className={styles.dummyBody}>
-        <KeywordList list={keywords} update={setKeywords} />
+        <KeywordList list={keywords} />
         <main className={styles.container}>
           <div className={styles.modeContainer}>
             <button
-              onClick={e => modeClicked(e, "blog")}
-              className={mode === "blog" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
+              onClick={e => switchMode("insert")}
+              className={mode === "insert" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
               ブログ登録
             </button>
             <button
-              onClick={e => modeClicked(e, "update")}
+              onClick={e => switchMode("update")}
               className={mode === "update" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
               更新
             </button>
           </div>
-          {mode === "blog" &&
-            <form action="/api/admin/upload" method="post" encType="multipart/form-data" onSubmit={onsubmit}>
-              <ol className={styles.listContainer}>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="genre" >ジャンル</label>
-                  <select id="genre" name="genre" className={styles.genre} value={genre} onChange={e => setGenre(e.target.value)}>
-                    {genres.map((genre, i) => <option key={i}>{genre}</option>)}
-                  </select>
-                </li>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
-                  <div className={styles.caution}>ディレクトリは手入力してください。頭の&quot/&quotは入れなくてよいです。例：202201_1/。</div>
-                  <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => setDir(e.target.value)} />
-                </li>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="title">タイトル</label>
-                  <input id="title" type="text" name="title" value={title} className={styles.blogTitle} onChange={e => setTitle(e.target.value)} />
-                </li>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="summary">概要</label>
-                  <textarea id="summary" name="summary" value={summary} className={styles.summary} onChange={e => setSummary(e.target.value)}></textarea>
-                </li>
-
-                <Uploader updateThumb={updateThumb} elemRef={fileInput}></Uploader>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="thumb">サムネのファイル名</label>
-                  <div className={styles.caution}>ファイル名は手入力してください。アップロードファイル名をクリックすると自動セットされるよ。無い場合は何も入力しないでください。</div>
-                  <input id="thumb" type="text" name="thumb" value={thumb} onChange={e => setThumb(e.target.value)} />
-                </li>
-
-                <li className={styles.items}>
-                  <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => setForce((force) => !force)} />
-                  <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
-                </li>
-
-                <li className={styles.items}>
-                  <label className={styles.label} htmlFor="submit">送信</label>
-                  <input id="submit" className={styles.submit} type="submit" value="submit" />
-                </li>
-
-                <input type="text" name="md" className={styles.hidden}></input>
-                {/* <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button> */}
-                <button onClick={testBuild}>Buildテスト</button>
-              </ol>
-            </form>
+          {mode === "insert" &&
+            <InsertMode
+              reload={setCurrentBlogs}
+              checkNewKeyword={checkNewKeyword}
+              genreList={genreList}
+            />
           }
           {mode === "update" &&
             <UpdateMode
-              genres={genres}
+              genreList={genreList}
               checkNewKeyword={checkNewKeyword}
-              updateKeywords={setKeywords}
               reload={setCurrentBlogs}
               currentBlogs={currentBlogs}
             />
@@ -335,6 +192,195 @@ export default function Admin() {
   );
 }
 
+/************************************************************************
+ * InsertMode Component。`mode`が"insert"の時に表示。
+ * ブログの新規Insert（アップロード）を行う。保存先が同じ場合は、
+ * 上書きでアップロードすることも可能。
+ * DBの登録とサーバにフォルダを作成を行うので、submitの前に良く確認すること。
+ /***********************************************************************/
+interface InsertModeProp {
+  genreList: string[]
+  checkNewKeyword(c: string[]): boolean,
+  reload: React.Dispatch<React.SetStateAction<BlogInfo[] | null>>,
+}
+
+// /api/admin/uploadのresponseボデーの型。application/json。
+interface UploadResponse {
+  blogs: WithId<BlogInfo>[]; // uploadを反映したブログ一覧
+  msg: string; // 成功メッセージ
+}
+
+export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModeProp) {
+
+  const { state, dispatch } = useBlogForm((genreList && genreList.length > 0) ? genreList[0] : "");
+  const { genre, dir, thumb, summary, title, isForce, keywordsInput } = state;
+  // file inputのrefを保持する変数
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const keyChanged = (key: Target, val: (string | boolean)) => {
+    dispatch({
+      type: FORM_ACTIONS.CHANGE,
+      payload: {
+        change: { target: key, value: val }
+      }
+    });
+  }
+
+  const onsubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); //defaultのformイベントを無効か
+
+    //チェック開始***********************
+    if (fileInput.current === null) {
+      return;
+    }
+    // fileが取得出来ない場合はエラー
+    const files = fileInput.current.files;
+    if (files === null || files.length === 0) {
+      alert("ファイルが選択されていない？")
+      return;
+    }
+
+    // ファイル名チェック。画像拡張子、mdファイルが存在するか、サムネが一覧に含まれるかをチェック。
+    const fnames = Array.from(files).map(file => file.name);
+    if (!checkExt(fnames) || !hasMd(fnames) || !doesThumbMatch(thumb, fnames)) {
+      return;
+    }
+
+    // 必須項目チェック
+    if (dir === "" || title === "" || summary === "") {
+      alert("保存先、タイトル、概要はすべて入力必要です");
+      return;
+    }
+
+    // 入力したkeywordsを配列に変換する。未入力の場合は空配列にする。
+    // 新しいkeywordがある場合、確認メッセージを出す。
+    // キャンセルを押した場合は何もせず戻る。
+    let _kw = keywordsInput || "";
+    _kw = moldKeywords(_kw);
+    let _kwArr = _kw.length === 0 ? [] : _kw.split(",")
+    if (_kwArr.length > 0 && checkNewKeyword(_kwArr)) {
+      if (!confirm("新しいパスワードが含まれます。登録して良いですか？")) {
+        return;
+      }
+    }
+
+    //チェック終了。ここから下はエラーなし**********
+    const formData = new FormData();
+    // file以外のformを設定
+    const md = getMdFile(fnames);
+    // postするデータ。multipart/form-dataとなるため、
+    // booleanや配列は文字列に変換する。適宜サーバでparseする。
+    const data = {
+      "genre": genre,
+      "dir": dir,
+      "thumb": thumb,
+      "title": title,
+      "summary": summary,
+      "md": md,
+      "isForce": isForce.toString(),
+      "keywords": JSON.stringify(_kwArr),
+    };
+
+    for (const [key, val] of Object.entries(data)) {
+      formData.append(key, val);
+    }
+
+    // fileをformDataに設定
+    Array.from(files).map(file => formData.append("uploads", file, file.name))
+
+    // upload。responseでuploadを反映した最新のブログ情報が帰ってくる。
+    fetch("/api/admin/upload", {
+      method: "POST",
+      body: formData,
+    })
+      // .then(res => res.text())
+      // .then(data => alert(data))
+      .then(res => res.json())
+      .then((data: UploadResponse) => {
+        const { blogs, msg } = data;
+        if (!blogs || blogs.length === 0) throw new Error("Could not get new blogs. Please check your DB.")
+        reload(blogs); // 最新のブログ情報で更新
+        alert(msg);
+      })
+      .catch(err => alert(err))
+  };
+
+  // const testBuild = (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.preventDefault();
+  //   fetch("/api/admin/testbuild", {
+  //     method: "POST"
+  //   })
+  // };
+
+  return (
+    <>
+      <h2 style={{ "textAlign": "center" }}>挿入（アップロード）モードの解説</h2>
+      <p>
+        新規ブログを挿入するモード。上書きのチェックボックスをオンにすれば、既存のフォルダを削除して再アップロードしてくれる。
+        submitボタンを押すと、DBへの挿入と、/public/postsにフォルダが作成される。テストの際には注意すること。
+      </p>
+      <form action="/api/admin/upload" method="post" encType="multipart/form-data" onSubmit={onsubmit}>
+        <ol className={styles.listContainer}>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="genre" >ジャンル</label>
+            <select id="genre" name="genre" className={styles.genre} value={genre} onChange={e => keyChanged("genre", e.target.value)}>
+              {genreList.map((genre, i) => <option key={i}>{genre}</option>)}
+            </select>
+          </li>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="assets">保存先ディレクトリ</label>
+            <div className={styles.caution}>ディレクトリは手入力してください。頭の/(slash)は入れなくてよいです。例：202201_1。</div>
+            <input id="assets" type="text" name="assetsDir" value={dir} className={styles.dir} onChange={e => keyChanged("dir", e.target.value)} />
+          </li>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="title">タイトル</label>
+            <input id="title" type="text" name="title" value={title} className={styles.blogTitle} onChange={e => keyChanged("title", e.target.value)} />
+          </li>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="summary">概要</label>
+            <textarea id="summary" name="summary" value={summary} className={styles.summary} onChange={e => keyChanged("summary", e.target.value)}></textarea>
+          </li>
+
+          <Uploader updateThumb={keyChanged} elemRef={fileInput}></Uploader>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="thumb">サムネのファイル名</label>
+            <div className={styles.caution}>ファイル名は手入力してください。アップロードファイル名をクリックすると自動セットされるよ。無い場合は何も入力しないでください。</div>
+            <input id="thumb" type="text" name="thumb" value={thumb} onChange={e => keyChanged("thumb", e.target.value)} />
+          </li>
+
+          <li className={styles.items}>
+            <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => keyChanged("isForce", !isForce)} />
+            <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
+          </li>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="keywords">キーワード</label>
+            <input id="keywords" type="text" name="keywords" value={keywordsInput} onChange={e => keyChanged("keywordsInput", e.target.value)} />
+          </li>
+
+          <li className={styles.items}>
+            <label className={styles.label} htmlFor="submit">送信</label>
+            <input id="submit" className={styles.submit} type="submit" value="submit" />
+          </li>
+
+          <input type="text" name="md" className={styles.hidden}></input>
+          {/* <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); console.log(genre) }}>TEST!</button> */}
+          {/* <button onClick={testBuild}>Buildテスト</button> */}
+        </ol>
+      </form>
+    </>
+  );
+}
+
+
+/**********************************************************************
+ * InsertModeの下位Component。アップロードファイルの選択をする。
+ **********************************************************************/
 function Uploader(props: ThumbP & RefP) {
 
   const { updateThumb, elemRef } = props;
@@ -358,13 +404,21 @@ function Uploader(props: ThumbP & RefP) {
   );
 }
 
+
+/**********************************************************************
+ * Uploaderの下位Component。アップロードファイルの名前を一覧で表示する。
+ **********************************************************************/
 function FileList(props: { data: string[] } & ThumbP) {
 
   const { data, updateThumb } = props;
 
   const click = (e: React.MouseEvent<HTMLButtonElement>, name: string) => {
     e.preventDefault();
-    updateThumb(name);
+    if (name.endsWith(".md")) {
+      alert("mdファイルはサムネに出来ません")
+      return;
+    }
+    updateThumb("thumb", name);
   };
 
   return (
@@ -375,19 +429,24 @@ function FileList(props: { data: string[] } & ThumbP) {
 }
 
 
+/**********************************************************************
+ * UpdateMode Component。Adminで`mode`が"insert"の時に表示。
+ * /blogページで表示される情報の修正が可能。titleは実際の記事のtitleでなく、
+ * あくまで/blogページに表示される太字な点に留意。
+ **********************************************************************/
+
 interface UpdateModeProp {
-  genres: string[],
+  genreList: string[],
   checkNewKeyword(c: string[]): boolean,
   currentBlogs: BlogInfo[] | null,
   reload: React.Dispatch<React.SetStateAction<BlogInfo[] | null>>,
-  updateKeywords: React.Dispatch<React.SetStateAction<string[] | null>>
 }
 function UpdateMode({
-  genres, checkNewKeyword, updateKeywords, currentBlogs, reload
+  genreList, checkNewKeyword, currentBlogs, reload
 }: UpdateModeProp) {
   return (
     <>
-      <h1 style={{ "textAlign": "center" }}>更新モードの解説</h1>
+      <h2 style={{ "textAlign": "center" }}>更新モードの解説</h2>
       <p>
         ブログページに表示されるタイトルとサマリの更新モード。キーワードの追加と更新もここで行う。記事単位で更新が可能。
         キーワードはカンマ区切りで入力し、"["と"]"で囲う必要はない。
@@ -397,7 +456,7 @@ function UpdateMode({
         currentBlogs
           ?
           <ol className={styles.listContainer}>
-            {currentBlogs.map((blog, i) => <Blog {...blog} genres={genres} reload={reload} checkNewKeyword={checkNewKeyword} updateKeywords={updateKeywords} key={i} />)}
+            {currentBlogs.map((blog, i) => <Blog {...blog} genreList={genreList} reload={reload} checkNewKeyword={checkNewKeyword} key={i} />)}
           </ol>
           :
           <div style={{ textAlign: "center", height: "500px", fontSize: "2rem", color: "white" }}>LOADING...</div>
@@ -406,76 +465,89 @@ function UpdateMode({
   );
 }
 
+
+/************************************************************************
+ * Blog Component。UpdateModeの下位Component。
+ ************************************************************************/
+
 interface BlogItemProp extends BlogInfo {
-  genres: string[],
+  genreList: string[],
   reload: React.Dispatch<React.SetStateAction<BlogInfo[] | null>>,
   checkNewKeyword(c: string[]): boolean,
-  updateKeywords: React.Dispatch<React.SetStateAction<string[] | null>>
 }
 
+/**
+ * Blogごとの情報を更新するためのComponent。
+ * @param param [BlogItemProp]assetsDir,title,summary,genre,keywrodsはdb値
+ * @returns 
+ */
 function Blog({
-  assetsDir, title, summary, genre, genres, keywords, reload,
-  checkNewKeyword, updateKeywords,
+  assetsDir, title, summary, genre, genreList, keywords,
+  reload, checkNewKeyword
 }: BlogItemProp) {
+
   // ["a","b"] => "a,b"に変換。[]なら""に変換
   const keywordsStr = keywords ? keywords.join(",") : "";
-  // from controllのために使う
-  const [titleInput, setTitleInput] = useState<string>(title);
-  const [summaryInput, setSummaryInput] = useState<string>(summary);
-  const [genreInput, setGenreInput] = useState<string>(genre);
-  const [keywordsInput, setKeywrodsInput] = useState<string>(keywordsStr);
-  // 変更判別用
-  const [isTitleChanged, setIsTitleChanged] = useState<boolean>(false);
-  const [isSummaryChanged, setIsSummaryChanged] = useState<boolean>(false);
-  const [isGenreChanged, setIsGenreChanged] = useState<boolean>(false);
-  const [isKeywordsChanged, setIsKeywordsChanged] = useState<boolean>(false);
+
+  // 各stateを設定。**Inputはユーザ入力値。is**Changedは変更フラグ。
+  const [state, dispatch] = useReducer(blogItemReducer, {
+    titleInput: title, summaryInput: summary,
+    genreInput: genre, keywordsInput: keywordsStr,
+    isTitleChanged: false, isSummaryChanged: false, isGenreChanged: false, isKeywordsChanged: false,
+  })
+
+  // stateからデータをdestruct.
+  const {
+    titleInput, summaryInput,
+    genreInput, keywordsInput,
+    isTitleChanged, isSummaryChanged,
+    isGenreChanged, isKeywordsChanged
+  } = state;
 
   // タイトルを変更した時に呼び出される
   const titleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // controll input element
-    setTitleInput(e.target.value);
-    // 入力値がDB値と一致していればfalse、不一致ならtrue
-    setIsTitleChanged(e.target.value !== title);
+    e.preventDefault();
+    dispatch({ type: ACTIONS.TITLE, payload: { titleInput: e.target.value, dbTitle: title } })
   };
 
   // サマリを変更した時に呼び出される
   const summaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // controll textarea element
-    setSummaryInput(e.target.value);
-    // 入力値がDB値と一致していればfalse、不一致ならtrue
-    setIsSummaryChanged(e.target.value !== summary);
+    e.preventDefault();
+    dispatch({ type: ACTIONS.SUMMARY, payload: { summaryInput: e.target.value, dbSummary: summary } })
   }
 
   // ジャンルを変更した時に呼び出される
   const genreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setGenreInput(e.target.value);
-    setIsGenreChanged(e.target.value !== genre);
+    e.preventDefault();
+    dispatch({ type: ACTIONS.GENRE, payload: { genreInput: e.target.value, dbGenre: genre } })
   }
 
   const keywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setKeywrodsInput(e.target.value);
-    setIsKeywordsChanged(e.target.value !== keywordsStr);
+    e.preventDefault();
+    dispatch({ type: ACTIONS.KEYWORDS, payload: { keywordsInput: e.target.value, dbKeywords: keywordsStr } })
   }
 
   // 値を戻す
   const undo = () => {
-    setTitleInput(title);
-    setSummaryInput(summary);
-    setGenreInput(genre);
-    setKeywrodsInput(keywordsStr);
-    // 色も戻す
-    defaultColor();
+    // db値をユーザ入力値に設定することで元に戻す。
+    dispatch({
+      type: ACTIONS.UNDO,
+      payload: {
+        titleInput: title,
+        summaryInput: summary,
+        genreInput: genre,
+        keywordsInput: keywordsStr
+      }
+    })
   };
 
   // 変更色を戻す
   const defaultColor = () => {
-    setIsTitleChanged(false);
-    setIsSummaryChanged(false);
-    setIsGenreChanged(false);
-    setIsKeywordsChanged(false);
+    dispatch({ type: ACTIONS.UN_COLOR, payload: {} });
   };
 
-  const commit = async () => {
+  const commit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     const data: UpdateItem = {};
     // 変更が無い場合は何もしない。
     if (!isSummaryChanged && !isTitleChanged
@@ -485,9 +557,9 @@ function Blog({
       return;
     }
 
-    const kwArr = keywordsInput.split(",");
+    const kwStr = moldKeywords(keywordsInput);
+    const kwArr = kwStr.split(",");
     // 入力ミス確認のため、新キーワードの場合は確認ダイアログを表示
-
     if (checkNewKeyword(kwArr)) {
       if (!confirm("新しいパスワードが含まれます。登録して良いですか？")) {
         return;
@@ -511,6 +583,7 @@ function Blog({
       updateKey: { assetsDir },
       data: data,
     };
+
     try {
       const resp = await fetch("/api/admin/update-one", {
         headers: { "Content-Type": "application/json" },
@@ -525,9 +598,6 @@ function Blog({
       alert("Update succeeded!")
       // ブログを更新
       reload(blogs);
-      // keyword更新
-      const kwlist = keywordList(blogs);
-      updateKeywords(kwlist);
       // 色戻す
       defaultColor();
     } catch (err) {
@@ -552,7 +622,7 @@ function Blog({
           onChange={genreChange}
           value={genreInput}
         >
-          {genres.map((v, i) => <option key={i}>{v}</option>)}
+          {genreList.map((v, i) => <option key={i}>{v}</option>)}
         </select>
       </div>
       <div className={styles.updateItem}>
@@ -591,37 +661,29 @@ function Blog({
   );
 }
 
+/************************************************************************
+ * Keyword一覧。Adminの下位Component。`mode`にかかわらず、サイドバーとして表示。
+ ***********************************************************************/
 interface KeywordListProp {
   list: string[] | null;
-  update: React.Dispatch<React.SetStateAction<string[] | null>>
 }
-function KeywordList({ list, update }: KeywordListProp) {
-  // const [keywords, setKeywords] = useState<string[] | null>(null);
-  // useEffect(() => {
-  //   fetch("/api/admin/keyword-list")
-  //     .then(res => {
-  //       if (!res || !res.ok) {
-  //         throw new Error("Something went wrong...Could not get keyword list!")
-  //       }
-  //       return res.json()
-  //     })
-  //     .then((data: string[]) => update(data.sort()))
-  //     .catch(err => alert(err))
-  // }, []);
+
+function KeywordList({ list }: KeywordListProp) {
 
   return (
     <aside
-      style={{
-        "backgroundColor": "#333", "color": "white",
-        "paddingRight": "1rem", "position": "fixed", "alignSelf": "flex-start", "top": "0px",
-        "height": "100vh", "paddingTop": "3rem"
-      }}
+      // style={{
+      //   "backgroundColor": "#333", "color": "white",
+      //   "paddingRight": "1rem", "position": "fixed", "alignSelf": "flex-start", "top": "0px",
+      //   "height": "100vh", "paddingTop": "3rem"
+      // }}
+      className={styles.keywordWrapper}
     >
-      <div style={{ textAlign: "center" }}>キーワード一覧</div>
+      <div className={styles.center}>キーワード一覧</div>
       {
         list
           ?
-          <ul>
+          <ul className={styles.keywordItemWrapper}>
             {list.map((kw, i) => <li key={i}>{kw}</li>)}
           </ul>
           :
@@ -631,11 +693,12 @@ function KeywordList({ list, update }: KeywordListProp) {
   );
 }
 
-/*************************************************
+
+/*************************************************************************
  * SSR　サーバ側の処理な点に留意。
  * @param context リクエストを操作するためのオブジェクト
  * @returns 
- **************************************************/
+ ************************************************************************/
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { user } = context.req.cookies;
   // 認証されていなければログインページへ

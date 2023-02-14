@@ -1,6 +1,12 @@
+/**
+ * /pages/adminで使用。ブログ記事のアップロードで使う。
+ * アップロード後、最新のブログ情報を返す。
+ */
+
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { multiUploader, saveFiles, makeFolder, insertDB } from "./middleware";
+import { findBlogDocs } from "../../../lib/db/func";
 import build from "../../../lib/build";
 
 const onerror = (err: Error, req: NextApiRequest, res: NextApiResponse) => {
@@ -13,9 +19,12 @@ const onnomatch = (req: NextApiRequest, res: NextApiResponse) => res.status(404)
 const router = nextConnect({ onError: onerror, onNoMatch: onnomatch });
 router.use(multiUploader);
 
-router.post(makeFolder, saveFiles, insertDB, (req: NextApiRequest, res: NextApiResponse) => {
-    build() //ビルド
-    res.status(200).send("Upload succeeded!")
+router.post(makeFolder, saveFiles, insertDB, async (req: NextApiRequest, res: NextApiResponse) => {
+    build(); //ビルド
+    // res.status(200).send("Upload succeeded!")
+    const blogs = await findBlogDocs(999);
+    const resData = { blogs, msg: "upload succeeded!" };
+    res.status(200).json(resData);
 });
 
 export const config = {

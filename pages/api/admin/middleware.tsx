@@ -87,7 +87,7 @@ async function saveFiles(req: CustomRequest, res: NextApiResponse, next: () => v
 
 
 async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => void) {
-    const { genre, dir, title, summary, thumb, md } = req.body;
+    const { genre, dir, title, summary, thumb, md, keywords } = req.body;
     const info: BlogInfo = {
         genre: genre,
         assetsDir: dir,
@@ -100,6 +100,7 @@ async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => v
         views: 0,
     }
     info["posted"] = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+    info["keywords"] = JSON.parse(keywords);
     insertBlogInfo(info);
     next();
 }
