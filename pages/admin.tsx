@@ -556,6 +556,11 @@ function Blog({
       alert("何も変更されていません。")
       return;
     }
+    // タイトル、概要に入力が無い場合はエラー
+    if (summaryInput.length === 0 || titleInput.length === 0) {
+      alert("タイトルと概要は入力必須です");
+      return;
+    }
 
     const kwStr = moldKeywords(keywordsInput);
     const kwArr = kwStr.split(",");
