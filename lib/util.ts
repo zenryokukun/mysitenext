@@ -53,8 +53,8 @@ export async function toHTMLString(md: string): Promise<string> {
     const processed = await
         remark()
             .use(remarkGfm)
-            .use(html, { sanitize: false })
             .use(remarkPrism)
+            .use(html, { sanitize: false })
             .process(md)
     return processed.toString();
 }
