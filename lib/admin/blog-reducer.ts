@@ -69,7 +69,10 @@ export function blogItemReducer(state: BlogItemState, action: Action) {
             };
 
         case ACTIONS.TITLE:
-            if (!titleInput || !dbTitle) return state;
+            /**
+             * jsでは空文字（""）を評価するとfalseになる点に留意。。。
+             */
+            if (titleInput === undefined || dbTitle === undefined) return state;
             isChanged = titleInput !== dbTitle;
             return {
                 ...state,
@@ -78,7 +81,7 @@ export function blogItemReducer(state: BlogItemState, action: Action) {
             }
 
         case ACTIONS.SUMMARY:
-            if (!summaryInput || !dbSummary) return state;
+            if (summaryInput === undefined || dbSummary === undefined) return state;
             isChanged = summaryInput !== dbSummary;
             return {
                 ...state,
@@ -87,7 +90,7 @@ export function blogItemReducer(state: BlogItemState, action: Action) {
             }
 
         case ACTIONS.GENRE:
-            if (!genreInput || !dbGenre) return state;
+            if (genreInput === undefined || dbGenre === undefined) return state;
             isChanged = genreInput !== dbGenre;
             return {
                 ...state,
@@ -96,7 +99,7 @@ export function blogItemReducer(state: BlogItemState, action: Action) {
             }
 
         case ACTIONS.KEYWORDS:
-            if (!keywordsInput || !dbKeywords) return state;
+            if (keywordsInput === undefined || dbKeywords === undefined) return state;
             isChanged = keywordsInput !== dbKeywords;
             return {
                 ...state,
