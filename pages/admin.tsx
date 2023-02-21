@@ -205,7 +205,7 @@ interface InsertModeProp {
 }
 
 // /api/admin/uploadのresponseボデーの型。application/json。
-interface UploadResponse {
+interface UpdateInsertResponse {
   blogs: WithId<BlogInfo>[]; // uploadを反映したブログ一覧
   msg: string; // 成功メッセージ
 }
@@ -296,7 +296,7 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
       // .then(res => res.text())
       // .then(data => alert(data))
       .then(res => res.json())
-      .then((data: UploadResponse) => {
+      .then((data: UpdateInsertResponse) => {
         const { blogs, msg } = data;
         if (!blogs || blogs.length === 0) throw new Error("Could not get new blogs. Please check your DB.")
         reload(blogs); // 最新のブログ情報で更新
@@ -599,7 +599,9 @@ function Blog({
         const msg = await resp.text();
         throw new Error(msg)
       }
-      const blogs = await resp.json();
+      const data: UpdateInsertResponse = await resp.json();
+      const { blogs, msg } = data;
+      if (!blogs || blogs.length === 0) throw new Error(`Could not get new blogs. Please check your DB:${msg}`)
       alert("Update succeeded!")
       // ブログを更新
       reload(blogs);

@@ -52,8 +52,9 @@ async function makeFolder(req: CustomRequest, res: NextApiResponse, next: () => 
         }
     } else {
         // 存在する場合。
-        //　同じフォルダ名で登録されているドキュメントをDBから削除
-        deleteDuplicateDir({ assetsDir: dir });
+        // 同じフォルダ名で登録されているドキュメントをDBから削除
+        // 削除後に挿入するため、awaitする。
+        await deleteDuplicateDir({ assetsDir: dir });
         next();
     }
 }
@@ -101,7 +102,13 @@ async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => v
     }
     info["posted"] = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
     info["keywords"] = JSON.parse(keywords);
-    insertBlogInfo(info);
+
+    // insert後に更新版のブログを返したいので、待つ
+    const result = await insertBlogInfo(info);
+    if (!result.acknowledged) {
+        // insertが失敗した場合はclientにエラーメッセージを返す。
+        return res.status(500).send("something went wrong...Try later!");
+    }
     next();
 }
 export { multiUploader, makeFolder, saveFiles, insertDB }

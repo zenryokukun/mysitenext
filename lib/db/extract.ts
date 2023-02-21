@@ -2,44 +2,54 @@
  * 記事一覧を抽出する関数群。関連記事や新着記事等 
  */
 
-import type { WithId } from "mongodb";
 import { BlogInfo } from "../../types";
-import { getBlogMemo } from "./blog-memo";
+import { findBlogDocs, findMatched, findByField } from "./func";
+
+import type { WithId } from "mongodb";
+
+/**
+ * dirで指定したブログを抽出する。assetsDirはユニークなので、１件しか返らない。
+ * @param dir 抽出するassetsDirの値
+ * @returns 
+ */
+export async function findByDir(dir: string) {
+    const blogArr = await findByField("assetsDir", dir);
+    if (!blogArr || blogArr.length === 0) return;
+    return blogArr[0];
+}
+
 
 /**
  * 関連記事抽出する関数。指定されたkeywordsを含むblogを返す。
- * @param kw keywordの配列
+ * @param BlogInfo 比較元のBlog
  * @returns 一致するキーワードを含むBlogInfo[]
  */
 export async function relatedBlogs(targetBlog: BlogInfo | undefined) {
-    // blogのmemoizationを取得
-    const memo = await getBlogMemo();
-    // 戻り値
-    const rels: BlogInfo[] = [];
-    // memoやtargetBlogが定義されていない場合は空配列を返す
-    if (!memo || !targetBlog) return rels;
 
-    const { keywords: targetKeywords, assetsDir: targetAssetsDir } = targetBlog;
+    let rels: WithId<BlogInfo>[] = [];
 
-    // targetBlogにkeywordsが設定ｓあれていない場合は空配列を返す
-    if (!targetKeywords) return rels;
-    // memoを走査し、targetのキーワードと一致するデータをrelにプッシュ。
+    // targetBlogがundefinedなら空配列を返す
+    if (!targetBlog) return rels;
+
+    const { assetsDir, keywords } = targetBlog;
+
+    // keywordがundefined、もしくは長さ０の配列なら空配列を返す。
+    // undefined->改修前の記事なら発生しうる。長さゼロ->keyword設定していないやつ。
+    if (!keywords || keywords.length === 0) return rels;
+
+    // キーワードを含むブログ一覧を取得
+    const matchedBlogs = await findMatched(keywords);
+
     // 自分自身は除外する必要がある点に留意
-    memo.forEach(blog => {
-        // keywrodsが設定されていないデータは次の走査に移る。
-        if (!blog.keywords) return;
-        // 自分自身の場合（targetのassetsDirと一致）は何もせず次の走査に移る。
-        if (targetAssetsDir === blog.assetsDir) return;
-        // blogのkeywordsを操作し、targetのキーワードと一致していればrelにプッシュ。
-        for (const kw of blog.keywords) {
-            if (targetKeywords.includes(kw)) {
-                rels.push(blog);
-                break;
-            }
+    for (const blog of matchedBlogs) {
+        if (blog.assetsDir !== assetsDir) {
+            rels.push(blog);
         }
-    });
+    }
+
     return rels;
 }
+
 
 /**
  * 記事を新しい順にcnt分返す
@@ -49,17 +59,16 @@ export async function relatedBlogs(targetBlog: BlogInfo | undefined) {
  */
 export async function newBlogs(cnt: number, opt: { discludeDir: string } | undefined = undefined) {
     const ret: BlogInfo[] = [];
-    // blogのmemoizationを取得。降順（新しい順）に並んでいる点に留意。
-    const memo = await getBlogMemo();
-    if (!memo) return ret;
+    // blogをcnt+1分取得。降順（新しい順）に並んでいる点に留意。
+    // 自分自身が含まれる可能性があるのでcnt+1にしている。
+    const blogs = await findBlogDocs(cnt + 1);
+    if (!blogs) return ret;
     // option未指定の場合はそのままcnt分返す。
     if (!opt) {
-        return memo?.slice(0, cnt);
+        return blogs.slice(0, cnt);
     }
 
-    // optionが指定されている場合、opt.discludeを除いてcnt分返す。
-    // cntより1つ多くslice。
-    const blogs = memo?.slice(0, cnt + 1);
+    // optionが指定されている場合、discludeDirを除外して返す。
     const newBlogs: WithId<BlogInfo>[] = [];
     for (const blog of blogs) {
         if (blog.assetsDir !== opt.discludeDir) {

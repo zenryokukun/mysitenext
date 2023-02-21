@@ -22,7 +22,7 @@ router.use(multiUploader);
 router.post(makeFolder, saveFiles, insertDB, async (req: NextApiRequest, res: NextApiResponse) => {
     build(); //ビルド
     // res.status(200).send("Upload succeeded!")
-    const blogs = await findBlogDocs(999);
+    const blogs = await findBlogDocs();
     const resData = { blogs, msg: "upload succeeded!" };
     res.status(200).json(resData);
 });

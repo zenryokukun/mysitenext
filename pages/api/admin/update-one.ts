@@ -1,4 +1,4 @@
-import { isAdmin, updateBlogInfo } from "../../../lib/db/func";
+import { isAdmin, updateBlogInfo, findBlogDocs } from "../../../lib/db/func";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { UpdateItemRequest } from "../../../types";
 
@@ -24,10 +24,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // UpdateItemRequestには更新キーと更新データが入ってる。
     const body: UpdateItemRequest = req.body;
     // db更新処理。
-    const blogs = await updateBlogInfo(body);
-    if (!blogs) {
+    const result = await updateBlogInfo(body);
+    if (!result.acknowledged) {
         return res.status(500).send("something went wrong...Try later!")
     }
+
     // 新しいブログのリストをクライアントに返す。
-    res.status(200).json(blogs);
+    const blogs = await findBlogDocs();
+    const resData = { blogs, msg: "upload succeeded!" };
+    res.status(200).json(resData);
 }

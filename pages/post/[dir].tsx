@@ -10,7 +10,7 @@ import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
 import { useState, useEffect } from "react";
-import { filterBlogMemo } from "../../lib/db/blog-memo";
+import { findByDir } from "../../lib/db/extract";
 
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -37,7 +37,7 @@ interface DataProp extends HeadProp {
  * getStaticPropsの戻り値。default exportされるPageの引数として呼ばれる。  
  * ブログ用mdファイルをfront-matter部分とmd部分に分割したデータがpropsとして渡される。  
  * props.content -> md部分をhtml文字列化したデータ  
- * props.data:HeadProp -> front-matter部分のデータ  
+ * props.data:DataProp -> front-matter部分のデータ  
  */
 interface PostProp {
   content: string;
@@ -139,8 +139,7 @@ export async function getStaticProps({ params }: PathProp) {
   const data = fmtData.data as DataProp;
 
   // 処理対象となるblog抽出
-  const targetBlog = await filterBlogMemo(dir);
-
+  const targetBlog = await findByDir(dir);
   // targetBlogのキーワードから関連記事を抽出
   const _rels = await relatedBlogs(targetBlog);
   // 最新記事を3つ。自分自身は除外。

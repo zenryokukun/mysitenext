@@ -67,25 +67,11 @@ function getCollection(client: MongoClient, col: string) {
 
 /**
  * assetsコレクションからblogの一覧documentを取得する。  
- *   
- * @param limit 抽出するドキュメント数の上限
- * @returns 
+ * @param limit 抽出するドキュメント数の上限。指定しない場合のdefault上限は999。
+ * @returns Promise<WithId<BlogInfo>[]>
  * 戻り値は以下に解決されるPromise。配列に入ってる。
- * [{
-    _id: ObjectId("6300ea351ce54aa4a26052bf"),  
-    genre: 'travel',  
-    assetsDir: '201102_1',  
-    title: '九州、そして鼻血',  
-    summary: '2011年冬、当時新社会人だった私は、一人九州に旅立つのでした。',  
-    thumb: 'nozomi.jpg',  
-    md: 'page2.md',  
-    likes: 0,  
-    dislikes: 0,  
-    posted: '8/20/2022, 11:05:41 PM',  
-    views: 0  
-  },]
  */
-async function findBlogDocs(limit: number) {
+async function findBlogDocs(limit: number = 999) {
     const col = await getAssetsCollection();
     const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
     return docs;
@@ -100,6 +86,43 @@ async function getBlogDirList() {
     const col = await getAssetsCollection();
     const docs = await col.find({}, { projection: { assetsDir: 1, _id: 0 } }).toArray();
     return docs;
+}
+
+/**
+ * 指定したfieldとvalueでブログ一覧を検索する。
+ * @param field 抽出するfield
+ * @param value <T> fieldの値。
+ * @returns Promise<WithID<BlogInfo>[]>
+ */
+async function findByField<T>(field: string, value: T) {
+    const col = await getAssetsCollection();
+    const query = {
+        [field]: value,
+    }
+    const ret = col.find(query).toArray();
+    return ret;
+}
+
+/**
+ * keywords配列の1つの要素でもマッチするblogの一覧を返す
+ * @param keywords 抽出するkeywordのリスト
+ * @param desc 降順にソートする場合はtrue(default)
+ * @returns Promise<WithID<BlogInfo>[]>
+ */
+async function findMatched(keywords: string[], desc: boolean = true) {
+    const col = await getAssetsCollection();
+
+    const query = {
+        keywords: { $in: keywords }
+    }
+
+    const ret = col.find(query);
+
+    if (desc) {
+        ret.sort({ _id: -1 })
+    }
+
+    return ret.toArray()
 }
 
 /**
@@ -123,7 +146,8 @@ async function _migrateBlogInfo(info: BlogInfo) {
  */
 async function insertBlogInfo(info: BlogInfo) {
     const col = await getAssetsCollection();
-    const result = col.insertOne(info);
+    const result = await col.insertOne(info);
+    // insertのリザルトを返す。
     return result;
 }
 
@@ -139,14 +163,8 @@ async function updateBlogInfo(reqBody: UpdateItemRequest) {
     const col = await getAssetsCollection();
     const query = { ...updateKey };
     const update = { $set: { ...data } };
-    const ret = await col.updateOne(query, update);
-    // 変更が無い場合は何もしない
-    if (!ret || !ret["modifiedCount"] || ret["modifiedCount"] === 0) {
-        return;
-    }
-    // 更新があった場合は更新後のブログ一覧を返す.
-    const blogs = await findBlogDocs(999);
-    return blogs;
+    const result = await col.updateOne(query, update);
+    return result;
 }
 
 /**
@@ -158,7 +176,7 @@ async function updateBlogInfo(reqBody: UpdateItemRequest) {
  */
 async function deleteDuplicateDir(filter: DirFilter) {
     const col = await getAssetsCollection();
-    const result = col.deleteMany(filter);
+    const result = await col.deleteMany(filter);
     return result;
 }
 
@@ -273,6 +291,8 @@ async function isAdmin(testStr: string) {
 export {
     findBlogDocs,
     getBlogDirList,
+    findByField,
+    findMatched,
     insertBlogInfo,
     deleteDuplicateDir,
     updateBlogInfo,
