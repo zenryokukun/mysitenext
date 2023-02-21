@@ -109,7 +109,7 @@ export async function getStaticProps() {
   //     thumb: string,
   //     md: string,
   //  }
-  const data = await findBlogDocs(20);
+  const data = await findBlogDocs(50);
   const blogDocs = JSON.parse(JSON.stringify(data));
   return {
     props: {
