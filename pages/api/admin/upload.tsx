@@ -6,7 +6,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { multiUploader, saveFiles, makeFolder, insertDB } from "./middleware";
-import { findBlogDocs } from "../../../lib/db/func";
+import { backupAssetsCollection, findBlogDocs } from "../../../lib/db/func";
 import build from "../../../lib/build";
 
 const onerror = (err: Error, req: NextApiRequest, res: NextApiResponse) => {
@@ -23,6 +23,7 @@ router.post(makeFolder, saveFiles, insertDB, async (req: NextApiRequest, res: Ne
     build(); //ビルド
     // res.status(200).send("Upload succeeded!")
     const blogs = await findBlogDocs();
+    backupAssetsCollection(blogs); // バックアップ
     const resData = { blogs, msg: "upload succeeded!" };
     res.status(200).json(resData);
 });

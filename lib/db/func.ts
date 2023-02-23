@@ -180,9 +180,14 @@ async function deleteDuplicateDir(filter: DirFilter) {
     return result;
 }
 
-// assetsDirコレクションをバックアップ
-async function backupAssetsCollection() {
-    const docs = await findBlogDocs(999);
+/**
+ * dbのassetsコレクションのバックアップをする。
+ * @param docs バックアップするデータ。optional。省略した場合、DBから全件取得してBK。
+ */
+async function backupAssetsCollection(docs?: WithId<BlogInfo>[]) {
+    if (!docs) {
+        docs = await findBlogDocs();
+    }
     const jstr = JSON.stringify(docs, null, 2);
     writeFile("./backup-assetsDir.json", jstr, { encoding: "utf-8" });
 }
