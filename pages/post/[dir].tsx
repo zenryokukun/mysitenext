@@ -15,7 +15,7 @@ import { findByDir } from "../../lib/db/extract";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-import type { HeadProp, BlogLinkItem, BlogInfo } from "../../types";
+import type { HeadProp, LinkItem, BlogInfo } from "../../types";
 
 import styles from "../../styles/Post.module.css";
 import { relatedBlogs, newBlogs } from "../../lib/db/extract";
@@ -42,8 +42,8 @@ interface DataProp extends HeadProp {
 interface PostProp {
   content: string;
   data: DataProp;
-  related: BlogLinkItem[];
-  latest: BlogLinkItem[];
+  related: LinkItem[];
+  latest: LinkItem[];
 }
 
 // getStaticPropsの引数。
@@ -145,7 +145,7 @@ export async function getStaticProps({ params }: PathProp) {
   // 最新記事を3つ。自分自身は除外。
   const _news = await newBlogs(3, { discludeDir: dir });
   // mapのコールバック関数
-  const genBlogLinkItem = (b: BlogInfo): BlogLinkItem => {
+  const genBlogLinkItem = (b: BlogInfo): LinkItem => {
     return {
       url: `/post/${b.assetsDir}`,
       title: b.title,
@@ -156,7 +156,7 @@ export async function getStaticProps({ params }: PathProp) {
     }
   }
 
-  const related: BlogLinkItem[] = _rels.map(genBlogLinkItem);
+  const related: LinkItem[] = _rels.map(genBlogLinkItem);
   const latest = _news.map(genBlogLinkItem);
   return {
     props: { content, data, related, latest },

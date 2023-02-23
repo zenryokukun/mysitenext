@@ -75,7 +75,7 @@ export interface UpdateItemRequest {
 /**
  * 関連記事データの型。/post/[dir]や他のコンポーネントで利用。
  */
-export interface BlogLinkItem {
+export interface LinkItem {
     // 関連記事のリンク
     url: string;
     // リンクに表示させる文字列

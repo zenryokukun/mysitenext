@@ -3,12 +3,12 @@
  */
 
 import Link from "next/link";
-import type { BlogLinkItem } from "../types";
+import type { LinkItem } from "../types";
 
 import styles from "./BlogLink.module.css";
 
 interface BLProp {
-  data: BlogLinkItem[]; // 記事情報
+  data: LinkItem[]; // 記事情報
   headline: string; // 見出し。「最新記事」とか。
 }
 
