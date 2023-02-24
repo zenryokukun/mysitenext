@@ -87,3 +87,22 @@ export interface LinkItem {
     // 投稿日
     posted?: string;
 }
+
+/**
+ * /pages/productionで表示する製作物のデータ
+ * @name string 名前
+ * @title string 成果物のタイトル
+ * @summary string 概要
+ * @href string 成果物へのリンク
+ * @imgPath string サムネのパス /publicに置く
+ * @alt string サムネが存在しない場合のalt
+ */
+export interface Production {
+    name: string,
+    title: string,
+    summary: string,
+    href: string,
+    imgPath: string,
+    alt: string,
+    posted: string,
+}

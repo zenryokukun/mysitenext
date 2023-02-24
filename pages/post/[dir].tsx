@@ -11,7 +11,7 @@ import { getBlogDirList } from "../../lib/db/func"
 import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
 import { useState, useEffect } from "react";
 import { findByDir } from "../../lib/db/extract";
-
+import { blogInfoToLinkItem } from "../../lib/typecast";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
@@ -144,20 +144,9 @@ export async function getStaticProps({ params }: PathProp) {
   const _rels = await relatedBlogs(targetBlog);
   // 最新記事を3つ。自分自身は除外。
   const _news = await newBlogs(3, { discludeDir: dir });
-  // mapのコールバック関数
-  const genBlogLinkItem = (b: BlogInfo): LinkItem => {
-    return {
-      url: `/post/${b.assetsDir}`,
-      title: b.title,
-      summary: b.summary,
-      // サムネは/public/postsにある。。。/postはPageで異なるので注意。
-      thumb: b.thumb ? `/posts/${b.assetsDir}/${b.thumb}` : "",
-      posted: b.posted || "",
-    }
-  }
 
-  const related: LinkItem[] = _rels.map(genBlogLinkItem);
-  const latest = _news.map(genBlogLinkItem);
+  const related: LinkItem[] = _rels.map(blogInfoToLinkItem);
+  const latest = _news.map(blogInfoToLinkItem);
   return {
     props: { content, data, related, latest },
   }
