@@ -1,0 +1,5 @@
+User-agent: Googlebot
+Disallow: /_home
+Disallow: /board
+Disallow: /login
+Disallow: /admin
