@@ -30,6 +30,9 @@
  * max-widthと揃える必要あり 
  */
 @media screen and (max-width:950px) {
+  .container {
+    border-left: none;
+  }
 
   .container>section,
   .container>div {
