@@ -1,59 +1,128 @@
-.container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  flex: 1;
-  min-height: 80vh;
+.cvs {
+    background-color: azure;
 }
 
-.bgImage {
-  min-width: 50%;
+.catchWrapper {
+    padding-left: 4rem;
+    padding-top: 3rem;
+    color: #f1f1f1;
+
+    /* width: 40%; */
+}
+
+.catchHeader {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.catchMessage {
+    padding: 2em;
+}
+
+.bgimage {
+    /* opacity: 0.5; */
+    height: 250px;
+    background-image: url("/home/sakura.JPG");
+    background-color: aqua;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.messageWrapper {
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+.heading {
+    border-left: solid 5px #E91E63;
+    padding-left: 1rem;
+    text-align: center;
+}
+
+.secondHeading {
+    border-left: solid 5px #E91E63;
+    padding-left: 1rem;
+}
+
+.underline {
+    width: 100%;
+    border-bottom: 1px solid #bbb;
+}
+
+.linkTitle {
+    text-align: center;
+}
+
+.linkArea {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+    /* margin-top: 2rem; */
+    margin-bottom: 2rem;
+}
+
+.linkWrapper {
+    max-width: 47%;
+    padding: 1rem;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12)
+}
+
+.birdSection {
+    display: flex;
+    flex-direction: row;
+    column-gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.birdTitle {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.birdImageWrapper {
+    margin: 0px;
+}
+
+.birdImage {
+    width: 130px;
+    height: 130px;
+}
+
+@media screen and (max-width:1250px) {
+
+    .linkArea {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .linkWrapper {
+        max-width: 80%;
+    }
 }
 
 
-
-.messageContainer {
-  position: fixed;
-  width: 40%;
-  border: dotted 1px rgb(117, 117, 117);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-  font: bold;
-  font-size: 16px;
-  color: #f3f3f3;
-  text-align: center;
-  background-color: rgb(117, 117, 117, 0.3);
+@media screen and (max-width:950px) {
+    .birdTitle {
+        padding-top: 1rem;
+    }
 }
 
-@media screen and (max-width:1024px) {
-  .messageContainer {
-    width: 70%;
-    top: 40%;
-  }
+@media screen and (max-width:700px) {
 
-  .bgImage {
-    max-width: 50%;
-  }
-}
+    .catchWrapper {
+        padding-top: 1rem;
+        padding-left: 1rem;
+    }
 
+    .linkWrapper {
+        max-width: 95%;
+    }
 
-@media screen and (max-width:750px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .bgImage {
-    min-width: 100%;
-  }
-}
-
-@media screen and (max-width:600px) {
-  .messageContainer {
-    width: 85%;
-    top: 15%;
-    font-size: 14px;
-    transform: translate(-50%, 0%);
-  }
+    .addLink {
+        font-size: 0.8rem !important;
+        height: 9rem !important;
+    }
 }

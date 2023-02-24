@@ -1,0 +1,66 @@
+/* 
+　旧ランディングページのCSS。Home.tsxコンポーネントで使用。
+　pages/_homeでは記念に残しているものの、本体リンクからは分離、
+　現在のランディングページのCSSは/styles/Home.module.css。
+　名前似ているので注意
+*/
+
+.container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex: 1;
+  min-height: 80vh;
+}
+
+.bgImage {
+  min-width: 50%;
+}
+
+
+
+.messageContainer {
+  position: fixed;
+  width: 40%;
+  border: dotted 1px rgb(117, 117, 117);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  font: bold;
+  font-size: 16px;
+  color: #f3f3f3;
+  text-align: center;
+  background-color: rgb(117, 117, 117, 0.3);
+}
+
+@media screen and (max-width:1024px) {
+  .messageContainer {
+    width: 70%;
+    top: 40%;
+  }
+
+  .bgImage {
+    max-width: 50%;
+  }
+}
+
+
+@media screen and (max-width:750px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .bgImage {
+    min-width: 100%;
+  }
+}
+
+@media screen and (max-width:600px) {
+  .messageContainer {
+    width: 85%;
+    top: 15%;
+    font-size: 14px;
+    transform: translate(-50%, 0%);
+  }
+}
