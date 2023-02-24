@@ -36,6 +36,8 @@
 }
 
 .fancyText {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -49,6 +51,17 @@
 
 .rowGap {
   row-gap: 5rem;
+}
+
+.withSummary {
+  text-decoration: none;
+  color: #333;
+}
+
+.summaryTitle {
+  color: #a4526d;
+  text-decoration: underline;
+  font-weight: bold;
 }
 
 @media screen and (max-width:950px) {
