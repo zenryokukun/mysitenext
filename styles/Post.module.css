@@ -45,6 +45,11 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
   margin-bottom: 1rem;
 }
 
+/* liのリンク文字が横スクロールにならないよう次の行に表示 */
+.articleContainer ul li a {
+  word-wrap: break-word;
+}
+
 .back {
   display: block;
   margin-top: 1rem;
