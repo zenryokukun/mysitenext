@@ -6,13 +6,16 @@ import IconLink from "./IconLink";
 
 export default function Footer() {
   let contStyle = styles.container;
+  const year = new Date().getFullYear();
   return (
     <div>
       <div className={contStyle}>
         <div className={`${styles.message} ${styles.large}`}>
           <div className={styles.messageItem}>全力君より、愛を込めて。</div>
-          <div className={styles.messageItem}><i className="fa-regular fa-copyright"></i>
-            2022 全力君</div>
+          <div className={styles.messageItem}>
+            <i className="fa-regular fa-copyright"></i>
+            {` ${year} 全力君`}
+          </div>
         </div>
         <div className={styles.content}>
           <AboutFooter></AboutFooter>
