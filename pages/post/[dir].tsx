@@ -98,16 +98,16 @@ export default function Post({ content, data, related, latest }: PostProp) {
       <Layout>
         <Main>
           {/* <main className={styles.mainContainer}> */}
-          <Link href="/blog">
-            <a className={styles.back}>記事一覧に戻る</a>
+          <Link href="/blog" className={styles.back}>
+            記事一覧に戻る
           </Link>
           <article
             className={styles.articleContainer}
             dangerouslySetInnerHTML={{ __html: content }}
           ></article>
           <Like isClicked={likeClicked} likeClick={click}></Like>
-          <Link href="/blog">
-            <a className={styles.back}>記事一覧に戻る</a>
+          <Link href="/blog" className={styles.back}>
+            記事一覧に戻る
           </Link>
         </Main>
         <Side addStyle={styles.rowGap}>

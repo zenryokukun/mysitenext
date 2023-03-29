@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link.js";
 import { MODE } from "./constants.js";
 import styles from "./Menu.module.css";
@@ -21,38 +21,19 @@ interface HamProp {
 }
 
 export default function Menu({ iniMode }: MenuProp) {
+
   // mobileのときの、メニューリストの展開判定に使う
   const [isSpread, setSpread] = useState(false);
-
-  const mobileSelector = useRef<HTMLAnchorElement>(null)
 
   // 表示データと対応する定数
   const texts = ["home", "about", "blog", "production", "board", "updates"];
   const ids = [MODE.HOME, MODE.ABOUT, MODE.BLOG, MODE.PRODUCTION, MODE.BOARD, MODE.UPDATES];
 
   // MenuItemをクリックした時のイベント関数
-  const select = () => {
-    setSpread(false);
-    // setMode(mode);
-    // setSelected(mode);
-  };
+  const select = () => { setSpread(false); };
 
-  // MenuHamをクリックした時のイベント関数
+  // MenuHamをクリックした時のイベント関数。
   const tap = () => setSpread(isSpread => !isSpread);
-
-  // mobileの時、選択されたURLを生成する関数
-  const genLinkOnMobile = () => {
-    const ref = mobileSelector.current;
-    if (!ref) return;
-    let href = "/"
-    if (iniMode !== MODE.HOME) {
-      // HOMEはルートなので除外してよい。
-      // メニューのテキスト == ページのディレクトリとしているので、ルートにテキスト追加でOK
-      href = "/" + texts[iniMode];
-    }
-    // aタグにリンク設定
-    ref.href = href;
-  }
 
   // mobileのときの、メニューリストの展開状態に応じたスタイルをセット
   const showul = isSpread ? styles.show : styles.hide;
@@ -60,10 +41,24 @@ export default function Menu({ iniMode }: MenuProp) {
   // 現在のメニューのテキスト
   const currentText = texts[iniMode]
 
+  // 現在メニューのルートURL。home時はルートのため"/"のみ。
+  // /blog → /post/blognameのような変則ルートや、/about → /about/policyのように階層が出来ているページでは、
+  // 滞在モードとURLは必ずしも一致しない。
+  // 滞在モードと同じメニューをクリックした時に、そのモードのルートページに遷移させたいので、
+  // 滞在モードのルートページのURLを保持。(例：/post/blogname -> /blog, /about/policy -> /about)
+  const href = iniMode !== MODE.HOME ? "/" + texts[iniMode] : "/"
+
   return (
     <div className={styles.container}>
+      {/* 
+       * mobile判定はmedia query で600px以下。
+       * MenuHamコンポーネントはmobileのみ表示。
+       * [.selected]              -- mobileのみ表示 
+       * [showul(.hide,or .show)] -- mobileの時は基本非表示。tapしてspreadした状態の時は表示。
+       *                          -- mobileでないときは表示。
+       */}
       <div className={styles.selected}>
-        <a ref={mobileSelector} className={styles.selectedLink} onClick={genLinkOnMobile}>{currentText}</a>
+        <Link href={href} className={styles.selectedLink}>{currentText}</Link>
       </div>
       <header>
         <nav>
@@ -98,6 +93,8 @@ function genItems(
       cn += " " + styles.active;
     }
     if (isSpread && id !== mode) {
+      // メニュー展開状態。モバイルのみ。
+      // id !== modeは、現在いるmodeを展開させない（.selectedで表示中のため）ために必要。
       // hamがタップされた場合のスタイル追加
       cn += " " + styles.spread
 
@@ -116,9 +113,9 @@ function genItems(
 
 function MenuItem({ text, id, cn, select, href }: ItemProp) {
   return (
-    <Link href={href}>
+    <Link href={href} className={styles.link}>
       <li className={cn} onClick={() => select()}>
-        <a className={styles.link}>{text}</a>
+        {text}
       </li>
     </Link>
   );

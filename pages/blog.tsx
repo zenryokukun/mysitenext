@@ -89,9 +89,9 @@ function blogLink(props: BlogInfo, i: number, fn: () => void) {
         <h2 className={styles.title}>{title}</h2>
         <p className={styles.summary}>{summary}</p>
       </div>
-      <Link href={route}>
+      <Link href={route} className={styles.noDecoration} onClick={() => fn()}>
         <button className={styles.read}>
-          <a className={styles.noDecoration} onClick={() => fn()}>Read</a>
+          Read
         </button>
       </Link>
     </div>

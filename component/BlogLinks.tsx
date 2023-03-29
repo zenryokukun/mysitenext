@@ -28,7 +28,7 @@ export default function BlogLinks({ data, headline }: BLProp) {
           data.map((rel, i) => {
             return (
               <li className={styles.item} key={i}>
-                <Link href={rel.url}>{rel.title}</Link>
+                <Link href={rel.url} legacyBehavior>{rel.title}</Link>
               </li>
             );
           })
@@ -57,7 +57,7 @@ export function FancyBlogLinks({ data, headline, showSummary, addStyle, replaceS
       {data.map((rel, i) => {
         const thumb = (rel.thumb && rel.thumb.length > 0) ? rel.thumb : "/zen_logo.png";
         return (
-          <a href={rel.url} className={linkStyle} key={i}>
+          <Link href={rel.url} className={linkStyle} key={i}>
             <div className={styles.fancyImageWrapper}>
               <img className={styles.fancyImage} src={thumb} alt="thumbnail" />
             </div>
@@ -74,7 +74,7 @@ export function FancyBlogLinks({ data, headline, showSummary, addStyle, replaceS
                 </div>
             }
             <div className={styles.when}>{rel.posted}</div>
-          </a>
+          </Link>
         );
       })}
     </section>

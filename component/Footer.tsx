@@ -2,7 +2,7 @@ import React from "react";
 import { ICON } from "./constants";
 import styles from "./Footer.module.css";
 import IconLink from "./IconLink";
-
+import Link from "next/link";
 
 export default function Footer() {
   let contStyle = styles.container;
@@ -70,10 +70,10 @@ function MapFooter() {
           fa={ICON.MAP.STYLE}
           href={ICON.MAP.LINK} /> */}
 
-        <a className={styles.noDecoration} href="/about/policy">
+        <Link className={styles.noDecoration} href="/about/policy">
           <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span>
           <span>Site Policy</span>
-        </a>
+        </Link>
       </div>
       {/* <div className={`${styles.small} ${styles.topPadding}`}>The Greater Metropolitan Tokyo,JP.</div> */}
     </div>

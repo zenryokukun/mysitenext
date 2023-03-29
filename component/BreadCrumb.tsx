@@ -44,7 +44,7 @@ export default function BreadCrumb() {
 function Crumb({ crumb, href, char }: CrumbType,) {
   return (
     <li className={styles.item}>{char || ""}
-      <Link href={href}>{crumb}</Link>
+      <Link href={href} legacyBehavior>{crumb}</Link>
     </li>
   );
 }
