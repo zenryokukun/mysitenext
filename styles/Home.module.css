@@ -68,6 +68,14 @@
     box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12)
 }
 
+/* 
+firefox対応でmax-widthをSideBarレイアウトに設定している。
+Postページでは必要だが、Homeページでは不要なcssのため、無効にする。
+*/
+.addLink {
+    max-width: none;
+}
+
 .birdSection {
     display: flex;
     flex-direction: row;
