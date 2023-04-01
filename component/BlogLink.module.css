@@ -19,6 +19,16 @@
   position: relative;
 }
 
+/* 
+firefoxのみに適用。sidebarのmin-widthがchrome等
+と一致しないため、強制させる。
+ */
+@-moz-document url-prefix() {
+  .fancyImageWrapper {
+    max-width: 320px;
+  }
+}
+
 .fancyItemWrapper:last-of-type {
   border-bottom: 1px solid darkgray;
 }
