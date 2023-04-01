@@ -5,7 +5,12 @@
   border-left: 1px solid darkgray;
   background-color: #eaeaea;
 
-  min-width: 320px;
+  /* 
+   * もともとはmin-width:320px
+   * min-widthになる場合が、firefoxのみ異なったため、
+   * やむなくwidth:320pxに変更
+   */
+  width: 320px;
 }
 
 /* sidebarコンテンツのwidthやmarginはここで一括して指定してしまう */
