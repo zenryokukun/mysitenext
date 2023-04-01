@@ -112,13 +112,10 @@ export default function Post({ content, data, related, latest }: PostProp) {
         </Main>
         <Side addStyle={styles.rowGap}>
           <Author name={author} postedDate={postedDate}></Author>
-          {/* <BlogLinks data={related} headline="関連記事"></BlogLinks> */}
           <FancyBlogLinks data={related} headline="関連記事"></FancyBlogLinks>
           <FancyBlogLinks data={latest} headline="最新記事"></FancyBlogLinks>
           <Twitter></Twitter>
         </Side>
-        {/* </main> */}
-        {/* <SideBar author={author} postedDate={postedDate} /> */}
       </Layout>
       {/* </div> */}
       <Footer></Footer>
