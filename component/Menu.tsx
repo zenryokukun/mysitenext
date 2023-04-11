@@ -113,11 +113,11 @@ function genItems(
 
 function MenuItem({ text, id, cn, select, href }: ItemProp) {
   return (
-    <Link href={href} className={styles.link}>
-      <li className={cn} onClick={() => select()}>
+    <li className={cn} onClick={() => select()}>
+      <Link href={href} className={styles.link}>
         {text}
-      </li>
-    </Link>
+      </Link>
+    </li>
   );
 }
 

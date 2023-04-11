@@ -18,14 +18,16 @@
   float: left;
   font-size: 1.2rem;
   list-style-type: none;
-  padding: 0.8rem 1rem;
+  /* padding: 0.8rem 1rem; */
   text-align: center;
   text-decoration: none;
 }
 
 .link {
+  display: block;
   color: #f2f2f2;
   text-decoration: none;
+  padding: 0.8rem 1rem;
 }
 
 .item:hover:not(.active) {
@@ -37,6 +39,7 @@
   float: right;
   right: 0;
   top: 0;
+  padding: 0.8rem 1rem;
 }
 
 .active {
