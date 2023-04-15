@@ -1,3 +1,4 @@
+import Image from "next/image";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
@@ -59,7 +60,9 @@ function About() {
     <>
       <h1 className={styles.header}>このサイトについて</h1>
       <div className={styles.container}>
-        <img className={styles.wrapper} src="/about/hakata.jpg" alt="torii in hakata" />
+        <div className={styles.wrapper}>
+          <Image src="/about/hakata.jpg" alt="" width={600} height={700} style={{ "width": "100%", "height": "100%" }} />
+        </div>
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
@@ -76,8 +79,9 @@ function About() {
             我々は個人は、それぞれのセンスをエキセントリックに研ぎ澄ましていかなければなりません。その一助となればと思い立ち上げたサイトです。
           </p>
         </section>
-        {/* {textContent(titles[0], texts[0])} */}
-        <img className={styles.wrapper} src="/about/hakodate.jpg" alt="torii in hakodate" />
+        <div className={styles.wrapper}>
+          <Image src="/about/hakodate.jpg" alt="" width={600} height={700} style={{ "width": "100%", "height": "100%" }} />
+        </div>
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
@@ -93,10 +97,9 @@ function About() {
             その他、野鳥をこよなく愛し、時間があれば探しにいき写真を撮っています。
           </p>
         </section>
-        {/* {textContent(titles[1], texts[1])} */}
-        <img className={styles.wrapper} src="/about/yashima.jpg" alt="torii in yashima" />
-        {/* <i class="fa-solid fa-address-card"></i> */}
-        {/* {likeContent(titles[2], likes)} */}
+        <div className={styles.wrapper}>
+          <Image src="/about/yashima.jpg" alt="" width={600} height={700} style={{ "width": "100%", "height": "100%" }} />
+        </div>
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>

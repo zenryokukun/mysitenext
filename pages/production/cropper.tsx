@@ -1,3 +1,5 @@
+import Image from "next/image";
+import React, { useState, useRef, useEffect } from "react";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
@@ -5,7 +7,6 @@ import Loader from "../../component/Loader";
 import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import Twitter from "../../component/Twitter";
-import React, { useState, useRef, useEffect } from "react";
 import { MODE } from "../../component/constants"
 
 import styles from "../../styles/Cropper.module.css";
@@ -170,7 +171,11 @@ export default function Page() {
                   大きさを変えたい場合は、リサイズ後の横幅をピクセル数で入力してください。
                 </p>
                 <div className={styles.imageWrapper}>
-                  <img className={styles.image} src="/html/cropper/view.jpg" alt="example-image" />
+                  <Image
+                    className={styles.image}
+                    src="/html/cropper/view.jpg"
+                    alt="example-image"
+                    width={500} height={670} />
                 </div>
               </section>
               <section>

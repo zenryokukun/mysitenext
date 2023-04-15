@@ -31,6 +31,11 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
   margin-bottom: 1rem;
 }
 
+/*ul 直後のh2が詰まって見えるため、marginを設定*/
+.articleContainer ul+h2 {
+  margin-top: 2rem;
+}
+
 .back {
   display: block;
   margin-top: 1rem;

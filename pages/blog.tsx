@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Router from "next/router";
 import { useState, useEffect } from "react";
@@ -77,12 +78,17 @@ function blogLink(props: BlogInfo, i: number, fn: () => void) {
   //EX:/public/posts/201102_1 
   const thumbPath = thumb.length > 0
     ? "/posts/" + assetsDir + "/" + thumb
-    : "zen_logo.png";
+    : "/zen_logo.png";
   const route = `/post/${assetsDir}`;
   return (
     <div key={i} className={styles.wrapper}>
       <div className={styles.imgWrapper}>
-        <img className={thumbClass} src={thumbPath} alt="thumbnail" />
+        <Image
+          src={thumbPath}
+          alt="thumbnail"
+          fill
+          sizes="(max-width:900px):95vw,(max-width:1100px) 25vw,16vw"
+          className={thumbClass} />
       </div>
       <h3 className={styles.when}>{posted}</h3>
       <div className={styles.description}>

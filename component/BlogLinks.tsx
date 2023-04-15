@@ -2,6 +2,7 @@
  * サイドバー等に「関連記事」や「最新記事」のような記事一覧を表示するコンポーネント
  */
 
+import Image from "next/image";
 import Link from "next/link";
 import { getStyle } from "./common";
 import type { LinkItem } from "../types";
@@ -55,11 +56,19 @@ export function FancyBlogLinks({ data, headline, showSummary, addStyle, replaceS
     <section>
       <div className={styles.head}>{headline}</div>
       {data.map((rel, i) => {
-        const thumb = (rel.thumb && rel.thumb.length > 0) ? rel.thumb : "/zen_logo.png";
+        // サムネ用に小さい画像を使う。
+        const thumb = (rel.thumbSmall && rel.thumbSmall.length > 0) ? rel.thumbSmall : "/zen_logo_small.png";
         return (
           <Link href={rel.url} className={linkStyle} key={i}>
             <div className={styles.fancyImageWrapper}>
-              <img className={styles.fancyImage} src={thumb} alt="thumbnail" />
+              <Image
+                className={styles.fancyImage}
+                src={thumb}
+                alt="thumbnail"
+                width={95} height={95}
+              // fill
+              // sizes="(max-width:600px) 32vw,16vw"
+              />
             </div>
             {
               showSummary

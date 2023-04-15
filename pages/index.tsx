@@ -1,3 +1,4 @@
+import Image from "next/image";
 import MyHead from "../component/MyHead";
 import Menu from "../component/Menu";
 import { MODE } from "../component/constants";
@@ -95,19 +96,42 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
             <div className={styles.birdTitle}>作者の別の趣味（野鳥）</div>
             <div className={styles.birdSection}>
               <figure className={styles.birdImageWrapper}>
-                <img className={styles.birdImage} src="/home/jou-female.jpg" alt="jou-bitaki-bird" />
+                <div className={styles.birdImage}>
+                  <Image
+                    src="/home/jou-female.jpg"
+                    alt="jou-bitaki-bird"
+                    width={130} height={130} />
+                </div>
                 <figcaption>ジョウビタキ♀</figcaption>
               </figure>
               <figure className={styles.birdImageWrapper}>
-                <img className={styles.birdImage} src="/home/kawasemi.jpg" alt="kawasemi-bird" />
+                <div className={styles.birdImage}>
+                  <Image
+                    src="/home/kawasemi.jpg"
+                    alt="kawasemi-bird"
+                    width={130} height={130}
+                  />
+                </div>
                 <figcaption>カワセミ</figcaption>
               </figure>
               <figure className={styles.birdImageWrapper}>
-                <img className={styles.birdImage} src="/home/swallow.jpg" alt="swallow-bird" />
+                <div className={styles.birdImage}>
+                  <Image
+                    src="/home/swallow.jpg"
+                    alt="swallow-bird"
+                    width={130} height={130}
+                  />
+                </div>
                 <figcaption>ツバメ</figcaption>
               </figure>
               <figure className={styles.birdImageWrapper}>
-                <img className={styles.birdImage} src="/home/mozu.jpg" alt="mozu-bird" />
+                <div className={styles.birdImage}>
+                  <Image
+                    src="/home/mozu.jpg"
+                    alt="mozu-bird"
+                    width={130} height={130}
+                  />
+                </div>
                 <figcaption>モズ</figcaption>
               </figure>
             </div>

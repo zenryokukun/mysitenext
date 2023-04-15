@@ -38,11 +38,14 @@ firefoxのみに適用。sidebarのmin-widthがchrome等
   flex-grow: 0;
   flex-shrink: 0;
   margin-right: 0.5rem;
+  position: relative;
 }
 
 .fancyImage {
-  width: 100%;
-  height: 100%;
+  /* width: 100%; */
+  /* height: 100%; */
+  width: 95px;
+  height: 95px;
 }
 
 .fancyText {
@@ -77,6 +80,18 @@ firefoxのみに適用。sidebarのmin-widthがchrome等
 @media screen and (max-width:950px) {
   .container {
     width: 65% !important;
+  }
+}
+
+@media screen and (max-width:700px) {
+
+  /* 
+  Homeページで700px以下になると、画像が縦長になってしまう。
+  （FancyBlogLinkをサマリ付きで表示しているため）
+  なるべく正方形になるよう、max-heightを設定
+  */
+  .fancyImageWrapper {
+    max-height: 96px;
   }
 }
 

@@ -1,6 +1,7 @@
 /**
  * 旧ランディングページ。pages/_homeでは記念に残しているものの、本体リンクからは分離
  */
+import Image from "next/image";
 import type { ReactNode } from "react";
 import styles from "./Home.module.css";
 
@@ -32,7 +33,10 @@ export function TopMessage(): JSX.Element {
 
 function getImage(src: string, alt: string): ReactNode {
   return (
-    <img src={src} alt={alt} className={styles.bgImage}></img>
+    <Image
+      src={src} alt={alt} className={styles.bgImage}
+      width={756} height={426}
+    />
   );
 }
 

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
@@ -40,7 +41,10 @@ function Product({ title, summary, href, imgPath, alt }: Production) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.imgWrapper}>
-        <img className={styles.fill} src={imgPath} alt={alt} />
+        {/* <Image src={imgPath} alt={alt} fill sizes="50vw" /> */}
+        <Image src={imgPath} alt={alt} width={450} height={167}
+          style={{ width: "100%", height: "100%" }} />
+
       </div>
       <div className={styles.info}>
         <h1 className={styles.title}>

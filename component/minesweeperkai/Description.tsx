@@ -2,6 +2,8 @@
  * Minesweeperの説明書をモーダルで表示するコンポーネント
  */
 
+import Image from "next/image";
+
 import style from "./Description.module.css";
 
 interface DescProp {
@@ -60,7 +62,13 @@ export default function Description({ closeModal }: DescProp) {
               時短に利用してください。
             </li>
             <div className={style.imgWrapper}>
-              <img className={style.descImg} src="/production/minesweeper/double-click.png" alt="double-click-explanation" />
+              <Image
+                className={style.descImg}
+                src="/production/minesweeper/double-click.png"
+                alt="double-click-explanation"
+                width={250}
+                height={380}
+              />
             </div>
             <li>ニコニコボタンを押すと、同じレベルで再プレイできます</li>
             <li>上部のEASY MEDIUM HARDを押すと、レベル変更できます</li>
