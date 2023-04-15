@@ -1,3 +1,8 @@
+/**
+ * Aboutページのコンポーネント。/pages/about/index.tsxに移植済みのため、
+ * 現在は使われていない。手当は不要。
+ */
+
 import styles from "../styles/About.module.css";
 import Image from "next/image";
 
