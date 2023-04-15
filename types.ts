@@ -84,6 +84,8 @@ export interface LinkItem {
     summary?: string;
     // サムネ
     thumb?: string;
+    // 小さいサムネ。FancyBlogLinkdで使う
+    thumbSmall?: string;
     // 投稿日
     posted?: string;
 }
@@ -96,6 +98,7 @@ export interface LinkItem {
  * @href string 成果物へのリンク
  * @imgPath string サムネのパス /publicに置く
  * @alt string サムネが存在しない場合のalt
+ * @imgPath string 小さい晩のサムネ。optional.
  */
 export interface Production {
     name: string,
@@ -103,6 +106,7 @@ export interface Production {
     summary: string,
     href: string,
     imgPath: string,
+    imgPathSmall?: string,
     alt: string,
     posted: string,
 }

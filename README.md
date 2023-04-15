@@ -57,6 +57,30 @@ git pull
 - /page　直下のページComponentは、lowercase-with-hyphen
 - /styles　直下のcss名は、対応するページのdefault Component名.(module).css、もしくはページ名の大文字.(module).css...あまり統一されていない、、、、
 
+## サムネ補足
+
+ロード時間短縮のため小さいサムネを追加。
+
+### blog
+
+blog一覧ページ用のサムネ、サイドバーやhome画面の一覧(FancyBlogLinksコンポーネント)に表示するサムネの２種類ある。
+
+#### blog一覧
+
+サムネはmongodbの`thumb`フィールドで指定。**最適化未実施。**
+
+#### FancyBlogLinks
+
+各記事フォルダの直下に`thumb-small.png`の名前で保存。最適化済。必ず**95px×95px**で作成。
+
+サムネが無い記事（ロゴで代替）もあるので、片方だけ存在している状態にはしないこと。
+（dbのthumbを設定している場合は、必ずthumb-small.pngを作成すること。設定していない場合、作成しないこと。）
+
+### production
+
+production一覧ページ、サイドバーやhome画面の一覧(FancyBlogLinksコンポーネント)に表示するサムネの２種類ある。
+production.jsonの`imgPath`が前者のサムネ、`imgPathSmall`が後者に対応。
+ 
 ## コマンド
 
 開発環境
