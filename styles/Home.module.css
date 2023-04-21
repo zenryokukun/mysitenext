@@ -135,6 +135,12 @@
     }
 }
 
+@media screen and (max-width:600px) {
+    .bgimage {
+        background-image: url("/home/sakura-400w.jpg");
+    }
+}
+
 @media screen and (max-width:420px) {
 
     /* スマホだとFancyBlogLinkのサマリ部分が結構見切れるので、

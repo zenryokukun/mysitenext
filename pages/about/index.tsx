@@ -61,7 +61,7 @@ function About() {
       <h1 className={styles.header}>このサイトについて</h1>
       <div className={styles.container}>
         <div className={styles.wrapper}>
-          <Image src="/about/hakata.jpg" alt="" width={600} height={700} style={{ "width": "100%", "height": "100%" }} />
+          <Image src="/about/hakata.jpg" alt="" width={600} height={700} style={{ "width": "100%", "height": "100%" }} priority />
         </div>
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
