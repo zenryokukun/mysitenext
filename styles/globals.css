@@ -90,9 +90,14 @@ article>blockquote {
   margin: 0;
 }
 
-
 article>* {
   width: 100%;
+}
+
+/* mdファイルの<div><img></div>をセンタリングするため */
+article>div,
+article>picture {
+  text-align: center;
 }
 
 article>h1 {
@@ -120,10 +125,14 @@ article>ul:last-child {
   margin-bottom: 1rem;
 }
 
-article>p>img {
+article>p>img,
+article>div>img,
+article>picture>source,
+article>picture>img {
   display: block;
   margin: 0 auto;
   max-width: 100%;
+  height: auto;
 }
 
 article>blockquote>p {
@@ -191,6 +200,12 @@ article a {
 .table__custom-link {
   text-decoration: none;
   color: #2c921a;
+}
+
+/* imgやvideoのまわりにborderを付けるCSS */
+.img-border {
+  padding: 0.5rem;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
 }
 
 @media screen and (max-width:650px) {
