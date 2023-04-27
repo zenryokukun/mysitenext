@@ -123,8 +123,9 @@ function MenuItem({ text, id, cn, select, href }: ItemProp) {
 
 function MenuHam({ tap }: HamProp) {
   return (
-    <a className={styles.ham} onClick={tap}>
+    // リンクでは無いため、aタグをdivに変更。
+    <div className={styles.ham} onClick={tap}>
       <i className="fa fa-bars"></i>
-    </a>
+    </div>
   );
 }
