@@ -91,7 +91,6 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
           </section>
         </Main>
         <Side>
-          <Twitter />
           <section>
             <div className={styles.birdTitle}>作者の別の趣味（野鳥）</div>
             <div className={styles.birdSection}>
@@ -136,6 +135,7 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
               </figure>
             </div>
           </section>
+          <Twitter />
         </Side>
       </Layout>
       <Footer></Footer>
