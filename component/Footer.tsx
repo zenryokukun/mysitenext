@@ -20,7 +20,7 @@ export default function Footer() {
         <div className={styles.content}>
           <AboutFooter></AboutFooter>
           <IconFooter></IconFooter>
-          <MapFooter></MapFooter>
+          <SitePolicy></SitePolicy>
         </div>
       </div>
     </div>
@@ -46,23 +46,26 @@ function IconFooter() {
     <div className={styles.flexOne}>
       <div className={`${styles.light} ${styles.large}`}>Feel free to follow me.</div>
       <div className={`${styles.iconContainer} ${styles.topPadding}`}>
-        <IconLink a={styles.noDecoration}
+        <IconLink a={styles.iconLink}
           fa={ICON.TWITTER.STYLE}
-          href={ICON.TWITTER.LINK} />
+          href={ICON.TWITTER.LINK}
+          label={ICON.TWITTER.LABEL} />
 
-        <IconLink a={styles.noDecoration}
+        <IconLink a={styles.iconLink}
           fa={ICON.INSTAGRAM.STYLE}
-          href={ICON.INSTAGRAM.LINK} />
+          href={ICON.INSTAGRAM.LINK}
+          label={ICON.INSTAGRAM.LABEL} />
 
-        <IconLink a={styles.noDecoration}
+        <IconLink a={styles.iconLink}
           fa={ICON.GITHUB.STYLE}
-          href={ICON.GITHUB.LINK} />
+          href={ICON.GITHUB.LINK}
+          label={ICON.GITHUB.LABEL} />
       </div>
     </div>
   );
 }
 
-function MapFooter() {
+function SitePolicy() {
   return (
     <div className={`${styles.light} ${styles.flexOne}`}>
       <div className={`${styles.underline} ${styles.large}`}>
@@ -70,7 +73,7 @@ function MapFooter() {
           fa={ICON.MAP.STYLE}
           href={ICON.MAP.LINK} /> */}
 
-        <Link className={styles.noDecoration} href="/about/policy">
+        <Link className={styles.iconLink} href="/about/policy">
           <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span>
           <span>Site Policy</span>
         </Link>

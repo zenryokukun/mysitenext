@@ -54,9 +54,10 @@
   display: inline-block;
 }
 
-.noDecoration {
+.iconLink {
   color: #f3f3f3;
   margin: 0.3rem 0.7rem;
+  display: inline-block;
 }
 
 .sidePadding {

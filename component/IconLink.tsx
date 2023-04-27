@@ -1,7 +1,8 @@
 interface IconLinkProp {
-  a: string, //a-tag className
-  href: string, //a-tag href attr
-  fa: string, //font-awesome className
+  a: string, // a-tag className
+  href: string, // a-tag href attr
+  fa: string, // font-awesome className
+  label?: string // aria-label for underlying a tag. For screen-reader.
 }
 
 interface StockIconProp {
@@ -9,10 +10,11 @@ interface StockIconProp {
 }
 
 export default function IconLink(
-  { a, fa, href }: IconLinkProp
+  { a, fa, href, label }: IconLinkProp
 ): JSX.Element {
+  label = label || "";
   return (
-    <a href={href} className={a}>
+    <a href={href} className={a} aria-label={label}>
       <StockIcon fa={fa}></StockIcon>
     </a>
   );
