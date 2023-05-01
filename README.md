@@ -67,7 +67,8 @@ blog一覧ページ用のサムネ、サイドバーやhome画面の一覧(Fancy
 
 #### blog一覧
 
-サムネはmongodbの`thumb`フィールドで指定。**最適化未実施。**
+サムネはmongodbの`thumb`フィールドで指定。**最適化未実施。** next/imageのsrcsetで対応予定。せめてアスペクト比を揃えておく。
+横1.6:縦1(228px:140px)に揃える。
 
 #### FancyBlogLinks
 
