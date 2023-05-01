@@ -141,14 +141,26 @@ article>blockquote>p {
   font-style: italic;
 }
 
-/* ページ内リンクの飛び先の位置調整 */
-article a {
+/* ページ内リンクの飛び先の位置調整
+　 aタグを使うのは良くないので、移行が終わったらaは削除。
+　 移行が済むまでは並行するので、消さないこと。
+*/
+article a,
+article h2,
+article h3,
+article h4,
+article h5 {
   scroll-margin-top: 1rem;
 }
 
 /*601px以上でメニューを固定しているため、ページ内リンクがメニューの高さ分ずれてしまうので、調整*/
 @media screen and (min-width:601px) {
-  article a {
+
+  article a,
+  article h2,
+  article h3,
+  article h4,
+  article h5 {
     scroll-margin-top: 4rem;
   }
 }
@@ -202,6 +214,12 @@ article a {
   color: #2c921a;
 }
 
+/* 目次内のリンクの幅を広げる。*/
+.table-of-contents li {
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
 /* imgやvideoのまわりにborderを付けるCSS */
 .img-border {
   padding: 0.5rem;
@@ -211,6 +229,12 @@ article a {
 @media screen and (max-width:650px) {
   .table-of-contents {
     width: 100% !important;
+  }
+
+  /* 目次内のリンクの幅を、スマホの場合はもっと広げる。*/
+  .table-of-contents li {
+    margin-top: 1.3rem;
+    margin-bottom: 1.3rem;
   }
 }
 
