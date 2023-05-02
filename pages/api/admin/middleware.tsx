@@ -1,11 +1,13 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { BlogInfo } from "../../../types";
+import { deleteDuplicateDir, insertBlogInfo } from "../../../lib/db/func";
+import { isAdmin } from "../../../lib/db/func";
 import multer from "multer";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
-import { deleteDuplicateDir, insertBlogInfo } from "../../../lib/db/func";
+
 
 type CustomRequest = NextApiRequest & {
     files: Express.Multer.File[],
@@ -18,6 +20,36 @@ const FORM_NAME = "uploads";
 // 複数ファイルのアップロードに対応したmiddleware.
 // req.filesに配列で設定ｓあれる
 const multiUploader = multer().array(FORM_NAME);
+
+/**
+ * request.cookies.userを認証する。認証failなら40Xステータスを返す。
+ * 認証OKなら次のmiddlewareを呼ぶ。
+ * @param req NextApiRequest
+ * @param res NextApiResponse
+ * @param next 次のmiddlewareを呼ぶ
+ * @returns void
+ */
+async function checkUser(req: NextApiRequest, res: NextApiResponse, next: () => void) {
+    // 認証チェック。cookieに設定されたuser情報が正しくないと処理しない。
+    // userを取得
+    const { user } = req.cookies;
+
+    // userが設定されていなければ処理しない
+    if (!user) {
+        return res.status(401).send("unauthorized");
+    }
+
+    // user認証チェック
+    const allow = await isAdmin(user);
+
+    // 認証されなければ処理しない
+    if (!allow) {
+        return res.status(401).send("unauthorized");
+    }
+
+    // 認証OK。次のmiddlewareへ。
+    next();
+}
 
 /**
  * formで入力したdirの名前で、/public/postsにフォルダを作成。  
@@ -111,4 +143,4 @@ async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => v
     }
     next();
 }
-export { multiUploader, makeFolder, saveFiles, insertDB }
+export { checkUser, multiUploader, makeFolder, saveFiles, insertDB }

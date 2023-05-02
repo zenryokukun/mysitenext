@@ -186,9 +186,59 @@ export default function Admin() {
             />
           }
         </main>
+        <SideMenu />
       </div>
       <Footer></Footer>
     </>
+  );
+}
+
+/************************************************************************
+ * SideMenu
+ * modeによらず表示するコンポーネント。コンパイルボタンを設置
+************************************************************************/
+function SideMenu() {
+  const build = () => {
+    fetch("/api/admin/compile", { method: "POST" })
+      .then(res => {
+        if (!res.ok) {
+
+          throw new Error(`build failed...${res.status}`)
+        }
+        return res.text();
+      })
+      .then(msg => {
+        alert(msg);
+      })
+      .catch(err => {
+        alert(err);
+      })
+  }
+
+  return (
+    <div style={{
+      backgroundColor: "#333",
+      paddingLeft: "1rem", paddingRight: "1rem",
+      position: "fixed",
+      right: "0px",
+      height: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      top: "0px"
+    }}>
+      <button
+        style={{
+          backgroundColor: "#E91E63",
+          color: "#f3f3f3",
+          border: "1px solid #555",
+          fontWeight: "bold",
+          fontSize: "1.3rem",
+          top: "3rem",
+          position: "relative"
+        }}
+        onClick={build}
+      >コンパイル</button>
+    </div>
   );
 }
 
