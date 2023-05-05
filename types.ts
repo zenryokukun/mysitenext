@@ -47,7 +47,10 @@ export interface BlogInfo {
     md: string,
     likes?: number,
     dislikes?: number,
-    posted?: string,
+    // 投稿日。更新した場合は更新される。
+    posted?: Date
+    // 初期投稿日。更新しても変わらない。
+    firstPostedDate?: Date,
     views?: number,
     // keyword追加
     keywords?: string[],
@@ -86,7 +89,7 @@ export interface LinkItem {
     thumb?: string;
     // 小さいサムネ。FancyBlogLinkdで使う
     thumbSmall?: string;
-    // 投稿日
+    // 投稿日。
     posted?: string;
 }
 

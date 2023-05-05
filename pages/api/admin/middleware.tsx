@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import type { BlogInfo } from "../../../types";
 import { deleteDuplicateDir, insertBlogInfo } from "../../../lib/db/func";
 import { isAdmin } from "../../../lib/db/func";
+import { getBlogMd, formatMd } from "../../../lib/util";
 import multer from "multer";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
@@ -120,7 +121,7 @@ async function saveFiles(req: CustomRequest, res: NextApiResponse, next: () => v
 
 
 async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => void) {
-    const { genre, dir, title, summary, thumb, md, keywords } = req.body;
+    const { genre, dir, title, summary, thumb, md, keywords } = req.body
     const info: BlogInfo = {
         genre: genre,
         assetsDir: dir,
@@ -132,7 +133,21 @@ async function insertDB(req: NextApiRequest, res: NextApiResponse, next: () => v
         dislikes: 0,
         views: 0,
     }
-    info["posted"] = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+
+    // 現在時刻を設定
+    const now = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+    // mdファイルの中身を抽出し、`postedDate`を初期投稿日として設定。
+    const mdData = await getBlogMd(dir);
+    // gray-matterでmdDataをyaml部分とそれ以外に分離
+    const fmtData = formatMd(mdData);
+    // 初期投稿日を取得
+    const { postedDate } = fmtData.data;
+    // 初期投稿日が設定されていない場合、現在時刻を設定
+    const iniDate = postedDate ? new Date(postedDate).toLocaleString("ja", { timeZone: "Asia/Tokyo" }) : now;
+
+    // 日付型に変換してDB登録
+    info["posted"] = new Date(now);
+    info["firstPostedDate"] = new Date(iniDate);
     info["keywords"] = JSON.parse(keywords);
 
     // insert後に更新版のブログを返したいので、待つ

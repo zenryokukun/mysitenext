@@ -73,3 +73,35 @@ export function genSessionId({ id, password }: { id: string, password: string })
     const hash = crypto.createHash("sha256").update(buf).digest("hex");
     return hash;
 }
+
+/**
+ * Date型をYYYY-MM-DDに変換する関数
+ * @param d Date
+ * @returns YYYY-MM-DD
+ */
+export function dateToString(d: Date) {
+    // mongodbには日本時間文字列→new Date()して投入。ただ、それがUTCとして解釈されるため
+    // find()でして使おうとそこからさらにJSTに変換（＋９時間）される。
+    // そのため、getUTC~の関数を使う。投入されている時間が日本時間前提で。
+    let year = d.getUTCFullYear().toString();
+    let monthNum = d.getUTCMonth();
+    let month: string;
+    let day = d.getUTCDate().toString();
+
+    // Date().getMonth()は0～11がそれぞれ1月~12月に対応。注意。
+    monthNum++; // 月に換算するため＋１
+
+    if (monthNum < 10) {
+        // 1桁なら前0埋めして文字列に変換。
+        month = "0" + monthNum;
+    } else {
+        // 2桁ならそのまま文字列に変換。
+        month = monthNum.toString();
+    }
+
+    if (d.getDate() < 10) {
+        day = "0" + day;
+    }
+
+    return year + "-" + month + "-" + day;
+}

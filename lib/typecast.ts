@@ -4,6 +4,7 @@
  * Production -> LinkItem
  */
 
+import { dateToString } from "./util";
 import type { BlogInfo, LinkItem, Production } from "../types";
 
 export function blogInfoToLinkItem(b: BlogInfo): LinkItem {
@@ -16,6 +17,10 @@ export function blogInfoToLinkItem(b: BlogInfo): LinkItem {
      * 　そもそも/blogページ用のサムネが無いケースもある。サムネの有無は/blogとFancyBlogLinksで
      * 　必ず揃えること。
      */
+
+    // 投稿日設定。初期投稿日優先。postedは更新があった時に更新日が設定される。
+    const _posted = b.firstPostedDate || b.posted;
+    const posted = _posted === undefined ? "-" : dateToString(_posted);
     return {
         url: `/post/${b.assetsDir}`,
         title: b.title,
@@ -23,7 +28,7 @@ export function blogInfoToLinkItem(b: BlogInfo): LinkItem {
         // サムネは/public/postsにある。。。/postはPageで異なるので注意。
         thumb: b.thumb ? `/posts/${b.assetsDir}/${b.thumb}` : "",
         thumbSmall: b.thumb ? `/posts/${b.assetsDir}/thumb-small.png` : "",
-        posted: b.posted || "",
+        posted: posted,
     };
 }
 

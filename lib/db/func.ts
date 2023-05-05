@@ -73,7 +73,8 @@ function getCollection(client: MongoClient, col: string) {
  */
 async function findBlogDocs(limit: number = 999) {
     const col = await getAssetsCollection();
-    const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
+    // const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
+    const docs = col.find().sort({ firstPostedDate: -1, posted: -1 }).limit(limit).toArray();
     return docs;
 }
 
