@@ -8,22 +8,23 @@ import MyHead from "../component/MyHead";
 import Loader from "../component/Loader";
 import { MODE } from "../component/constants";
 import { findBlogDocs } from "../lib/db/func"
+import { dateToString } from "../lib/util";
 
 import styles from "../styles/Blog.module.css";
 
-/**Description ブログ記事の一覧Page */
-interface BlogInfo {
-  _id: string,
-  genre: string,
-  assetsDir: string,
-  title: string,
-  summary: string,
-  thumb: string,
-  md: string,
-  posted: string,
+/**Description ブログ記事の一覧Page
+ * Date型項目を文字列化している内部用type。
+ * `types.ts`の同項目とは異なる
+ */
+interface BlogInfoOverrides {
+  assetsDir: string;
+  thumb: string;
+  posted: string;
+  title: string;
+  summary: string;
 }
 
-export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
+export default function BlogList({ blogDocs }: { blogDocs: BlogInfoOverrides[] }) {
 
   const [isLoading, setLoading] = useState(false);
 
@@ -72,7 +73,7 @@ export default function BlogList({ blogDocs }: { blogDocs: BlogInfo[] }) {
   );
 }
 
-function blogLink(props: BlogInfo, i: number, fn: () => void) {
+function blogLink(props: BlogInfoOverrides, i: number, fn: () => void) {
   const { assetsDir, thumb, posted, title, summary } = props;
   const thumbClass = thumb.length > 0 ? styles.thumb : styles.logo
   //EX:/public/posts/201102_1 
@@ -105,18 +106,20 @@ function blogLink(props: BlogInfo, i: number, fn: () => void) {
 }
 
 export async function getStaticProps() {
-  // findBlogDocs return type
-  //  {  
-  //     id: object,
-  //     genre: string,
-  //     assetsDir: string,
-  //     title: string,
-  //     summary: string,
-  //     thumb: string,
-  //     md: string,
-  //  }
+
   const data = await findBlogDocs(50);
-  const blogDocs = JSON.parse(JSON.stringify(data));
+
+  const docs: BlogInfoOverrides[] = [];
+
+  // posted,firstPostedDateの２つの日付項目を片方に寄せて、文字列にする。
+  data.map(blog => {
+    const _posted = blog.firstPostedDate || blog.posted;
+    const posted = _posted === undefined ? "-" : dateToString(_posted);
+    docs.push({ ...blog, posted })
+  })
+
+  const blogDocs = JSON.parse(JSON.stringify(docs));
+
   return {
     props: {
       blogDocs,
