@@ -60,6 +60,9 @@ pwd.txt
 # front-matterや目次htmlのテンプレ
 template.md
 
+# 手動でmongodbを更新した時のmongoshコマンド
+mongo-manual.txt
+
 # メモ用。pwdもここに移した。
 /memo/
 
