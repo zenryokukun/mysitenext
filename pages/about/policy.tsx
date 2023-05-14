@@ -1,6 +1,9 @@
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBuildingShield, faKey, faCopyright, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { faInternetExplorer } from "@fortawesome/free-brands-svg-icons"
 import { MODE } from "../../component/constants";
 
 import styles from "../../styles/Policy.module.css";
@@ -17,13 +20,21 @@ export default function Policy() {
       <div className={styles.container}>
         <main className={styles.wrapper}>
           <section className={styles.underline}>
-            <h1 className={styles.header}><i className="fa-solid fa-building-shield"></i>サイトポリシー</h1>
+            {/* <h1 className={styles.header}><i className="fa-solid fa-building-shield"></i>サイトポリシー</h1> */}
+            <h1 className={styles.header}>
+              <FontAwesomeIcon icon={faBuildingShield} />
+              サイトポリシー
+            </h1>
             <p>
               このWebサイトは個人（私、全力君）が運営しています。当サイトを利用される場合は、以下の各事項につきご了承をお願いいたします。
             </p>
           </section>
           <section className={styles.postit}>
-            <h2><i className="fa-solid fa-key"></i>プライバシーポリシー</h2>
+            {/* <h2><i className="fa-solid fa-key"></i>プライバシーポリシー</h2> */}
+            <h2 className={styles.header2}>
+              <FontAwesomeIcon icon={faKey} />
+              プライバシーポリシー
+            </h2>
             <p>
               当サイトでは「Googleアナリティクス」を使ってアクセス解析をしています。同ツールでは、Cookieを使ってデータの収集を行います。
               サイト内での操作や滞在時間、デバイスのOSやブラウザの種類、アクセス元（国）等の情報を収集しています。
@@ -35,11 +46,19 @@ export default function Policy() {
             </p>
           </section>
           <section className={styles.postit}>
-            <h2><i className="fa-solid fa-copyright"></i>著作権</h2>
+            {/* <h2><i className="fa-solid fa-copyright"></i>著作権</h2> */}
+            <h2 className={styles.header2}>
+              <FontAwesomeIcon icon={faCopyright} />
+              著作権
+            </h2>
             <p>当サイト上のコンテンツは、特段の記載がない限り、サイト運営者が所有・管理しているものです。著作権法による認められる場合を除き、サイト運営者に無断で複製・改変することは禁止されています。</p>
           </section>
           <section className={styles.postit}>
-            <h2><i className="fa-solid fa-triangle-exclamation"></i>免責事項</h2>
+            {/* <h2><i className="fa-solid fa-triangle-exclamation"></i>免責事項</h2> */}
+            <h2 className={styles.header2}>
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+              免責事項
+            </h2>
             <ul className={styles.listWrapper}>
               <li>当サイトの利用は訪問者の責任において行われるものとします。</li>
               <li>当サイトの利用により生じた経済的不利益、精神的不利益について、サイト運営者は一切の責任を負いません。</li>
@@ -48,7 +67,11 @@ export default function Policy() {
             </ul>
           </section>
           <section className={styles.postit}>
-            <h2><i className="fa-brands fa-internet-explorer"></i>動作環境</h2>
+            {/* <h2><i className="fa-brands fa-internet-explorer"></i>動作環境</h2> */}
+            <h2 className={styles.header2}>
+              <FontAwesomeIcon icon={faInternetExplorer} />
+              動作環境
+            </h2>
             <p>当サイトはChrome 109.0.5414.75(64bit)以上のバージョンでテストしています。</p>
             <ul className={styles.listWrapper}>
               <li>ECMAScript5(ES5)互換にしています。2023年1月時点で、Chrome、Edge、Safari、Opera、FireFox等の

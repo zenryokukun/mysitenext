@@ -7,7 +7,8 @@
 }
 
 .likeWrapper {
-  width: 70%;
+  width: 100%;
+  height: 135px;
   margin-left: auto;
   margin-right: auto;
   border-top: 2px solid #eaeaea;
@@ -32,14 +33,18 @@
   margin-bottom: 0.7rem;
 }
 
-.like {
+/* .like {
   transition-duration: 0.5s;
-}
+} */
 
 @media screen and (min-width:950px) {
   .accentOnHover {
     transform: scale(1.2, 1.2);
     color: #E91E63;
+  }
+
+  .like {
+    transition-duration: 0.5s;
   }
 }
 

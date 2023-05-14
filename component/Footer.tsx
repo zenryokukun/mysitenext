@@ -1,8 +1,11 @@
 import React from "react";
 import { ICON } from "./constants";
 import styles from "./Footer.module.css";
-import IconLink from "./IconLink";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopyright } from "@fortawesome/free-regular-svg-icons"
+import { faTwitter, faInstagram, faGithub } from "@fortawesome/free-brands-svg-icons"
+import { faBuildingShield } from "@fortawesome/free-solid-svg-icons"
 
 export default function Footer() {
   let contStyle = styles.container;
@@ -13,7 +16,8 @@ export default function Footer() {
         <div className={`${styles.message} ${styles.large}`}>
           <div className={styles.messageItem}>全力君より、愛を込めて。</div>
           <div className={styles.messageItem}>
-            <i className="fa-regular fa-copyright"></i>
+            {/* <i className="fa-regular fa-copyright"></i> */}
+            <FontAwesomeIcon icon={faCopyright} />
             {` ${year} 全力君`}
           </div>
         </div>
@@ -45,21 +49,16 @@ function IconFooter() {
   return (
     <div className={styles.flexOne}>
       <div className={`${styles.light} ${styles.large}`}>Feel free to follow me.</div>
-      <div className={`${styles.iconContainer} ${styles.topPadding}`}>
-        <IconLink a={styles.iconLink}
-          fa={ICON.TWITTER.STYLE}
-          href={ICON.TWITTER.LINK}
-          label={ICON.TWITTER.LABEL} />
-
-        <IconLink a={styles.iconLink}
-          fa={ICON.INSTAGRAM.STYLE}
-          href={ICON.INSTAGRAM.LINK}
-          label={ICON.INSTAGRAM.LABEL} />
-
-        <IconLink a={styles.iconLink}
-          fa={ICON.GITHUB.STYLE}
-          href={ICON.GITHUB.LINK}
-          label={ICON.GITHUB.LABEL} />
+      <div>
+        <a className={styles.iconLink} aria-label={ICON.TWITTER.LABEL} href={ICON.TWITTER.LINK}>
+          <FontAwesomeIcon icon={faTwitter} size="2x" />
+        </a>
+        <a className={styles.iconLink} aria-label={ICON.INSTAGRAM.LABEL} href={ICON.INSTAGRAM.LINK}>
+          <FontAwesomeIcon icon={faInstagram} size="2x" />
+        </a>
+        <a className={styles.iconLink} aria-label={ICON.GITHUB.LABEL} href={ICON.GITHUB.LINK}>
+          <FontAwesomeIcon icon={faGithub} size="2x" />
+        </a>
       </div>
     </div>
   );
@@ -69,16 +68,12 @@ function SitePolicy() {
   return (
     <div className={`${styles.light} ${styles.flexOne}`}>
       <div className={`${styles.underline} ${styles.large}`}>
-        {/* <IconLink a={`${styles.noDecoration} ${styles.sidePadding}`}
-          fa={ICON.MAP.STYLE}
-          href={ICON.MAP.LINK} /> */}
-
         <Link className={styles.iconLink} href="/about/policy">
-          <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span>
+          {/* <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span> */}
+          <FontAwesomeIcon icon={faBuildingShield} className={styles.sidePadding} width={20} height={18} />
           <span>Site Policy</span>
         </Link>
       </div>
-      {/* <div className={`${styles.small} ${styles.topPadding}`}>The Greater Metropolitan Tokyo,JP.</div> */}
     </div>
   );
 }

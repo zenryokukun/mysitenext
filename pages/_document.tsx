@@ -7,7 +7,8 @@ export default function Document() {
         {/* 勝手に付けてくれるようなのでコメントアウト。 */}
         {/* <meta charSet="UTF-8" /> */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"></link>
+        {/* font-awesomeの全cssが全ページに挿入されてしまう。パッケージ版に移行したためコメントアウト */}
+        {/* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"></link> */}
       </Head>
       <body>
         <Main></Main>

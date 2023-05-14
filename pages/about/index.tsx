@@ -2,6 +2,9 @@ import Image from "next/image";
 import MyHead from "../../component/MyHead";
 import Menu from "../../component/Menu";
 import Footer from "../../component/Footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTwitter, faInstagram } from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faToriiGate, faPoo, faAddressCard } from "@fortawesome/free-solid-svg-icons";
 import { MODE, LINK } from "../../component/constants";
 
 import styles from "../../styles/About.module.css";
@@ -66,7 +69,8 @@ function About() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              <i className={`fa-solid fa-torii-gate ${styles.icon}`}></i>
+              {/* <i className={`fa-solid fa-torii-gate ${styles.icon}`}></i> */}
+              <FontAwesomeIcon icon={faToriiGate} className={styles.icon} />
               About This Site
             </div>
           </h3>
@@ -85,7 +89,8 @@ function About() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              <i className={`fa-solid fa-poo ${styles.icon}`}></i>
+              {/* <i className={`fa-solid fa-poo ${styles.icon}`}></i> */}
+              <FontAwesomeIcon icon={faPoo} className={styles.icon} />
               About The Author
             </div>
           </h3>
@@ -103,25 +108,49 @@ function About() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              <i className={`fa-solid fa-address-card ${styles.icon}`}></i>
+              {/* <i className={`fa-solid fa-address-card ${styles.icon}`}></i> */}
+              <FontAwesomeIcon icon={faAddressCard} className={styles.icon} />
               Contact
             </div>
           </h3>
           <p>本サイト内で、誤った情報、不適切な内容がある場合はメールかTwitterでご連絡ください。確認の上、可能な限り対応します。要望なども歓迎です。</p>
           <ul className={styles.links}>
-            <li className={styles.item}><a href={"mailto:" + LINK.MAIL}><i className={`fa-solid fa-envelope ${styles.prs}`}></i>Mail</a></li>
-            <li className={styles.item}><a href={LINK.TWITTER}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter</a></li>
+            {/* <li className={styles.item}><a href={"mailto:" + LINK.MAIL}><i className={`fa-solid fa-envelope ${styles.prs}`}></i>Mail</a></li> */}
+            <li className={styles.item}>
+              <a href={"mailto:" + LINK.MAIL}>
+                <FontAwesomeIcon icon={faEnvelope} className={styles.prs} />
+                Mail
+              </a>
+            </li>
+            {/* <li className={styles.item}><a href={LINK.TWITTER}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter</a></li> */}
+            <li className={styles.item}>
+              <a href={LINK.TWITTER}>
+                <FontAwesomeIcon icon={faTwitter} className={styles.prs} />
+                Twitter
+              </a>
+            </li>
           </ul>
           <p>
             他のSNSアカウントです。こちらのTwitterは自動取引の結果を自動ツイートしています。
             Instagramはあまり活動できていませんが、主に野鳥や旅行の写真を投稿していく予定です。
           </p>
           <ul className={styles.links}>
-            <li className={styles.item}><a href={LINK.TWITTER2}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter(bot)</a></li>
-            <li className={styles.item}><a href={LINK.INSTAGRAM}><i className={`fa-brands fa-instagram ${styles.prs}`}></i>Instagram</a></li>
+            {/* <li className={styles.item}><a href={LINK.TWITTER2}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter(bot)</a></li> */}
+            <li className={styles.item}>
+              <a href={LINK.TWITTER2}>
+                <FontAwesomeIcon icon={faTwitter} className={styles.prs} />
+                Twitter(bot)
+              </a>
+            </li>
+            {/* <li className={styles.item}><a href={LINK.INSTAGRAM}><i className={`fa-brands fa-instagram ${styles.prs}`}></i>Instagram</a></li> */}
+            <li className={styles.item}>
+              <a href={LINK.INSTAGRAM}>
+                <FontAwesomeIcon icon={faInstagram} className={styles.prs} />
+                Instagram
+              </a>
+            </li>
           </ul>
         </section>
-
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Like.module.css";
 
 // like component
@@ -34,7 +35,8 @@ export default function Like({ isClicked, likeClick }: LikeProp) {
         {isClicked ? '"いいね"ありがとうございます！！' : '最後までありがとうございます。"いいね"も下さい。'}
       </div>
       <div className={styles.iconWrapper} onMouseEnter={enter} onMouseLeave={leave} onClick={click}>
-        <i className={`fa-solid fa-heart fa-2x ${styles.like} ${color}`}></i>
+        {/* <i className={`fa-solid fa-heart fa-2x ${styles.like} ${color}`}></i> */}
+        <FontAwesomeIcon icon={faHeart} size="2x" className={`${styles.like} ${color}`} />
       </div>
     </div>
   );

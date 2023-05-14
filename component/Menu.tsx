@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import Link from "next/link.js";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { MODE } from "./constants.js";
 import styles from "./Menu.module.css";
 
@@ -125,7 +127,7 @@ function MenuHam({ tap }: HamProp) {
   return (
     // リンクでは無いため、aタグをdivに変更。
     <div className={styles.ham} onClick={tap}>
-      <i className="fa fa-bars"></i>
+      <FontAwesomeIcon icon={faBars} />
     </div>
   );
 }

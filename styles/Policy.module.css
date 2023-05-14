@@ -18,6 +18,11 @@
   text-align: center;
 }
 
+.header>svg,
+.header2>svg {
+  margin-right: 0.5rem;
+}
+
 .postit {
   background-color: white;
   /* border: 1px solid #777; */
