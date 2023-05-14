@@ -68,3 +68,6 @@ mongo-manual.txt
 
 # dbのバックアップ
 /backup-*.json
+
+# App Router。移行がある程度済むまでignore。
+/app/
