@@ -115,12 +115,24 @@ export default function genDocString(article: string) {
     }
 </style>
 <style>
+    * {
+        box-sizing: border-box;
+    }
     main {
         display: flex;
         flex-direction: column;
         /* justify-content: center; */
         align-items: center;
         min-height: 80vh
+    }
+
+    article nav {
+        background-color: #f9f5f5;
+        box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        padding-left: 1rem;
+        width: 80%;
     }
     
     article>p>code,
@@ -187,7 +199,16 @@ export default function genDocString(article: string) {
         article {
             width: 80%;
         }
+        article nav {
+            width: 100%;
+        }
     }
+    @media screen and (max-width:650px) {
+        article>p>video {
+          width: 100%;
+          height: auto;
+        }
+      }
     @media screen and (max-width:600px) {
         article {
             width:95%;
