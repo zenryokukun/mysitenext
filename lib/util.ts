@@ -1,10 +1,6 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import matter from "gray-matter";
-import { remark } from "remark";
-import html from "remark-html";
-import remarkPrism from "remark-prism";
-import remarkGfm from "remark-gfm";
 import crypto from "crypto";
 
 
@@ -41,22 +37,6 @@ export function getBlogMd(dir: string): Promise<string> {
  */
 export function formatMd(md: string) {
     return matter(md);
-}
-
-/**
- * gray-matterで抽出したmdのcontent部分をhtml文字列に変換する.
- * @param md matter(mdfile).content
- * @returns mdからhtml文字列に変換された文字列
- */
-export async function toHTMLString(md: string): Promise<string> {
-    // remarkGfm -> githubのmd形式に対応したparser。
-    const processed = await
-        remark()
-            .use(remarkGfm)
-            .use(remarkPrism)
-            .use(html, { sanitize: false })
-            .process(md)
-    return processed.toString();
 }
 
 export function JST(): string {

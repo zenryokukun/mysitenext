@@ -3,7 +3,8 @@ import Menu from "../component/Menu";
 import Footer from "../component/Footer";
 import { MODE } from "../component/constants";
 import styles from "../styles/Updates.module.css";
-import { getUpdateMd, formatMd, toHTMLString } from "../lib/util";
+import { getUpdateMd, formatMd } from "../lib/util";
+import { toHTMLString } from "../lib/to-html-string";
 
 /**Description Update Page */
 

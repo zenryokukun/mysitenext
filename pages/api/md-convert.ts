@@ -7,7 +7,8 @@
  */
 import multer from "multer";
 import nextConnect from "next-connect";
-import { toHTMLString, formatMd } from "../../lib/util";
+import { formatMd } from "../../lib/util";
+import { toHTMLString } from "../../lib/to-html-string";
 
 import type { NextApiRequest, NextApiResponse } from "next";
 

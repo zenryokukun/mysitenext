@@ -8,7 +8,8 @@ import { FancyBlogLinks } from "../../component/BlogLinks";
 import Like from "../../component/Like";
 import { MODE } from "../../component/constants";
 import { getBlogDirList } from "../../lib/db/func"
-import { getBlogMd, formatMd, toHTMLString } from "../../lib/util";
+import { getBlogMd, formatMd } from "../../lib/util";
+import { toHTMLString } from "../../lib/to-html-string";
 import { useState, useEffect } from "react";
 import { findByDir } from "../../lib/db/extract";
 import { blogInfoToLinkItem } from "../../lib/typecast";
