@@ -62,7 +62,7 @@ export async function generateStaticParams() {
 }
 
 // getStaticPropsのapp router版
-export async function getProps(dir: string) {
+async function getProps(dir: string) {
   // mdファイルの中身を抽出
   const mdData = await getBlogMd(dir);
   // gray-matterでmdDataをyaml部分とそれ以外に分離
