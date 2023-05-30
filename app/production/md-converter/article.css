@@ -1,0 +1,222 @@
+article {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+}
+
+article nav {
+    background-color: #f9f5f5;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+    width: 80%;
+}
+
+article>p>code,
+article>ul>li>code,
+article>code {
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    background-color: #e1e1e1;
+    /* widthをはみ出るため、次の行にいくようにする */
+    word-break: break-word;
+}
+
+/* 
+  flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）分
+  取らる。広く感じるので狭める。 
+   */
+article>p,
+article>div,
+article>picture {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+/* 最後の要素は広めにmargin設定 */
+article>p:last-of-type {
+    margin-bottom: 1rem;
+}
+
+/* liのリンク文字が横スクロールにならないよう次の行に表示 */
+article ul li a {
+    word-wrap: break-word;
+}
+
+/* p直後のulの間隔が狭いため、marginを設定 */
+article p+ul {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/*ul 直後のh2が詰まって見えるため、marginを設定*/
+article ul+h2 {
+    margin-top: 2rem;
+}
+
+/* videoを真ん中に寄せて表示 */
+article>p>video {
+    display: block;
+    margin: auto;
+}
+
+article>blockquote {
+    margin: 0;
+}
+
+article>* {
+    width: 100%;
+}
+
+/* mdファイルの<div><img></div>をセンタリングするため */
+article>div,
+article>picture {
+    text-align: center;
+}
+
+article>h1 {
+    border-left: solid 5px #E91E63;
+    background-color: #f7f7f7;
+    padding-left: 1rem;
+    text-align: center;
+}
+
+article>h2 {
+    border-left: solid 5px #E91E63;
+    background-color: #fcfcfc;
+    padding-left: 1rem;
+}
+
+article>ul {
+    margin-block-start: 0px;
+    margin-block-end: 0px;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 20px;
+}
+
+article>ul:last-child {
+    margin-bottom: 1rem;
+}
+
+article>p>img,
+article>div>img,
+article>picture>source,
+article>picture>img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}
+
+article>blockquote>p {
+    padding: 0.3rem;
+    background-color: #eaeaea;
+    font-style: italic;
+}
+
+/* ページ内リンクの飛び先の位置調整
+  　 aタグを使うのは良くないので、移行が終わったらaは削除。
+  　 移行が済むまでは並行するので、消さないこと。
+  */
+article a,
+article h2,
+article h3,
+article h4,
+article h5 {
+    scroll-margin-top: 1rem;
+}
+
+.back {
+    display: block;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.back:last-of-type {
+    margin-bottom: 1rem;
+}
+
+.rowGap {
+    row-gap: 2rem;
+}
+
+
+/* mdから読み取った部分のダークテーマ */
+@media (prefers-color-scheme:dark) {
+    article {
+        color: #e0e0e0;
+    }
+
+    /*bodyにbackground-colorつけているので、articleには不要*/
+    article>h1 {
+        background-color: #383838;
+    }
+
+    article>h2 {
+        background-color: #383838;
+    }
+
+    article code {
+        background-color: #707070;
+    }
+}
+
+@media (prefers-color-scheme:dark) {
+    .container {
+        background-color: #333;
+    }
+}
+
+@media screen and (max-width:1200px) {
+    article {
+        width: 90%;
+    }
+
+    article nav {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width:950px) {
+    .wrapper {
+        flex-direction: column;
+    }
+
+    .sideBarContainer {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width:650px) {
+    article>p>video {
+        width: 100%;
+        height: auto;
+    }
+}
+
+/*601px以上でメニューを固定しているため、ページ内リンクがメニューの高さ分ずれてしまうので、調整*/
+@media screen and (min-width:601px) {
+
+    article a,
+    article h2,
+    article h3,
+    article h4,
+    article h5 {
+        scroll-margin-top: 4rem;
+    }
+}
+
+@media screen and (max-width:600px) {
+    article {
+        width: 95%;
+    }
+}
+
+@media (prefers-color-scheme:dark) {
+    .table-of-contents {
+        background-color: #383838;
+    }
+}

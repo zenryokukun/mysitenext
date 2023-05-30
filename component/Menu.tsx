@@ -1,4 +1,4 @@
-
+"use client"
 import { useState } from "react";
 import Link from "next/link.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

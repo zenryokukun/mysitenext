@@ -1,23 +1,34 @@
-import { getComments } from "../lib/db/func";
-import Modal from "../component/Modal";
-import MyHead from "../component/MyHead";
-import Menu from "../component/Menu";
-import Footer from "../component/Footer";
-import { MODE } from "../component/constants";
-import styles from "../styles/Board.module.css";
-import React, { useState } from "react";
-import Loader from "../component/Loader"
+"use client"
+/**
+ * page.tsxをclient componentにするとgetPropsが聞かない
+ * （サーバ側で動くロジックのため。）
+ * page.tsxはserver componentsのままにし、client部分を切り出した。
+ * 
+ */
+import { useState } from "react"
+import Modal from "../../component/Modal"
+import Loader from "../../component/Loader"
+import styles from "../../styles/Board.module.css"
+import type { WithId, Document } from "mongodb"
 
-interface CommentProp {
+interface Comment {
   name: string,
   msg: string,
   posted?: string,
 }
 
+type Comments = Comment[]
+
+interface BoardProp {
+  comments: Comments;
+}
+
 const ENDPOINT_LIST = "/api/board/getlist"; //コメントの一覧を取得するAPI
 const ENDPOINT_INSERT = "api/board/comment" // コメント挿入するAPI
 
-export default function Board({ comments }: { comments: CommentProp[] }) {
+export default function Board({ comments }: { comments: WithId<Document>[] }) {
+  // 型変換
+  const data = comments as unknown as Comments;
 
   const [isModal, setModal] = useState(false);
   const [isLoading, setLoader] = useState(false);
@@ -31,8 +42,9 @@ export default function Board({ comments }: { comments: CommentProp[] }) {
   const reload = () => {
     fetch(ENDPOINT_LIST).then(data => data.json()).then(newComments => setComment(newComments));
   };
+
   // モーダルのpostボタン押下時処理。Modal コンポーネントで呼ぶ。
-  const postComment = (body: CommentProp) => {
+  const postComment = (body: Comment) => {
     setLoader(true); // Loader表示
     fetch(ENDPOINT_INSERT, {
       method: "POST",
@@ -50,23 +62,20 @@ export default function Board({ comments }: { comments: CommentProp[] }) {
 
   return (
     <>
-      <MyHead title="掲示板"></MyHead>
       {isLoading && <Loader text="ナウ、アップローディン..."></Loader>}
-      <Menu iniMode={MODE.BOARD}></Menu>
       <main className={styles.main}>
         {commentState.map((comment, i) => {
           const { name, msg, posted } = comment;
           return <Comment key={i} name={name} msg={msg} posted={posted}></Comment>
         })}
         <div className={styles.commentButton} onClick={showModal}>Post Comment</div>
+        {isModal && <Modal post={postComment} close={hideModal}></Modal>}
       </main>
-      {isModal && <Modal post={postComment} close={hideModal}></Modal>}
-      <Footer></Footer>
     </>
-  );
+  )
 }
 
-function Comment({ name, msg, posted }: CommentProp) {
+function Comment({ name, msg, posted }: Comment) {
   return (
     <div className={styles.commentWrapper}>
       <div className={styles.name}>{name}</div>
@@ -74,12 +83,4 @@ function Comment({ name, msg, posted }: CommentProp) {
       <div className={styles.when}>{posted}</div>
     </div>
   );
-}
-
-export async function getServerSideProps() {
-  const data = await getComments(20);
-  const comments = JSON.parse(JSON.stringify(data));
-  return {
-    props: { comments }
-  };
 }

@@ -1,30 +1,17 @@
-/**
- * 
- * md -> htmlに変換するサービス
- * PCならドラッグ&ドロップ、モバイルならクリック（非表示<input type=file>に設定）でアップロード。
- * PCとモバイルで選択したファイルを取得する方法が異なる点に留意。
- * PC -> dragイベントのdataTransferオブジェクトからfileオブジェクトを取得
- * モバイル -> inputのfilesオブジェクトから取得
- */
+"use client"
 
-import MyHead from "../../../component/MyHead";
-import Menu from "../../../component/Menu";
-import Footer from "../../../component/Footer";
-import Loader from "../../../component/Loader";
-import { MODE, LINK } from "../../../component/constants";
-import { useEffect, useRef, useState } from "react";
-
+import Loader from "../../../component/Loader"
+import { useEffect, useRef, useState } from "react"
+import { LINK } from "../../../component/constants";
 import DOMPurify from "dompurify";
 import genDocString from "../../../lib/mdconv/download";
 
 import type React from "react";
 import styles from "../../../styles/Md-converter.module.css";
+import "prismjs/themes/prism-tomorrow.css";
+import "./article.css";
 
-// meta description用文字列
-const DESCR = `MDを見やく、簡易なCSS込みでHTMLに変換するサービスです。GitHub-Flavored-MarkDownに対応しています。`
-
-
-export default function Page() {
+export default function Converter() {
   // formのnameにつける。
   const fileFormName = "upload";
   // mobile用。input fileのrefを格納。
@@ -146,14 +133,8 @@ export default function Page() {
         setIsLoading(false);
       })
   };
-
   return (
     <>
-      <MyHead
-        title="MD-CONVERTER" metaDescription={DESCR}
-        useBreadCrumb={true}
-      />
-      <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}
       <main className={styles.container}
         onDrop={(e) => e.preventDefault()}
@@ -162,16 +143,6 @@ export default function Page() {
           <div className={styles.mainWrapper}>
             <h1 className={styles.mainHeader}>MDファイルをHTMLに変換するサービスです</h1>
             <p className={styles.mainAppeal}>オフラインでも閲覧できるように、ダウンロード機能もつけました。GitHub-Flavored-MarkDownにも対応しています。</p>
-            {/* <form
-              onSubmit={submit}
-              className={styles.mobile}
-              action="" method="post"
-              encType="multipart/form-data">
-              <fieldset>
-                <legend>mdファイルを選択してください。</legend>
-                <input type="submit" value="htmlに変換" />
-                </fieldset>
-              </form> */}
             <input
               className={styles.hidden} type="file" onChange={manualUpload} name={fileFormName} ref={fileInput} />
             <div
@@ -235,10 +206,11 @@ export default function Page() {
           <Article html={resString} back={back} />
         }
       </main>
-      <Footer></Footer>
+
     </>
-  );
+  )
 }
+
 
 /**
  * <Article />

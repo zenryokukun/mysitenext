@@ -1,17 +1,15 @@
-import Image from "next/image";
-import React, { useRef, useState, useEffect } from "react";
-import MyHead from "../../component/MyHead";
-import Menu from "../../component/Menu";
-import Footer from "../../component/Footer";
-import { MODE } from "../../component/constants";
+"use client"
+
+import Image from "next/image"
+import { useRef, useState, useEffect } from "react";
 import {
   render, Board, leftClick, rightClick, doubleClick,
   loadSprite, setSize, scheduleTick, smileDown, smileUp,
   changeSmile
-} from "../../lib/ms/logic";
+} from "../../../lib/ms/logic";
 
-import type { HeadProp } from "../../types";
-import style from "../../styles/Minesweeper.module.css";
+import style from "../../../styles/Minesweeper.module.css";
+
 
 // game levels
 const EASY = 0;
@@ -47,7 +45,7 @@ const LEVEL: AllLevels = {
   [HARD]: { cols: 30, rows: 16, bombs: 90, level: HARD },
 };
 
-const Page = () => {
+export default function Minesweeper() {
   // ルール説明モーダルを表示するために使う
   const [isModal, setModal] = useState<boolean>(false);
   // level変更でGameを再描写する。
@@ -115,19 +113,8 @@ const Page = () => {
     return style.menu;
   };
 
-  const headParam: HeadProp = {
-    title: "Minesweeper",
-    cardTitle: "全力RETRO GAME",
-    description: "嘗て古のOSに搭載され、時代の流れとともにひっそりと姿を消した伝説のGAME.その名は『地雷を撤去せし者』。",
-    imagePath: "https://www.zenryoku-kun.com/production/minesweeper/ms-card-img.png",
-    metaDescription: "懐かしのマインスイーパーです。地雷が埋まっているマスに旗を立て、それ以外のマスを全て開けば勝ちです。EASY,MEDIUM,HARDから難易度を選べます。楽しんで下さい。",
-    useBreadCrumb: true,
-  };
-
   return (
     <>
-      <MyHead {...headParam}></MyHead>
-      <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isModal && <Description closeModal={closeModal}></Description>}
       <main className={style.container}>
         <div className={style.menuWrapper}>
@@ -142,10 +129,10 @@ const Page = () => {
         <div className={style.message}>{getMessage()}</div>
         <a onClick={showModal} className={style.rule} href="#rule">ルール説明</a>
       </main>
-      <Footer></Footer>
     </>
-  );
-};
+  )
+}
+
 
 // canvas部分のコンポーネント
 const Game = ({ img, board, restart, gameClick }: GameProp) => {
@@ -327,5 +314,3 @@ function Description({ closeModal }: DescProp) {
     </div >
   );
 }
-
-export default Page;

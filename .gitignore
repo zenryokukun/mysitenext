@@ -70,4 +70,8 @@ mongo-manual.txt
 /backup-*.json
 
 # App Router。移行がある程度済むまでignore。
-/app/
+# 20230529 - 移行完了
+# /app/
+
+# pagesのバックアップ 20230529時点
+/pages-bk/

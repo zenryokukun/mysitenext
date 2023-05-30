@@ -1,26 +1,19 @@
-import Image from "next/image";
-import React, { useState, useRef, useEffect } from "react";
-import MyHead from "../../component/MyHead";
-import Menu from "../../component/Menu";
-import Footer from "../../component/Footer";
-import Loader from "../../component/Loader";
-import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
-import Author from "../../component/Author";
-import Twitter from "../../component/Twitter";
-import { MODE } from "../../component/constants"
+"use client"
+import Image from "next/image"
+import { useState, useRef, useEffect } from "react"
+import Loader from "../../../component/Loader"
+import Layout, { Main, Side } from "../../../component/layouts/sidebar/Layout"
+import Author from "../../../component/Author"
+import Twitter from "../../../component/Twitter"
+import styles from "../../../styles/Cropper.module.css"
 
-import styles from "../../styles/Cropper.module.css";
-
-// meta description
-const DESC = "スマホで撮影した縦長の画像を、任意の縦横比に切り取るサービスです。アスペクト比は9:16、2:3、3:4、1:1から選べ、リサイズにも対応しています。"
 // api endpoint
 const ENDPOINT = "/api/cropper/upload";
 // resizeのラジオボタンのvalueのenum
 type Resize = "default" | "custom";
 
 
-export default function Page() {
-
+export default function Cropper() {
   // file inputを制御するために使う
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -123,12 +116,6 @@ export default function Page() {
 
   return (
     <>
-      <MyHead
-        title="スマホ画像切取君"
-        description={DESC}
-        useBreadCrumb={true}
-      />
-      <Menu iniMode={MODE.PRODUCTION}></Menu>
       {isLoading && <Loader text="ナウ、ローディン..."></Loader>}
       <Layout>
         <Main>
@@ -192,7 +179,6 @@ export default function Page() {
           <Twitter></Twitter>
         </Side>
       </Layout>
-      <Footer></Footer>
     </>
-  );
+  )
 }

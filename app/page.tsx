@@ -1,37 +1,47 @@
+// Components
 import Image from "next/image";
-import MyHead from "../component/MyHead";
 import Menu from "../component/Menu";
-import { MODE } from "../component/constants";
-import Footer from "../component/Footer";
 import Layout, { Main, Side } from "../component/layouts/sidebar/Layout";
 import { FancyBlogLinks } from "../component/BlogLinks";
 import Twitter from "../component/Twitter";
-import { newBlogs } from "../lib/db/extract";
-import { blogInfoToLinkItem, productionToLinkItems } from "../lib/typecast";
-import productionList from "../lib/prod-list";
-
-import type { LinkItem } from "../types";
-
+// Other data
+import { MODE } from "../component/constants";
 import styles from "/styles/Home.module.css";
 
-interface Prop {
-  newBlogLinks: LinkItem[];
-  prodLinks: LinkItem[];
+// logics used in `getProps`
+import { newBlogs } from "../lib/db/extract";
+import productionList from "../lib/prod-list";
+import { blogInfoToLinkItem, productionToLinkItems } from "../lib/typecast";
+import { LinkItem } from "../types";
+
+/**
+ * `fetch`代替。ssgしてくれる想定。
+ * 直近ブログ記事と製作物を取得して返す。
+ * @returns [直近ブログ、製作物]
+ */
+async function getProps(): Promise<[LinkItem[], LinkItem[]]> {
+  // 直近記事を３つ取得
+  const newsProm = newBlogs(3);
+  // 製作物一覧を取得。
+  const prodsProm = productionList();
+  // 両方resolveするのを待つ。
+  const [news, prods] = await Promise.all([newsProm, prodsProm]);
+  // undefined時はエラーにする
+  if (news === undefined || prods === undefined) {
+    throw new Error("failed to fetch Props: `news` or `prods`");
+  }
+  // LinkItem型に変換
+  const newBlogLinks = news.map(blogInfoToLinkItem);
+  const prodLinks = prods.map(productionToLinkItems);
+  // prodLinksの数を直近記事数に揃える。
+  return [newBlogLinks, prodLinks.slice(0, 3)];
 }
 
-export default function Page({ newBlogLinks, prodLinks }: Prop) {
-  const desc = `プログラミングで一人で何かを作りたいけど、困っている方へ。\
-私自身、このサイトや仮想通貨の自動取引BOTなどを作っていますが、実装やパッケージの理解で苦労することがよくあります。\
-ブログ記事や製作物を通じて、同じところでつまずいた時の助けになるような、役立つ情報を提供します。\
-実践的なチュートリアルやエラー解決方法、完成した作品などを掲載していますので、是非、ご覧ください。\
-  `;
+export default async function Page() {
+  const [newBlogLinks, prodLinks] = await getProps();
   return (
     <>
-      <MyHead
-        title="全力君。"
-        metaDescription={desc}
-      />
-      <Menu iniMode={MODE.HOME}></Menu>
+      <Menu iniMode={MODE.HOME} />
       <aside className={styles.bgimage}>
         <section className={styles.catchWrapper}>
           <div className={styles.catchHeader}>Zen-Production</div>
@@ -43,7 +53,6 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
       <Layout>
         <Main>
           <section className={styles.messageWrapper}>
-
             <h1 className={styles.heading}>一人で作ることの苦楽を共有したい</h1>
             <p>
               プログラミング、建築、動画、音楽、プラモデル、、、規模の大小、質の高低、技術の新旧を問わず、何かを作ることはとても楽しい作業です。
@@ -78,6 +87,7 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
             </p>
             <div className={styles.underline}></div>
           </section>
+
           <section className={styles.linkSection}>
             <h2 className={styles.linkTitle}>直近の製作物</h2>
             <div className={styles.linkArea}>
@@ -138,30 +148,6 @@ export default function Page({ newBlogLinks, prodLinks }: Prop) {
           <Twitter />
         </Side>
       </Layout>
-      <Footer></Footer>
     </>
   );
-}
-
-export async function getStaticProps() {
-
-  const news = await newBlogs(3);
-  const prods = await productionList();
-
-  // データが取れない場合は404ページを返す。
-  if (!prods || !news) {
-    return {
-      notFound: true,
-    }
-  }
-
-  const newBlogLinks = news.map(blogInfoToLinkItem);
-  const prodLinks = prods.map(productionToLinkItems);
-
-  return {
-    props: {
-      newBlogLinks,
-      prodLinks: prodLinks.slice(0, 3),
-    }
-  }
 }
