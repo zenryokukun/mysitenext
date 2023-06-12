@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: { dir: string } }) 
   const data = fmtData.data as DataProp;
   return {
     title: data.title,
-    description: data.description,
+    description: data.metaDescription,
   }
 }
 

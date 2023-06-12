@@ -120,6 +120,8 @@ pm2 restart "your file name"
 NODE_ENV=production pm2 "your file name" #環境変数付きで起動
 pm2 save # 初回起動後に実施。ターミナルで促されるので従っておく
 pm2 restart "your file name" #restart時は環境変数不要
+# npmコマンドの場合
+pm2 start npm --name "app name" -- start
 ```
 
 ### Nginx
