@@ -113,3 +113,13 @@ firefoxのみに適用。sidebarのmin-widthがchrome等
     margin-top: 2rem;
   }
 }
+
+@media (prefers-color-scheme:dark) {
+  .withSummary {
+    color: white;
+  }
+
+  .withSummary:visited {
+    color: inherit;
+  }
+}

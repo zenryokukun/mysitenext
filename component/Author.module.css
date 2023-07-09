@@ -50,6 +50,12 @@
   margin-bottom: 10px;
 }
 
+@media (prefers-color-scheme:dark) {
+  .container {
+    color: #333;
+  }
+}
+
 /* 
  * [Responsive対応] 
  * max-widthは、SideBarLayoutのflex-direction切替の

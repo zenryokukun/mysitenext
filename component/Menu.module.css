@@ -141,5 +141,13 @@
       /* display: none; */
     }
   }
+}
 
+@media (prefers-color-scheme:dark) {
+
+  /* global.cssのa:visitedを効かないようにする */
+  .link:visited,
+  .selectedLink:visited {
+    color: inherit
+  }
 }

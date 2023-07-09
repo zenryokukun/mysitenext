@@ -3,7 +3,7 @@
  */
 .container {
     min-height: 80vh;
-    background-color: #d1d1d1
+    background-color: #d1d1d1;
 }
 
 .rule {
@@ -158,5 +158,17 @@
 @media screen and (max-width:850px) {
     .descImg {
         width: 60%;
+    }
+}
+
+@media (prefers-color-scheme:dark) {
+
+    .container,
+    .modal {
+        color: black;
+    }
+
+    .menu {
+        color: inherit;
     }
 }
