@@ -61,7 +61,8 @@ function MyApp({ Component, pageProps, router }: AppProps) {
   // NODE_ENVがproductionの場合はGAタグを設定
   return (
     <>
-      <Script
+      {/* login,admin以外はappに移行したため、Scriptタグをコメントアウト */}
+      {/* <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-V9TR64QDHY"
         strategy='afterInteractive'
       />
@@ -73,7 +74,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
        
            gtag('config', 'G-V9TR64QDHY');
         `}
-      </Script>
+      </Script> */}
       <Component {...pageProps} />
     </>
   );
