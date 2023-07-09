@@ -75,3 +75,7 @@ mongo-manual.txt
 
 # pagesのバックアップ 20230529時点
 /pages-bk/
+
+# docker imageの.tar, .gz
+*.tar
+*.gz

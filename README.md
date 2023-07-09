@@ -159,3 +159,23 @@ db.`collection-name`.find({`field-name`:`field-value`})
 db.`collection-name`.find({`field-name`:{$gt:0}},`field-name2`:{$lte:9})
 
 ```
+
+### docker
+
+next.config.jsで```output:"standalone"```にしておく必要あり。standaloneだと、public以外のフォルダへ動的にアクセスすることが出来ず、エラーになる（ビルド時はOK）。
+
+
+
+- docker-image作成
+
+```bash
+docker-build -t nextjs-docker .
+```
+
+- container実行
+
+standaloneだとビルド以降はpublic以外のフォルダにアクセスできないため、動的にアクセスする必要があるファイルはbindする。
+
+```bash
+docker run -dp 3000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json nextjs-docker
+```
