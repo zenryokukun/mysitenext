@@ -25,3 +25,22 @@
     text-decoration: none;
     color: #2c921a;
 }
+
+@media (prefers-color-scheme:dark) {
+    .table-of-contents {
+        background-color: #3F3F3F;
+        /* background-color: #1C262D; */
+    }
+}
+
+@media screen and (max-width:650px) {
+    .table-of-contents {
+        width: 100% !important;
+    }
+
+    /* 目次内のリンクの幅を、スマホの場合はもっと広げる。*/
+    .table-of-contents li {
+        margin-top: 1.3rem;
+        margin-bottom: 1.3rem;
+    }
+}
