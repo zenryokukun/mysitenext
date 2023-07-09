@@ -4,6 +4,7 @@ import Author from "../../../component/Author";
 import Twitter from "../../../component/Twitter";
 import Like from "../../component/Like";
 import { FancyBlogLinks } from "../../../component/BlogLinks";
+import Amazon from "../../../component/Amazon";
 import { getBlogDirList } from "../../../lib/db/func"
 import { getBlogMd, formatMd } from "../../../lib/util";
 import parseMd from "../../../lib/parse-md";
@@ -26,6 +27,8 @@ import "prismjs/components/prism-go"
 import "prismjs/components/prism-json"
 import "prismjs/components/prism-jsx"
 import "prismjs/components/prism-tsx"
+import "prismjs/components/prism-powershell"
+import "prismjs/components/prism-docker"
 
 
 // falseだとgennerateStaticParamsで生成されない場合404になる。
@@ -90,7 +93,7 @@ export default async function Page({ params }: PageProp) {
   const { content, data, related, latest } = await getProps(params.dir);
   const author = data.author || "全力君";
   const postedDate = data.postedDate || "2022年";
-
+  const { amazonLink } = data;
   return (
     <Layout>
       <Main>
@@ -104,6 +107,7 @@ export default async function Page({ params }: PageProp) {
       </Main>
       <Side addStyle={styles.rowGap}>
         <Author name={author} postedDate={postedDate} />
+        <Amazon src={amazonLink} />
         <FancyBlogLinks data={related} headline="関連記事" />
         <FancyBlogLinks data={latest} headline="最新記事" />
         <Twitter />

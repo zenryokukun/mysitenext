@@ -14,8 +14,9 @@ export interface HeadProp {
     // meta description
     metaDescription?: string,
     // scriptタグに挿入するJSON-ldを使う場合はtrue。
-    useBreadCrumb?: boolean
-
+    useBreadCrumb?: boolean,
+    // Amazonアソシエイトリンク
+    amazonLink?: string,
     //**************************************************
     // 以下 twitter card用
     //**************************************************

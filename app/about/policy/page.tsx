@@ -1,6 +1,6 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBuildingShield, faKey, faCopyright, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { faBuildingShield, faKey, faCopyright, faTriangleExclamation, faRectangleAd } from "@fortawesome/free-solid-svg-icons"
 import { faInternetExplorer } from "@fortawesome/free-brands-svg-icons"
 
 import styles from "../../../styles/Policy.module.css"
@@ -57,6 +57,16 @@ export default function Page() {
             <li>当サイト、およびそのコンテンツは予告なく削除される可能性があります。</li>
             <li>サイト運営者は、当サイトのコンテンツの内容の正確性、各種サービスの完全性を保証しません。</li>
           </ul>
+        </section>
+        <section className={styles.postit}>
+          <h2 className={styles.header2}>
+            <FontAwesomeIcon icon={faRectangleAd} />
+            サイト内の広告について
+          </h2>
+          <p>
+            Amazonのアソシエイトとして、運営者（全力君）は適格販売により収入を得ています。<br />
+            広告であることが分かるように掲載することを心がけますので、ご了承ください。
+          </p>
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
