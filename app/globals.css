@@ -28,4 +28,13 @@ body {
     color: white;
     background-color: #333;
   }
+
+  a {
+    color: #55A4F1;
+  }
+
+  a:visited {
+    /* color: #D0ADF0 */
+    color: #a751f7;
+  }
 }

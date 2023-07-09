@@ -138,6 +138,7 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 /* mdから読み取った部分のダークテーマ */
 @media (prefers-color-scheme:dark) {
   .articleContainer {
+    background-color: #333;
     color: #e0e0e0;
   }
 
@@ -152,13 +153,13 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 
   .articleContainer code {
     background-color: #707070;
+    color: #222;
   }
-}
 
-@media (prefers-color-scheme:dark) {
-  .container {
-    background-color: #333;
+  .articleContainer blockquote:not(.articleContainer pre) {
+    color: #222;
   }
+
 }
 
 @media screen and (max-width:1200px) {
@@ -199,11 +200,5 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 @media screen and (max-width:600px) {
   .articleContainer {
     width: 95%;
-  }
-}
-
-@media (prefers-color-scheme:dark) {
-  .table-of-contents {
-    background-color: #383838;
   }
 }
