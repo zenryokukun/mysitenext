@@ -164,8 +164,6 @@ db.`collection-name`.find({`field-name`:{$gt:0}},`field-name2`:{$lte:9})
 
 next.config.jsで```output:"standalone"```にしておく必要あり。standaloneだと、public以外のフォルダへ動的にアクセスすることが出来ず、エラーになる（ビルド時はOK）。
 
-
-
 - docker-image作成
 
 ```bash
@@ -175,7 +173,19 @@ docker-build -t nextjs-docker .
 - container実行
 
 standaloneだとビルド以降はpublic以外のフォルダにアクセスできないため、動的にアクセスする必要があるファイルはbindする。
+standaloneだとコピーされないファイルも出てしまうが、それはDockerfile内で手動でコピーする
+
+#### bind
+1. /lib/db/dbinfo.json
+2. /pages/api/genkidama/src/conf/conf.json
+3. /public/posts
 
 ```bash
-docker run -dp 3000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json nextjs-docker
+# $pwdを使うためプロジェクトフォルダに移動した上で実行すること。
+
+# windows
+docker run -dp 5000:5000 --mount type=bind,src="$(pwd)\lib\db\dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)\pages\api\genkidama\src\conf\conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)\public\posts",target=/app/public/posts --restart on-failure --name nextblog nextjs-docker 
+# linux
+docker run -dp 5000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)/pages/api/genkidama/src/conf/conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)/public/posts",target=/app/public/posts --restart on-failure --name nextblog nextjs-docker 
 ```
+

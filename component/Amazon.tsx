@@ -27,6 +27,8 @@ export function Amazon({ src }: { src?: string }) {
       // scrolling="no"
       // frameBorder={0}
       src={linkSrc}
+      // for accessbility
+      title="Ad for Amazon"
     />
   );
 }

@@ -43,6 +43,10 @@ export default function BlogLinks({ data, headline }: BLProp) {
  * Fancy blog links
  */
 export function FancyBlogLinks({ data, headline, showSummary, addStyle, replaceStyle }: BLProp) {
+  if (data.length === 0) {
+    //　データが無い場合は何も表示しない。「関連記事」とかだとない場合もあるので。
+    return null;
+  }
   const wrapperStyle = () => {
     if (!showSummary) {
       return styles.fancyItemWrapper
