@@ -36,8 +36,13 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
   word-wrap: break-word;
 }
 
-/* p直後のulの間隔が狭いため、marginを設定 */
-.articleContainer p+ul {
+/* 
+ * p直後のulの間隔が狭いため、marginを設定 
+ * div（画像）直後のul、pre直後のulの間隔が狭いため追加
+ */
+.articleContainer p+ul,
+.articleContainer div+ul,
+.articleContainer pre+ul {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
