@@ -29,7 +29,7 @@ import "prismjs/components/prism-jsx"
 import "prismjs/components/prism-tsx"
 import "prismjs/components/prism-powershell"
 import "prismjs/components/prism-docker"
-
+import "prismjs/components/prism-sql"
 
 // falseだとgennerateStaticParamsで生成されない場合404になる。
 export const dynamicParams = false;
