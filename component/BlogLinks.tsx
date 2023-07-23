@@ -78,12 +78,12 @@ export function FancyBlogLinks({ data, headline, showSummary, addStyle, replaceS
               showSummary
                 ?
                 <div className={styles.fancyText}>
-                  <span className={styles.summaryTitle}>{rel.title}</span>
-                  <span className={styles.summary} >{rel.summary}</span>
+                  <div className={styles.summaryTitle}>{rel.title}</div>
+                  <div className={styles.summary} >{rel.summary}</div>
                 </div>
                 :
                 <div className={styles.fancyText}>
-                  <span>{rel.title}</span>
+                  <div>{rel.title}</div>
                 </div>
             }
             <div className={styles.when}>{rel.posted}</div>

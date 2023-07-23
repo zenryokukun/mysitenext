@@ -11,14 +11,6 @@ body {
 }
 
 
-@media screen and (max-width:600px) {
-
-  /* スマホの時は少し文字小さく */
-  body {
-    font-size: 0.9rem;
-  }
-}
-
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

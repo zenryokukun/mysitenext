@@ -130,7 +130,7 @@
     }
 
     .addLink {
-        font-size: 0.8rem !important;
+        /* font-size: 0.8rem !important; */
         height: 9rem !important;
     }
 }

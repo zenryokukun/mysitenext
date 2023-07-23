@@ -38,12 +38,12 @@
   padding-top: 5px;
   padding-bottom: 5px;
   border-bottom: solid 1px darkgray;
-  font-size: 0.9rem;
+  /* font-size: 0.9rem; */
 }
 
 .itemColumnText {
   margin-left: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .item:last-of-type {
