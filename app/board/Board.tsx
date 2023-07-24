@@ -9,33 +9,46 @@ import { useState } from "react"
 import Modal from "../../component/Modal"
 import Loader from "../../component/Loader"
 import styles from "../../styles/Board.module.css"
-import type { WithId, Document } from "mongodb"
+import type { WithId } from "mongodb"
+import type { CommentInfo } from "../../types"
 
-interface Comment {
-  name: string,
-  msg: string,
-  posted?: string,
-}
-
-type Comments = Comment[]
-
-interface BoardProp {
-  comments: Comments;
-}
 
 const ENDPOINT_LIST = "/api/board/getlist"; //コメントの一覧を取得するAPI
 const ENDPOINT_INSERT = "api/board/comment" // コメント挿入するAPI
 
-export default function Board({ comments }: { comments: WithId<Document>[] }) {
-  // 型変換
-  const data = comments as unknown as Comments;
+interface ThreadHandler {
+  seq: number | null;
+  set: (s: number | null) => void
+}
+
+// スレッドのIDを管理するオブジェクト。
+// useStateでも良いのだが、描写に直接関係しないため、外出し。
+const threadHandler: ThreadHandler = {
+  seq: null,
+  set: function (seq: number | null) {
+    this.seq = seq;
+  }
+}
+
+// Modalに渡す関数。型共有できるようにexport。
+export interface PostBody {
+  name: string;
+  msg: string;
+  parentSeq: null | number;
+  topic: string;
+}
+
+export default function Board({ comments }: { comments: WithId<CommentInfo>[] }) {
 
   const [isModal, setModal] = useState(false);
   const [isLoading, setLoader] = useState(false);
   const [commentState, setComment] = useState(comments);
 
   // post commentボタン押下時、モーダルを開く
-  const showModal = (e: React.MouseEvent<HTMLDivElement>) => setModal(true);
+  const showModal = (seq: number | null) => {
+    setModal(true);
+    threadHandler.set(seq);
+  }
   // モーダルのcloseボタンを押下時、モーダルを閉じる。Modalコンポーネントで実行する。
   const hideModal = () => setModal(false);
   // コメントが新たにポストされたらコメント表示を一新する。Modal コンポーネントで実行する。
@@ -44,7 +57,7 @@ export default function Board({ comments }: { comments: WithId<Document>[] }) {
   };
 
   // モーダルのpostボタン押下時処理。Modal コンポーネントで呼ぶ。
-  const postComment = (body: Comment) => {
+  const postComment = (body: PostBody) => {
     setLoader(true); // Loader表示
     fetch(ENDPOINT_INSERT, {
       method: "POST",
@@ -64,23 +77,68 @@ export default function Board({ comments }: { comments: WithId<Document>[] }) {
     <>
       {isLoading && <Loader text="ナウ、アップローディン..."></Loader>}
       <main className={styles.main}>
-        {commentState.map((comment, i) => {
-          const { name, msg, posted } = comment;
-          return <Comment key={i} name={name} msg={msg} posted={posted}></Comment>
-        })}
-        <div className={styles.commentButton} onClick={showModal}>Post Comment</div>
-        {isModal && <Modal post={postComment} close={hideModal}></Modal>}
+        <Message comments={commentState} showModal={(seq: number) => showModal(seq)} />
+        <div className={styles.commentButton} onClick={() => showModal(null)}>Post Comment</div>
+        {isModal && <Modal post={postComment} close={hideModal} parentSeq={threadHandler.seq}></Modal>}
       </main>
     </>
   )
 }
 
-function Comment({ name, msg, posted }: Comment) {
+
+interface MessageProp {
+  comments: CommentInfo[];
+  showModal: (seq: number) => void;
+}
+
+function Message({ comments, showModal }: MessageProp) {
+  // threadを抽出。threadはparentSeqがnull。
+  const threads = comments.filter(cmt => cmt.parentSeq === null);
   return (
-    <div className={styles.commentWrapper}>
-      <div className={styles.name}>{name}</div>
-      <div className={styles.msg}>{msg}</div>
-      <div className={styles.when}>{posted}</div>
-    </div>
+    <>
+      {threads.map((thread, i) => {
+        // スレッド傘下のコメントを抽出。
+        const conversation = comments.filter(cmt => cmt.parentSeq === thread.threadSeq);
+        return <Thread key={i} thread={thread} conversation={conversation} showModal={showModal} />
+      })}
+    </>
+  );
+}
+
+
+interface ThreadProp {
+  thread: CommentInfo;
+  conversation: CommentInfo[];
+  showModal: (seq: number) => void;
+}
+function Thread({ thread, conversation, showModal }: ThreadProp) {
+  const [showConversation, setShowConversation] = useState(false);
+  const { topic, name, msg, posted, threadSeq } = thread;
+  return (
+    <>
+      <div className={styles.commentWrapper}>
+        {topic && topic.length !== 0 && <div className={styles.topic}>{topic}</div>}
+        <div className={styles.name}>[投稿者]: {name}</div>
+        <div className={styles.msg}>{msg}</div>
+        <div className={styles.when}>{posted}</div>
+        {showConversation && <div>{conversation.map((cmt, i) => <Comment key={i} {...cmt} />)}</div>}
+        <button className={styles.showReply} onClick={() => setShowConversation(() => !showConversation)}>
+          {showConversation ? "返信を非表示にする" : `返信を表示する ${conversation.length}件`}
+        </button>
+        <button className={styles.reply} onClick={() => showModal(threadSeq as number)}>このスレッドに返信する</button>
+      </div>
+    </>
+  );
+}
+
+function Comment({ name, msg, posted, replySeq }: CommentInfo) {
+  return (
+    <>
+      <div className={styles.replyWrapper}>
+        <div className={styles.name}>No.{replySeq} [投稿者]: {name}</div>
+        <div className={styles.msg}>{msg}</div>
+        <div className={styles.when}>{posted}</div>
+      </div>
+    </>
   );
 }

@@ -5,14 +5,10 @@ import { genSessionId } from "../util";
 
 import type { MongoClient, WithId, Document } from "mongodb";
 import type { UpdateItemRequest } from "../../types";
-import type { BlogInfo } from "../../types";
+import type { BlogInfo, CommentInfo } from "../../types";
 
 interface DirFilter {
     assetsDir: string,
-}
-
-interface InsertComment {
-    name: string, msg: string,
 }
 
 // mongodbｎ.find().toArray()がWithId<Document>というtypeになるのでキャスト。
@@ -35,8 +31,6 @@ function getDB(client: MongoClient) {
 /**
  * 記事一覧collectionを返す関数。
  * getCollectionの特定版。型有にするために分離。
- * @param client 呼び出し元でclientPromiseをawaitしたもの
- * @param colName collectionの名前
  * @returns Collection<BlogInfo[]>
  */
 async function getAssetsCollection() {
@@ -45,11 +39,19 @@ async function getAssetsCollection() {
     const collection = db.collection<BlogInfo>(dbInfo["colAssets"]);
     return collection;
 }
-// function getAssetsCollection(client: MongoClient, colName: string) {
-//     const db = getDB(client);
-//     const collection = db.collection<BlogInfo>(colName);
-//     return collection;
-// }
+
+/**
+ * コメント一覧のcollectionを返す関数。
+ * getCollectionの特定版。型有にするために分離。
+ * @param client 呼び出し元でclientPromiseをawaitしたもの
+ * @returns 
+ */
+async function getNewCommentsCollection() {
+    const client = await clientPromise;
+    const db = getDB(client);
+    const collection = db.collection<CommentInfo>(dbInfo["colNewComment"]);
+    return collection;
+}
 
 /**
  * 内部関数。colパラメタに応じたcollectionを返す汎用関数。型設定が出来ない。
@@ -227,33 +229,93 @@ async function updateVisit(dir: string) {
     return result;
 }
 
+
+interface Select {
+    [key: string]: number;
+}
 /**
- * /api/board/commentsとboard.tsxのgetServerSidePropsで利用
- * コメントの一覧を降順で取得。limitが取得上限
- * @param limit 取得上限
- * @returns Promise 
+ * 新版のコメントを取得する関数
+ * api/board/getlistで使用
+ * @param limit 取得するドキュメントの上限数。デフォルト50（少ない）
+ * @param select 抽出する項目のオブジェクト。{field1:1,field2:1,_id:0}のように指定。
+ * @returns Promise<WithId<CommentInfo>[]>
  */
-async function getComments(limit: number) {
-    const colName = dbInfo["colComment"];
-    const client = await clientPromise;
-    const col = getCollection(client, colName);
-    const docs = col.find().sort({ _id: -1 }).limit(limit).toArray();
+export async function getNewComments(limit: number = 50, select: Select | undefined = undefined) {
+    const col = await getNewCommentsCollection();
+    let docs: Promise<WithId<CommentInfo>[]>
+    if (!select) {
+        docs = col.find().limit(limit).toArray();
+    } else {
+        docs = col.find({}, select).limit(limit).toArray();
+    }
     return docs;
 }
 
+
+// 新版
+interface NewCommentProp {
+    name: string;
+    msg: string;
+    // 親スレッドのID。新規スレッドの場合はnull。
+    parentSeq: number | null;
+    topic: string;
+}
 /**
- * /api/board/commentで使用。
- * コメントをDBにinsert。
- * @param {name:string,msg:string} 
+ * api/board/commentで使用。コメントをDBに投入、
+ * @param param0 NewCommentProp
+ * @returns Promise<InsertOneResult<CommentInfo>>
  */
-async function insertComment({ name, msg }: InsertComment) {
-    if (!name || !msg) {
-        return;
+export async function insertNewComment({ name, msg, parentSeq, topic }: NewCommentProp) {
+    // ******threadSeq,replySeqの最大値計算********
+
+    // parentSeqが渡されている場合、threadSeqを設定。
+    let threadSeq = parentSeq || null;
+
+    // 新規スレッド（parentSeqがnull）ならnullのまま。
+    let replySeq: number | null = null;
+
+    // 最大値を計算用。threadSeqとreplySeqのみ取得
+    const ids = await getNewComments(1000, { threadSeq: 1, replySeq: 1, _id: 0 });
+
+    // 新規スレッドの場合
+    if (!threadSeq) {
+        // threadSeqの配列。新規スレッドの場合threadSeqはnullのため、
+        // その場合は-1をセット、
+        const seqs = ids.map(d => d.threadSeq || -1);
+
+        if (seqs.length === 0) {
+            // データがない場合は1を設定
+            threadSeq = 1;
+        } else {
+            // ある場合、最大値＋１。
+            const maxThreadSeq = Math.max.apply(null, seqs);
+            threadSeq = maxThreadSeq > 0 ? maxThreadSeq + 1 : 1;
+        }
+    } else {
+        // 既存スレッドの場合。
+        // 同じthreadSeqのデータ内でreplySeqを計算。
+        let seqs = ids.map(d => {
+            if (d.replySeq === null) return -1;
+            return threadSeq === d.parentSeq ? d.replySeq : -1
+        })
+
+        if (seqs.length === 0) {
+            replySeq = 1;
+        } else {
+            const maxReplySeq = Math.max.apply(null, seqs);
+            replySeq = maxReplySeq > 0 ? maxReplySeq + 1 : 1;
+        }
     }
-    const colName = dbInfo["colComment"];
-    const client = await clientPromise;
-    const col = getCollection(client, colName);
-    const doc = { name, msg, posted: JST() };
+
+    // ******Insert処理********
+    // mongodbコレクション取得
+    const col = await getNewCommentsCollection();
+    // 挿入ドキュメント
+    const doc: CommentInfo = {
+        threadSeq, replySeq, parentSeq, topic,
+        name, msg, posted: JST()
+    }
+
     const result = col.insertOne(doc);
     return result;
 }
@@ -305,8 +367,6 @@ export {
     _migrateBlogInfo,
     backupAssetsCollection,
     updateVisit,
-    getComments,
-    insertComment,
     updateLike,
     authenticate,
     isAdmin,

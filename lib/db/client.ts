@@ -13,7 +13,7 @@ interface DbInfo {
     "url": string,
     "db": string,
     "colAssets": string,
-    "colComment": string,
+    "colNewComment": string,
     "colVisits": string,
     "colAdmin": string,
 }

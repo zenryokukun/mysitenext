@@ -14,26 +14,70 @@
     min-height: 5rem;
     background-color: white;
     box-shadow: 0 5px 5px 0 rgba(0, 0, 0, .16);
-    padding-left: 5px;
-    padding-right: 5px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     word-wrap: break-word;
 }
 
-.commentWrapper:not(:first-child) {
-    border-top: solid 1px #d1d1d1;
+
+.topic {
+    text-align: center;
+    font-weight: bold;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color: white;
+    background: linear-gradient(90deg, #022648, #27445e);
+    /* background: linear-gradient(90deg, #01372a, #03707a); */
 }
+
+.replyWrapper {
+    border-top: solid 1px #d1d1d1;
+    padding-left: 1rem;
+    /* アニメーション */
+    animation-name: from-top;
+    animation-duration: 0.5s;
+}
+
 
 .name {
     font-weight: bold;
+    color: #E91E63;
+    padding: 5px;
+    /* border-bottom: solid 1px lightgray; */
+}
+
+.msg {
+    /* textareaに改行を入力→DB登録→取得して表示すると、
+    　 改行が表示されない。white-spaceをpre-wrapにすると表示される。
+    */
+    white-space: pre-wrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-top: 1rem;
 }
 
 .when {
     text-align: right;
     color: darkgray;
+    padding-right: 5px;
+}
+
+.reply,
+.showReply {
+    border: none;
+    height: 3rem;
+}
+
+.reply {
+    font-weight: bold;
+}
+
+.showReply:not(:last-child) {
+    border-bottom: white 1px solid;
 }
 
 .commentWrapper:first-child {
-    margin-top: 1rem;
+    margin-top: 2rem;
 }
 
 .commentWrapper:last-child {
@@ -80,6 +124,24 @@
     .commentWrapper {
         background-color: #404040;
     }
+
+    .topic {
+        color: black;
+        background: linear-gradient(90deg, #f6aeae, #fbdfdf);
+    }
+}
+
+/*hoverはPCのみ有効に。タップ後残るので。*/
+@media screen and (min-width:1024px) {
+    .showReply:hover {
+        background-color: #555;
+        color: #fff;
+    }
+
+    .reply:hover {
+        background-color: #740f30;
+        color: white;
+    }
 }
 
 @media screen and (max-width:1024px) {
@@ -106,5 +168,15 @@
 @media screen and (max-width:600px) {
     .commentWrapper {
         width: 90%;
+    }
+}
+
+@keyframes from-top {
+    0% {
+        transform: translateY(-50%);
+    }
+
+    100% {
+        transform: translateY(0%);
     }
 }

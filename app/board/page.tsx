@@ -1,5 +1,5 @@
 import Board from "./Board";
-import { getComments } from "../../lib/db/func";
+import { getNewComments } from "../../lib/db/func";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // getServerSidePropsと同じ動作にするために必要。
 export const revalidate = 0;
 async function getProps() {
-  const comments = await getComments(20);
+  const comments = await getNewComments(20);
   return JSON.parse(JSON.stringify(comments));
 }
 

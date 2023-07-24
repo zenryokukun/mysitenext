@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getComments } from "../../../lib/db/func";
+import { getNewComments } from "../../../lib/db/func";
 
 /**
  * コメントの一覧を返す。
@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).send("Wrong method!");
     }
     try {
-        const docs = await getComments(30);
+        const docs = await getNewComments(1000);
         return res.status(200).json(docs);
     } catch (err) {
         console.log(err);

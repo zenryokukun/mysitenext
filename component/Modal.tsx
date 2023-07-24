@@ -1,29 +1,48 @@
 import React from "react";
+import DOMPurify from "dompurify";
 import { useState } from "react";
 import styles from "./Modal.module.css";
-
-interface CommentProp {
-  name: string,
-  msg: string,
-  posted?: string,
-}
+import type { PostBody } from "../app/board/Board";
 
 interface ModalProp {
-  post: (body: CommentProp) => void,
-  close: () => void,
+  post: (body: PostBody) => void;
+  close: () => void;
+  // スレッドのID。新規の場合はnull
+  parentSeq: number | null;
 }
 
-export default function Modal({ post, close }: ModalProp) {
+export default function Modal({ post, close, parentSeq }: ModalProp) {
 
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
+  // topic
+  const [topic, setTopic] = useState("");
 
   const submit = () => {
     if (msg.length === 0 || name.length === 0) {
       alert("Nameとコメントは入力必須です。")
       return;
     }
-    post({ name, msg })
+    if (!parentSeq && topic.length === 0) {
+      alert("topicは入力必須です");
+      return;
+    }
+    // sanitize input;
+    const cleanName = DOMPurify.sanitize(name);
+    const cleanMsg = DOMPurify.sanitize(msg);
+
+    let cleanTopic = topic;
+    if (topic.length !== 0) {
+      cleanTopic = DOMPurify.sanitize(topic);
+    }
+    // post
+    console.log(`post parentSeq:${parentSeq}`)
+    post({
+      name: cleanName,
+      msg: cleanMsg,
+      topic: cleanTopic,
+      parentSeq
+    })
   };
 
 
@@ -31,7 +50,18 @@ export default function Modal({ post, close }: ModalProp) {
     <>
       <div className={styles.modal}>
         <div className={styles.wrapper}>
-          <div className={styles.name}>
+          {!parentSeq &&
+            <div className={styles.topic + " " + styles.first}>
+              <div className={styles.topic_label}>Topic</div>
+              <input type="text"
+                className={styles.topic_text}
+                maxLength={200}
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+              />
+            </div>
+          }
+          <div className={!parentSeq ? styles.name : styles.name + " " + styles.first}>
             <div className={styles.name_label}>Name</div>
             <input
               maxLength={30}

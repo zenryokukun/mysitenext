@@ -57,6 +57,22 @@ export interface BlogInfo {
     keywords?: string[],
 }
 
+/**掲示板のコメント情報 */
+export interface CommentInfo {
+    // スレッドのID
+    threadSeq: number;
+    // スレッドに対するコメントのID。新規スレッドの場合null。
+    replySeq: number | null;
+    // 属するスレッドのID。新規スレッドの場合null。
+    parentSeq: number | null;
+    // スレッドのトピック。新規スレッドの場合のみ設定。新規の場合空文字
+    topic: string;
+
+    name: string;
+    msg: string;
+    posted?: string;
+}
+
 /**
  * Adminページの更新モードで使用。一度登録したblog情報で更新可能な項目。
  * BlogInfo型（/lib/db/funcにある、、、いずれここに移したい）とキー名は揃えること。

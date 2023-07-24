@@ -1,4 +1,4 @@
-import { insertComment } from "../../../lib/db/func";
+import { insertNewComment } from "../../../lib/db/func";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 
@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).send("Wrong method!")
     }
     try {
-        await insertComment(req.body);
+        await insertNewComment(req.body);
         return res.status(200).send("comment insert succeeded.")
     } catch (err) {
         console.log(err);
