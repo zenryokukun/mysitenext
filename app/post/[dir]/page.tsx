@@ -107,10 +107,13 @@ export default async function Page({ params }: PageProp) {
       </Main>
       <Side addStyle={styles.rowGap}>
         <Author name={author} postedDate={postedDate} />
-        <Amazon src={amazonLink} />
         <FancyBlogLinks data={related} headline="関連記事" />
         <FancyBlogLinks data={latest} headline="最新記事" />
-        <Twitter />
+        <Amazon src={amazonLink} />
+        {/*
+          重たいのでコメントアウトする。。。いつか使いたい。 
+          <Twitter /> 
+        */}
       </Side>
     </Layout>
   )
