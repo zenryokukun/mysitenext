@@ -43,7 +43,10 @@ RUN apk --no-cache add tzdata && \
 RUN yarn build
 
 # delete conf files
-RUN rm /app/lib/db/dbinfo.json /app/pages/api/genkidama/src/conf/conf.json
+RUN rm /app/lib/db/dbinfo.json /app/pages/api/genkidama/src/conf/conf.json /app/lib/cred/*
+
+# backup用ファイルがpermissionエラーになるので、からファイル作成＆権限付与
+RUN touch backup-assetsDir.json
 
 # If using npm comment out above and use below instead
 # RUN npm run build
@@ -82,6 +85,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/pages/api/cropper/src/myzip.py /a
 
 # 日本時間をbuilderからコピー
 COPY --from=builder --chown=nextjs:nodejs /etc/localtime /etc/localtime
+
+# backupファイルをbuilderからコピー
+COPY --from=builder --chown=nextjs:nodejs /app/backup-assetsDir.json ./
 
 USER nextjs
 

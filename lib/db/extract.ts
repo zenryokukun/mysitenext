@@ -4,7 +4,7 @@
 
 import { BlogInfo } from "../../types";
 import { findBlogDocs, findMatched, findByField } from "./func";
-
+import { popularDir } from "../ga4";
 import type { WithId } from "mongodb";
 
 /**
@@ -77,4 +77,21 @@ export async function newBlogs(cnt: number, opt: { discludeDir: string } | undef
     }
     // 全てマッチした場合cnt+1分返ってしまうのでslice.
     return newBlogs.slice(0, cnt);
+}
+
+
+/**
+ * アクセス数（pageView数）が上位のblog記事を抽出する。
+ * @param cnt 返す記事数
+ * @returns 
+ */
+export async function popularBlogs(cnt: number) {
+    const dirs = await popularDir(cnt);
+    const ret: BlogInfo[] = [];
+    for (const dir of dirs) {
+        const blog = await findByDir(dir);
+        if (!blog) continue;
+        ret.push(blog);
+    }
+    return ret.slice(0, cnt);
 }

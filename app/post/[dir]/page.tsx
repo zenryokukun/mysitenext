@@ -8,7 +8,7 @@ import Amazon from "../../../component/Amazon";
 import { getBlogDirList } from "../../../lib/db/func"
 import { getBlogMd, formatMd } from "../../../lib/util";
 import parseMd from "../../../lib/parse-md";
-import { findByDir, newBlogs, relatedBlogs } from "../../../lib/db/extract";
+import { findByDir, newBlogs, relatedBlogs, popularBlogs } from "../../../lib/db/extract";
 import { blogInfoToLinkItem } from "../../../lib/typecast";
 import type { HeadProp, LinkItem } from "../../../types";
 import styles from "./Post-app.module.css";
@@ -78,9 +78,11 @@ async function getProps(dir: string) {
   const targetBlog = await findByDir(dir);
   const _rels = await relatedBlogs(targetBlog);
   const _news = await newBlogs(3, { discludeDir: dir });
+  const _popular = await popularBlogs(3);
   const related: LinkItem[] = _rels.map(blogInfoToLinkItem);
   const latest = _news.map(blogInfoToLinkItem);
-  return { content, data, related, latest };
+  const popular = _popular.map(blogInfoToLinkItem);
+  return { content, data, related, latest, popular };
 }
 
 interface PageProp {
@@ -90,7 +92,7 @@ interface PageProp {
 }
 
 export default async function Page({ params }: PageProp) {
-  const { content, data, related, latest } = await getProps(params.dir);
+  const { content, data, related, latest, popular } = await getProps(params.dir);
   const author = data.author || "全力君";
   const postedDate = data.postedDate || "2022年";
   const { amazonLink } = data;
@@ -109,6 +111,7 @@ export default async function Page({ params }: PageProp) {
         <Author name={author} postedDate={postedDate} />
         <FancyBlogLinks data={related} headline="関連記事" />
         <FancyBlogLinks data={latest} headline="最新記事" />
+        <FancyBlogLinks data={popular} headline="人気記事" />
         <Amazon src={amazonLink} />
         {/*
           重たいのでコメントアウトする。。。いつか使いたい。 

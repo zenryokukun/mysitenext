@@ -79,3 +79,6 @@ mongo-manual.txt
 # docker imageの.tar, .gz
 *.tar
 *.gz
+
+# cred
+/lib/cred/
