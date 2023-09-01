@@ -17,19 +17,11 @@ import "./md.css";
 /* syntax-higlight用CSS */
 import "prismjs/themes/prism-tomorrow.css";
 import "./prism-overrides.css";
+
 /**
- * syntax-higlightする言語はここで読み込む
+ * syntax-higlightする言語はここで読み込まず、parseMd内で読み込む。
+ * ここで読み込んでも問題ないが、md-converterでも使うので外出し。
  */
-import "prismjs/components/prism-python"
-import "prismjs/components/prism-typescript"
-import "prismjs/components/prism-bash"
-import "prismjs/components/prism-go"
-import "prismjs/components/prism-json"
-import "prismjs/components/prism-jsx"
-import "prismjs/components/prism-tsx"
-import "prismjs/components/prism-powershell"
-import "prismjs/components/prism-docker"
-import "prismjs/components/prism-sql"
 
 // falseだとgennerateStaticParamsで生成されない場合404になる。
 export const dynamicParams = false;

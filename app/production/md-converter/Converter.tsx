@@ -8,8 +8,10 @@ import genDocString from "../../../lib/mdconv/download";
 
 import type React from "react";
 import styles from "../../../styles/Md-converter.module.css";
-import "prismjs/themes/prism-tomorrow.css";
 import "./article.css";
+import "prismjs/themes/prism-tomorrow.css";
+import "../../post/[dir]/prism-overrides.css";
+
 
 export default function Converter() {
   // formのnameにつける。

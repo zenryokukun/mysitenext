@@ -48,6 +48,9 @@ RUN rm /app/lib/db/dbinfo.json /app/pages/api/genkidama/src/conf/conf.json /app/
 # backup用ファイルがpermissionエラーになるので、からファイル作成＆権限付与
 RUN touch backup-assetsDir.json
 
+# pythonのソース等をコピー
+COPY py ./py
+
 # If using npm comment out above and use below instead
 # RUN npm run build
 
@@ -81,7 +84,9 @@ COPY --from=python --chown=nextjs:nodejs /usr/local/lib /usr/local/lib
 
 # standaloneだとコピーされない一部のファイルをコピー
 COPY --from=builder --chown=nextjs:nodejs /app/pages/api/admin/conf.json /app/pages/api/admin
-COPY --from=builder --chown=nextjs:nodejs /app/pages/api/cropper/src/myzip.py /app/pages/api/cropper/src
+# COPY --from=builder --chown=nextjs:nodejs /app/pages/api/cropper/src/myzip.py /app/pages/api/cropper/src
+# pythonのソースをコピー
+COPY --from=builder --chown=nextjs:nodejs /app/py /app/py
 
 # 日本時間をbuilderからコピー
 COPY --from=builder --chown=nextjs:nodejs /etc/localtime /etc/localtime

@@ -184,8 +184,8 @@ standaloneだとコピーされないファイルも出てしまうが、それ�
 # $pwdを使うためプロジェクトフォルダに移動した上で実行すること。
 
 # windows
-docker run -dp 5000:5000 --mount type=bind,src="$(pwd)\lib\db\dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)\pages\api\genkidama\src\conf\conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)\public\posts",target=/app/public/posts --restart on-failure --name nextblog nextjs-docker 
+docker run -dp 5000:5000 --mount type=bind,src="$(pwd)\lib\db\dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)\pages\api\genkidama\src\conf\conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)\public\posts",target=/app/public/posts --mount type=bind,src="$(pwd)\lib\cred\line-notify.json",target=/app/lib/cred/line-notify.json --restart on-failure --name nextblog nextjs-docker 
 # linux
-docker run -dp 5000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)/pages/api/genkidama/src/conf/conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)/public/posts",target=/app/public/posts --restart on-failure --name nextblog nextjs-docker 
+docker run -dp 5000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)/pages/api/genkidama/src/conf/conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)/public/posts",target=/app/public/posts --mount type=bind,src="$(pwd)/lib/cred/line-notify.json",target=/app/lib/cred/line-notify.json --restart on-failure --name nextblog nextjs-docker 
 ```
 

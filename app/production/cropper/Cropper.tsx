@@ -87,8 +87,11 @@ export default function Cropper() {
         return res.blob();
       })
       .then(blob => download(blob))
-      .catch(res => {
-        res.text().then((err: string) => alert(err));
+      .catch((res: Response) => {
+        // API Route -> Route Handler移行に伴って変更。
+        // NextAPIResponse.send -> NextResponse.jsonとサーバ処理を変更している。
+        // res.text().then((err: string) => alert(err));
+        alert(res.statusText);
       })
       // postが成功しても失敗しても、Loaderをオフにする
       .finally(() => setLoading(false));

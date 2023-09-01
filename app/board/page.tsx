@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // getServerSidePropsと同じ動作にするために必要。
 export const revalidate = 0;
 async function getProps() {
-  const comments = await getNewComments(20);
+  const comments = await getNewComments(200);
   return JSON.parse(JSON.stringify(comments));
 }
 
