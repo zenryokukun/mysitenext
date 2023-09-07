@@ -63,10 +63,14 @@ export function dateToString(d: Date) {
     // mongodbには日本時間文字列→new Date()して投入。ただ、それがUTCとして解釈されるため
     // find()でして使おうとそこからさらにJSTに変換（＋９時間）される。
     // そのため、getUTC~の関数を使う。投入されている時間が日本時間前提で。
-    let year = d.getUTCFullYear().toString();
-    let monthNum = d.getUTCMonth();
+    // ****** [修正]
+    // mongodbもDate型で見ると標準時刻のように見えるが、日本時刻として解釈するのでgetUTC~系の関数を使うのは不適。
+    // 実際に日付ずれるケースもある（9/1 23時 -> 8/31 14時になってまう）。
+    // getUTCFullYear -> getFullYear, getUTCMonth -> getMonth getUTCDate -> getDate, 
+    let year = d.getFullYear().toString();
+    let monthNum = d.getMonth();
     let month: string;
-    let day = d.getUTCDate().toString();
+    let day = d.getDate().toString();
 
     // Date().getMonth()は0～11がそれぞれ1月~12月に対応。注意。
     monthNum++; // 月に換算するため＋１
@@ -79,6 +83,7 @@ export function dateToString(d: Date) {
         month = monthNum.toString();
     }
 
+    // bug fix. 日が一桁なら2桁にする
     if (d.getDate() < 10) {
         day = "0" + day;
     }
