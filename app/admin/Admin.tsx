@@ -273,7 +273,7 @@ interface UpdateInsertResponse {
 }
 
 export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModeProp) {
-  console.log((genreList && genreList.length > 0) ? genreList[0] : "")
+  // console.log((genreList && genreList.length > 0) ? genreList[0] : "")
   const { state, dispatch } = useBlogForm((genreList && genreList.length > 0) ? genreList[0] : "");
   const { genre, dir, thumb, summary, title, isForce, keywordsInput } = state;
 

@@ -68,14 +68,25 @@ export async function POST(req: NextRequest) {
             { status: 400 }
         );
     }
+
+    /**
+     * .forEachがayncだと、promsにwriteFileのPromiseが設定される前に
+     * 次のdb insertの処理が流れてしまう。.thenで繋げてなんとかする方式に変更
+     */
     const proms: Promise<void>[] = [];
-    files.forEach(async (file) => {
+    files.forEach((file) => {
         const fpath = path.join(savePath, file.name);
-        const ab = await file.arrayBuffer();
-        const buf = Buffer.from(ab);
-        const prom = writeFile(fpath, buf, { encoding: "binary" });
+        // const ab = await file.arrayBuffer();
+        // const buf = Buffer.from(ab);
+        // const prom = writeFile(fpath, buf, { encoding: "binary" });
+        const prom = file.arrayBuffer()
+            .then(ab => {
+                const buf = Buffer.from(ab);
+                return writeFile(fpath, buf, { encoding: "binary" });
+            })
         proms.push(prom);
     });
+
 
 
     /***********************************
