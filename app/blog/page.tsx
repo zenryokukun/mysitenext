@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { findBlogDocs } from "../../lib/db/func";
 import { dateToString } from "../../lib/util";
+import sortByDate from "../../lib/db/sort-bloginfo";
 import styles from "../../styles/Blog.module.css";
 
 /**Description ブログ記事の一覧Page
@@ -16,8 +17,10 @@ interface BlogInfoOverrides {
   summary: string;
 }
 
+
 async function getProps() {
-  const data = await findBlogDocs(50);
+  const unsortedData = await findBlogDocs(50);
+  const data = sortByDate(unsortedData);
   const docs: BlogInfoOverrides[] = [];
   data.map(blog => {
     // posted,firstPostedDateの２つの日付項目を片方に寄せて、文字列にする。
@@ -25,6 +28,7 @@ async function getProps() {
     const posted = _posted === undefined ? "-" : dateToString(_posted);
     docs.push({ ...blog, posted })
   })
+
   return docs;
 }
 

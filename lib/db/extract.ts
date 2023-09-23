@@ -5,6 +5,8 @@
 import { BlogInfo } from "../../types";
 import { findBlogDocs, findMatched, findByField } from "./func";
 import { popularDir } from "../ga4";
+import sortByDate from "./sort-bloginfo";
+
 import type { WithId } from "mongodb";
 
 /**
@@ -46,6 +48,9 @@ export async function relatedBlogs(targetBlog: BlogInfo | undefined) {
             rels.push(blog);
         }
     }
+
+    // ソートする
+    rels = sortByDate(rels);
 
     return rels;
 }
