@@ -44,6 +44,14 @@
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
 }
 
+/* 注意書き */
+.caution {
+  background-color: #f7f7f7;
+  border-radius: 1rem;
+  margin: 1rem;
+  padding: 1rem;
+}
+
 
 @media screen and (max-width:650px) {
   .table-of-contents {
@@ -61,5 +69,9 @@
   .table-of-contents {
     background-color: #3F3F3F;
     /* background-color: #1C262D; */
+  }
+
+  .caution {
+    background-color: #3f3f3f;
   }
 }
