@@ -6,7 +6,7 @@ import { useReducer } from "react";
 
 export type Target = "genre" | "dir"
     | "thumb" | "summary" | "title"
-    | "isForce" | "keywordsInput";
+    | "isForce" | "keywordsInput" | "isMDX";
 
 interface FormState {
     genre: string,
@@ -18,6 +18,7 @@ interface FormState {
     isForce: boolean,
     // mode: Mode,
     keywordsInput: string,
+    isMDX: boolean,
 }
 
 export interface FormAction {
@@ -77,6 +78,7 @@ export function useBlogForm(iniGenre: string) {
         isForce: false,
         // mode: "insert",
         keywordsInput: "",
+        isMDX: false,
     };
 
     const [state, dispatch] = useReducer<(s: FormState, a: FormAction) => FormState>(formReducer, ini);

@@ -28,6 +28,7 @@
     dangerouslySetInnerHTML={{ __html: some_JSON_string }}
   />
 */
+import { URL_DIR } from "../component/constants";
 import type { NextRouter } from "next/router";
 
 type ItemListType = "ListItem";
@@ -112,7 +113,7 @@ export function breadCrumbFromPath(router: NextRouter) {
     }
 
     // 変則ナビ対応　/blog -> /post/*。"post"が出現した時、"/blog"のリストを差し込む
-    if (name === "post") {
+    if (name === URL_DIR.MD || name === URL_DIR.MDX) {
       itemList.push({ name: "blog", item: root + "blog" })
       // 現状 /blog -> /post/article-folder-name　の遷移となる。
       // そのため、/post 単体のリンクは存在せず、パンくずリスト不要となる。

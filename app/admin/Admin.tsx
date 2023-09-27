@@ -50,17 +50,22 @@ function checkExt(fnames: string[]): boolean {
 }
 
 /**
- * .mdファイルが含まれているかチェック
- * @param fnames ファイル名のリスト
- * @returns 
+ * .mdファイルが存在すればtrue,しなければfalseを返す。
+ * showAlertがfalseの場合、.mdが無い場合にalertを表示しない。
+ * MDXの場合、サムネのみアップロードする場合がある。alertしたくないので、第二引数追加。
+ * @param fnames ファイル名を保持した配列
+ * @param showAlert アラート表示フラグ
+ * @returns true -> .mdあり、false -> .mdなし
  */
-function hasMd(fnames: string[]): boolean {
+function hasMd(fnames: string[], showAlert: boolean = true): boolean {
   for (const name of fnames) {
     if (name.slice(-3) === ".md") {
       return true;
     }
   }
-  alert("mdファイルがありません");
+  if (showAlert) {
+    alert("mdファイルがありません");
+  }
   return false;
 }
 
@@ -259,6 +264,8 @@ function SideMenu() {
  * ブログの新規Insert（アップロード）を行う。保存先が同じ場合は、
  * 上書きでアップロードすることも可能。
  * DBの登録とサーバにフォルダを作成を行うので、submitの前に良く確認すること。
+ * mdとmdxに対応。mdxの場合、.mdxファイルはアップロードしないが、
+ * サムネがる場合はアップロードすること。mdと同じように保存される。
  /***********************************************************************/
 interface InsertModeProp {
   genreList: string[]
@@ -275,8 +282,7 @@ interface UpdateInsertResponse {
 export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModeProp) {
   // console.log((genreList && genreList.length > 0) ? genreList[0] : "")
   const { state, dispatch } = useBlogForm((genreList && genreList.length > 0) ? genreList[0] : "");
-  const { genre, dir, thumb, summary, title, isForce, keywordsInput } = state;
-
+  const { genre, dir, thumb, summary, title, isForce, keywordsInput, isMDX } = state;
   // file inputのrefを保持する変数
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -289,23 +295,61 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
     });
   }
 
+  /**
+   * アップロードファイルのチェック（.md、.mdx共通）
+   * mdの場合:
+   *  - .mdファイルが含まれている必要がある。
+   * mdxの場合：
+   *  - アップロードなし、もしくは画像ファイルのみ許容。
+   *  - .mdファイルが含まれる場合はエラー
+   * @param files ファイル名のリスト
+   * @returns true -> ok, false -> ng
+   */
+  const mdFileCheck = (files: FileList | null) => {
+
+    if (isMDX === false) {
+      // mdの場合
+      // ファイルが無い場合、エラー
+      if (files === null || files.length === 0) {
+        alert("ファイルが選択されていない？")
+        return false;
+      }
+      // ファイル名チェック。画像拡張子、mdファイルが存在するか、サムネが一覧に含まれるかをチェック。
+      const fnames = Array.from(files).map(file => file.name);
+      if (!checkExt(fnames) || !hasMd(fnames) || !doesThumbMatch(thumb, fnames)) {
+        return false;
+      }
+      // エラーなし。
+      return true;
+
+    } else {
+      // mdxの場合
+      // ファイルが選択されていなければOK
+      if (files === null || files.length === 0) {
+        return true;
+      }
+      // ファイルが選択されていて、.mdファイルが存在する場合はエラー。
+      const fnames = Array.from(files).map(file => file.name);
+      // .mdxで、サムネのみアップロードしているケースは、エラーなしが正しい。
+      // .mdが含まれる場合、MDXフラグが間違っている場合もあるので、エラーにする。
+      // hasMd内のエラーメッセージを表示させないよう、第二引数をfalseで呼ぶ。
+      if (hasMd(fnames, false)) {
+        alert("mdxなのに.mdファイルが選択されています。どっちかはっきり！")
+        return false;
+      }
+
+      return true;
+    }
+  }
+
+
   const onsubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); //defaultのformイベントを無効か
+
+    //defaultのformイベントを無効か
+    e.preventDefault();
 
     //チェック開始***********************
     if (fileInput.current === null) {
-      return;
-    }
-    // fileが取得出来ない場合はエラー
-    const files = fileInput.current.files;
-    if (files === null || files.length === 0) {
-      alert("ファイルが選択されていない？")
-      return;
-    }
-
-    // ファイル名チェック。画像拡張子、mdファイルが存在するか、サムネが一覧に含まれるかをチェック。
-    const fnames = Array.from(files).map(file => file.name);
-    if (!checkExt(fnames) || !hasMd(fnames) || !doesThumbMatch(thumb, fnames)) {
       return;
     }
 
@@ -327,10 +371,28 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
       }
     }
 
+    const files = fileInput.current.files;
+
+    // アップロードファイルチェック
+    if (!mdFileCheck(files)) {
+      return;
+    }
+
     //チェック終了。ここから下はエラーなし**********
     const formData = new FormData();
     // file以外のformを設定
-    const md = getMdFile(fnames);
+    let md = ""
+    if (isMDX === false) {
+      // mdFileCheckでnullチェックしているので、型強制。
+      // 外部関数にしたのでtype narrowingが効いてないっぽい。
+      const fnames = Array.from(files as FileList).map(file => file.name);
+      md = getMdFile(fnames);
+    } else {
+      // mdxの場合、.mdxファイルのアップロードはなし。mdxファイルであることがわかれば良いので、
+      // 固定名で登録
+      md = "page.mdx";
+    }
+
     // postするデータ。multipart/form-dataとなるため、
     // booleanや配列は文字列に変換する。適宜サーバでparseする。
     const data = {
@@ -341,6 +403,7 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
       "summary": summary,
       "md": md,
       "isForce": isForce.toString(),
+      "isMDX": isMDX.toString(),
       "keywords": JSON.stringify(_kwArr),
     };
 
@@ -348,9 +411,10 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
       formData.append(key, val);
     }
 
-    // fileをformDataに設定
-    Array.from(files).map(file => formData.append("uploads", file, file.name))
-
+    if (files !== null && files.length > 0) {
+      // fileをformDataに設定
+      Array.from(files).map(file => formData.append("uploads", file, file.name))
+    }
     // upload。responseでuploadを反映した最新のブログ情報が帰ってくる。
     fetch("/api/admin/upload", {
       method: "POST",
@@ -421,6 +485,19 @@ export function InsertMode({ genreList, checkNewKeyword, reload }: InsertModePro
           <li className={styles.items}>
             <input id="force" type="checkbox" name="force" checked={isForce} onChange={e => keyChanged("isForce", !isForce)} />
             <label htmlFor="force" >同じフォルダ名が存在する場合、上書きする。</label>
+          </li>
+
+          <li className={styles.items}>
+            <input id="mdx" type="checkbox" name="mdx" checked={isMDX} onChange={e => keyChanged("isMDX", !isMDX)} />
+            <label htmlFor="mdx" >MDXファイルを登録</label>
+            <div className={styles.caution}>
+              <ul>
+                <li>MDXファイルを登録します。</li>
+                <li>MDファイルの場合、チェックはしないでください</li>
+                <li>MDXの場合、「アップロードするファイル」は何も選択しないでください。</li>
+                <li>記事一覧ページ、関連記事リンク集にMDとMDX両方を対応させるため、DBへの登録は必要です。</li>
+              </ul>
+            </div>
           </li>
 
           <li className={styles.items}>

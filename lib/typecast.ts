@@ -5,12 +5,13 @@
  */
 
 import { dateToString } from "./util";
+import blogRoute from "./blog-route";
 import type { BlogInfo, LinkItem, Production } from "../types";
 
 export function blogInfoToLinkItem(b: BlogInfo): LinkItem {
     /**
      * サムネは/blogページ用と、サイドバーや/homeページのFancyBlogLinks用の2種類ある
-     * /blogページ用：mongodbの`thumb`フィールドで定義。
+     * /blogページ用：mongodbの`thumb`フィールドで定義。なお、サムネ等はmd,mdxどちらでも/public/postsにある。
      * FancyBlogLinks用：
      * 　各記事フォルダの直下に、`thumb-small.png`の名前で保存されている。
      * 　後から追加しているため、mongodbのほうは手を入れず、固定名での対応とする。
@@ -22,7 +23,8 @@ export function blogInfoToLinkItem(b: BlogInfo): LinkItem {
     const _posted = b.firstPostedDate || b.posted;
     const posted = _posted === undefined ? "-" : dateToString(_posted);
     return {
-        url: `/post/${b.assetsDir}`,
+        // url: `/post/${b.assetsDir}`,
+        url: blogRoute(b),
         title: b.title,
         summary: b.summary,
         // サムネは/public/postsにある。。。/postはPageで異なるので注意。

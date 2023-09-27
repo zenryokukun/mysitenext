@@ -5,7 +5,7 @@ import Twitter from "../../../component/Twitter";
 import Like from "../../component/Like";
 import { FancyBlogLinks } from "../../../component/BlogLinks";
 import Amazon from "../../../component/Amazon";
-import { getBlogDirList } from "../../../lib/db/func"
+import { getMDBlogDirList } from "../../../lib/db/func"
 import { getBlogMd, formatMd } from "../../../lib/util";
 import parseMd from "../../../lib/parse-md";
 import { findByDir, newBlogs, relatedBlogs, popularBlogs } from "../../../lib/db/extract";
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: { dir: string } }) 
 
 // getStaticPathsのapp router版
 export async function generateStaticParams() {
-  const docs = await getBlogDirList();
+  const docs = await getMDBlogDirList();
   const params = docs.map(doc => {
     return { dir: doc["assetsDir"] }
   })

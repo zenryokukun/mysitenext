@@ -81,13 +81,17 @@ async function findBlogDocs(limit: number = 999) {
 }
 
 /**
- *
- * [dir].tsxのパス一覧取得用。mongodbのassetsコレクションのassetsDirフィールドのみ
- * 一覧で返す
+ * /post/[dir]/page.tsxでMDブログページの生成に使用。
+ * [dir].tsxのパス一覧取得用。mongodbのassetsコレクションのassetsDirフィールドのみ一覧で返す
+ * assetsコレクションには.mdと.mdx両方入っているが、.mdのみ一覧で返す。
  */
-async function getBlogDirList() {
+async function getMDBlogDirList() {
     const col = await getAssetsCollection();
-    const docs = await col.find({}, { projection: { assetsDir: 1, _id: 0 } }).toArray();
+    // *.mdを正規表現に。"."は任意の1文字扱いなので、文字として扱うために"\."のようにエスケープ。
+    // \wはアルファベットと数字とアンスコに対応。[A-Za-z0-9_]と同じ。
+    // ハイフン入っていると一致しないかも・・・？
+    const filter = { md: /\w*\.md$/ }
+    const docs = await col.find(filter, { projection: { assetsDir: 1, _id: 0 } }).toArray() as { assetsDir: string }[];
     return docs;
 }
 
@@ -165,6 +169,27 @@ async function updateBlogInfo(reqBody: UpdateItemRequest) {
     const { updateKey, data } = reqBody;
     const col = await getAssetsCollection();
     const query = { ...updateKey };
+    const update = { $set: { ...data } };
+    const result = await col.updateOne(query, update);
+    return result;
+}
+
+interface UpdateMDX {
+    genre: string;
+    title: string;
+    summary: string;
+    thumb: string;
+    keywords: string[];
+    posted: Date;
+}
+
+interface UpdateKey {
+    [key: string]: string;
+}
+
+export async function updateMDXBlogInfo(key: UpdateKey, data: UpdateMDX) {
+    const col = await getAssetsCollection();
+    const query = { ...key };
     const update = { $set: { ...data } };
     const result = await col.updateOne(query, update);
     return result;
@@ -358,7 +383,7 @@ async function isAdmin(testStr: string) {
 
 export {
     findBlogDocs,
-    getBlogDirList,
+    getMDBlogDirList,
     findByField,
     findMatched,
     insertBlogInfo,

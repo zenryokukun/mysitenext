@@ -5,6 +5,7 @@
 
 import path from 'node:path';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
+import { URL_DIR } from '../component/constants';
 
 // ga4のpropertyid
 const propertyId = '328060753';
@@ -39,9 +40,9 @@ export async function popularDir(limit: number = 3) {
         const parts = url.split('/');
         // 長さ2以下なら処理なし
         if (parts.length < 2) continue;
-        // お尻２つを抽出し、先頭がpostなら記事。
+        // お尻２つを抽出し、先頭がpostもしくはnew-postなら記事。
         const cand = parts.slice(-2);
-        if (cand[0] !== "post") continue;
+        if (cand[0] !== URL_DIR.MD && cand[0] !== URL_DIR.MDX) continue;
         dirs.push(cand[1]);
     }
 

@@ -1,0 +1,628 @@
+import Image from "../ImageWrapper";
+import basicExample from "./basic-example.jpg";
+import pluginExample from "./plugin-example.jpg";
+import exportExample from "./export-example.jpg";
+import customExample from "./custom-example.jpg";
+
+export const mdxMeta = {
+    title:"Next.jsでMDXを扱う方法",
+    description:"MDXはReactのコンポーネントを扱うことができるMDファイルです。Next.jsでMDXからページを生成する方法を解説します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2023/9/21",
+};
+
+# Next.jsでMDXを扱う方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#about">MDXとは</a></li>
+<li><a href="#scope">記事の範囲</a></li>
+<li><a href="#prereq">前提知識</a></li>
+<li><a href="#env">環境</a></li>
+<li>
+  <a href="#preparation">MDX利用までの準備</a>
+  <ul>
+    <li><a href="#install">1.必要なパッケージのインストール</a></li>
+    <li><a href="#mdx-components">2. mdx-components.tsxの作成</a></li>
+    <li><a href="#config">3.next.config.jsの修正</a></li>
+  </ul>
+</li>
+<li><a href="#use-mdx">基礎編：MDXを利用してみる</a></li>
+<li>
+  <a href="#advanced-mdx">応用編：MDXを利用してみる</a>
+  <ul>
+    <li><a href="#plug-in">プラグインの適用</a></li>
+    <li><a href="#front-matter">Front-Matterの代替</a></li>
+    <li><a href="#typescript">TypeScript利用時の注意点</a></li>
+  </ul> 
+  </li>
+<li>
+  <a href="#other-functions">その他の機能</a>
+  <ul>
+    <li><a href="#rust">Rustのコンパイラ</a></li>
+    <li><a href="#use-mdx-as-page">MDXファイルを直接ページとして使う</a></li>
+    <li><a href="#customize">MDXから変換されたHTMLをカスタムする</a></li>
+  </ul>
+</li>
+<li><a href="#trouble">少し困ったこと</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+MarkDownファイル（以下、MDファイル）は、GitHubのREADME.mdなどにも使われる、マーク・アップ言語を使って記述するファイルです。拡張子が```.md```のファイルですね。HTMLに変換することも出来るので、ウェブ・ページのコンテンツとしても広く使われます。
+
+Next.jsでも、公式チュートリアルの[Pre-rendering and Data Fetching](https://nextjs.org/learn/basics/data-fetching)で、MDファイルからブログ・ページを生成する例が紹介されています。Next.jsを使っている方は、MDファイルを利用している方が多いのではないでしょうか？このサイトも例外ではありません。
+
+とはいえ、HTMLへの変換は機械的に行われるので、制約は出ます。例えば、ディスプレイの幅に応じて画像を切り替えようとすると、MarkDown表記だけでは対応できません。直接、imgタグを埋め込んでsrcset属性を設定したり、pictureタグを埋め込んだり、HTMLを直接記述していく必要が出てきます。これがとにかく面倒です。
+
+他方、Next.jsでは```next/image```コンポーネントがあり、画像の最適化を自動で行ってくれます。当然ながら、これはReactのコンポーネントなのでMDファイル内で扱うことはできません。
+
+しかし、出来てしまうのです、、、MarkDown X（以下、MDXファイル）なら、、、！
+
+そして、Next.jsもMDXファイルをサポートしています。
+
+今回、Next.jsでMDXファイルからページの生成を行う方法を試してみたので、その方法と注意点を解説します。
+
+ちなみに、このページの記事部分はMDXから生成していますよ！
+
+<h2 id="about">MDXとは</h2>
+
+MDファイルは、MarkDownと呼ばれるマーク・アップ言語で記述されたテキスト・ファイルです。通常のHTMLを直接埋め込むことも可能です。
+
+MDXは、MDを拡張し**Reactのコンポーネントの埋め込みが出来る**ようにしたものです。拡張子は```.mdx```となります。
+
+Next.jsの```next/image```の**Image**コンポーネントのように、便利なコンポーネントをMDファイル内で直接扱うことが出来るので、使い方によってはかなり便利です。
+
+<h2 id="scope">記事の範囲</h2>
+
+Next.jsでMDXを扱う方法を、[公式の手順](https://nextjs.org/docs/app/building-your-application/configuring/mdx)の内容に基づいて解説します。
+
+MDやMDXの文法は範囲外となります。
+
+Next.jsはApp Routerの利用を前提に記載しています。Pages RouterでもMDXはサポートされていますが、設定方法等が微妙に異なる可能性がありますので、ご了承ください。
+
+<h2 id="prereq">前提知識</h2>
+
+- **MarkDown**に関する基礎的な知識
+- **remark**や**rehype**といったMarkDown⇔HTML変換に必要なパッケージに関する基礎的な知識
+- Next.jsの**App Router**に関する基礎的な知識
+
+既にMDファイルからウェブ・ページのコンテンツを生成されている方なら、問題無いと思います。
+
+前提知識として記載したものの、Next.jsに関する基礎的な知識があれば、読み進められると思います。
+
+別の記事でunified（remarkやrehype）や、App Routerについて記載しているので、よかったら参考にしてください。
+
+- [npmの巨大なエコシステム、unifiedについて調べました](/post/unified)
+- [Next.js13のApp Routerを試してみたぞ！](/post/nextjs-app-router)
+
+<h2 id="env">環境</h2>
+
+私の環境は以下のとおりです。
+
+```json
+{
+    "next":"^13.4.1",
+    "typescript":"^4.8.4"
+}
+```
+
+Next.jsはv13.4.1、TypeScriptはv4.8.4です。
+
+<h2 id="preparation">MDX利用までの準備</h2>
+
+大まかに３ステップあります。どれも簡単です。
+
+1. 必要なパッケージのインストール
+2. mdx-components.tsxの作成
+3. next.config.jsの修正
+
+<h3 id="install">1.必要なパッケージのインストール</h3>
+
+公式の記載されている４つインストールする必要があります。
+
+```bash
+npm install @next/mdx @mdx-js/loader @mdx-js/react @types/mdx
+```
+
+私の環境では以下のようなバージョンになりました。
+
+```json
+{
+    "@next/mdx": "^13.4.19",
+    "@mdx-js/loader": "^2.3.0",
+    "@mdx-js/react": "^2.3.0",
+    "@types/mdx": "^2.0.7",
+}
+```
+
+<h3 id="mdx-components">2.mdx-components.tsxの作成</h3>
+
+Next.jsのプロジェクトのルート・フォルダ（next.config.jsと同じ階層です）に、```mdx-components.tsx```の名前で、以下の内容を保存します。公式ドキュメントからのコピペです。
+
+TypeScriptを使わない場合、拡張子は```.jsx```にしてください。
+
+```ts
+import type { MDXComponents } from "mdx/types";
+
+// This file allows you to provide custom React components
+// to be used in MDX files. You can import and use any
+// React component you want, including components from
+// other libraries.
+
+export function useMDXComponents(components: MDXComponents): MDXComponents {
+    return {
+        // Allows customizing built-in components, e.g. to add styling.
+        // h1: ({ children }) => <h1 style={{ fontSize: "100px" }}>{children}</h1>,
+        ...components,
+    };
+}
+```
+
+TypeScriptを使っていない場合、1行目のimportを削除し、**useMDXComponents**のパラメタと戻り値の型情報を削除すればOKです。
+
+コメントに記載されているとおり、このファイルを置くことで、MDXファイル内でReactのコンポーネントを使うことが可能になります。
+
+<h3 id="config">3.next.config.jsの修正</h3>
+
+Next.jsのconfigファイルである```next.config.js```を修正します。
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  /**ここはいじらなくてOK */
+}
+const withMDX = require("@next/mdx")();
+export default withMDX(nextConfig);
+```
+
+既にある```nextConfig```には手を加えなくてOKです。
+
+1.でインストールした```@next/mdx```をインポートして、*nextConfig*をパラメタに渡して呼び出し、その結果をデフォルト・エクスポートするだけです。
+
+これで最小限のセットアップは完了です！
+
+<h2 id="use-mdx">基礎編：MDXを使ってみる</h2>
+
+それではさっそく使ってみます、
+
+### .mdxファイル
+
+```/app/mdx```に、以下の内容でMDXファイルを作成してみます。ファイル名は*page.mdx*としますが、何でも良いです。
+
+````markdown
+import Image from "next/image";
+import pic from "./console.jpg";
+
+# MDX TEST!!!
+
+## bash script
+
+```bash
+cd ~
+mkdir test
+```
+## next/imageのテスト
+
+<Image src={pic} alt="" width={500} height={300}/>
+````
+
+せっかくなので、画像をimportして```next/image```の**Image**コンポーネントを使ってみました。しかし、MarkDownにimportとかReactのコンポーネントが入ると不思議な気分ですね。
+
+### page.tsxファイル
+
+上記と同じ階層に、**page.tsx**を作成します。
+
+```tsx
+import MdxContent from "./page.mdx";
+
+export default async function Page() {
+  return (
+    <article>
+      <MdxContent />
+    </article>
+  )
+}
+```
+
+MDXファイルをReactのコンポーネントのようにimportできるのがミソです。なお、*MdxContent*という名前でimportしていますが、default exportなので名前は任意のもので大丈夫です。
+
+### ブラウザで見てみる
+
+実際に```http://localhost:3000/mdx```を開いてページを確認してみます。
+
+<Image src={basicExample} width={653} height={695} alt="basic-example"/>
+
+ちゃんと表示されました！画像も大丈夫ですね。
+
+<h2 id="advanced-mdx">応用編：MDXを利用してみる</h2>
+
+上記の例では、MDXをそのままコンポーネントのように扱っているだけです。
+
+実際に裏では[remark](https://www.npmjs.com/package/remark)と[rehype](https://www.npmjs.com/package/rehype)でHTMLに変換されているので、これらのプラグインを適用させることも可能です。
+
+後、今までMDを使われていた方は、メタ情報などをFront-Matterに記述していた方も多いのではないでしょうか？それこそNext.jsのチュートリアルで紹介されていたので、私も使っていました。
+
+こういうMDファイルの冒頭に記入するyaml形式のデータです。
+
+```markdown
+---
+title: TEST
+author: ZEN
+---
+
+# ふろんと・まったー
+```
+
+ここでは、remarkやrehypeのプラグインの適用方法と、MDXでFront-Matterに代わる機能を紹介します。
+
+<h3 id="plug-in">プラグインの適用</h3>
+
+私の場合、MDを使う場合は*remark-gfm*と*rehype-prism*を使っていましたので、MDXにも適用させてみようと思います。
+
+ちなみに、remark-gfmは「GitHub版のMarkDown」をHTML等に変換させる際に使うプラグインです。rehype-prismは、シンタックス・ハイライト用に使います。
+
+#### next.configの修正
+
+remark-gfmやrehype-prismはESMのみに対応しているため、```next.config.js```の拡張子を```.mjs```に修正する必要があります。
+
+そして、configの中身を以下のように修正します。
+
+```js
+import remarkGfm from 'remark-gfm';
+import rehypePrism from 'rehype-prism';
+import mdx from "@next/mdx"
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
+
+const withMDX = mdx({
+  options: {
+    // remarkとrehypeは指定しなくてよいとドキュメントに指定あり。
+    // remarkParse,remarkRehype,rehypeStringifyは指定しなくても大丈夫。
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypePrism],
+  },
+});
+
+export default withMDX(nextConfig);
+```
+
+remark-gfmやrehype-prismをimportし、オプションとして**mdx**のパラメタに指定しています。これでMDXファイルをパースする際に、プラグインが適用されます。
+
+なお、MDファイルをHTMLに変換にする場合、通常であればremark-parse、remark-rehype、rehype-stringifyといったパッケージも必要ですが、これらはNext.jsが自動でやってくれるので指定不要です。
+
+#### rehype-prismのシンタックス・ハイライトについて
+
+シンタックス・ハイライトしたい言語（jsやpython等）は、```next.config.mjs```内でimportすれば大丈夫です。
+
+```js
+import remarkGfm from 'remark-gfm';
+import rehypePrism from 'rehype-prism';
+import mdx from "@next/mdx"
+
+// Prismでシンタックス・ハイライトしたい言語
+import 'prismjs/components/prism-python.js';
+import 'prismjs/components/prism-bash.js';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
+
+const withMDX = mdx({
+  options: {
+    // remarkとrehypeは指定しなくてよいとドキュメントに指定あり。
+    // remarkParse,remarkRehype,rehypeStringifyは指定しなくても大丈夫。
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypePrism],
+  },
+});
+
+export default withMDX(nextConfig);
+```
+
+MDファイルの場合、page.tsx等でimportしても問題ありませんでしたが、何故かMDXファイルの場合はnext.config内でimportしないと*ReferenceError: Prism is not defined*とエラーになってしまいます。
+
+私の使い方が悪いだけかもしれませんが、、、もし同じエラーが出るようだったら、next.config内でimportしてみて下さい。
+
+#### ブラウザで確認
+
+page.tsxとMDXファイルを準備して、ブラウザで確認してみます。
+
+page.tsxには、シンタックス・ハイライト用のCSSのimportを追加しています。後は基礎編と同じです。
+
+```tsx
+import MdxContent from "./page.mdx";
+
+ // syntax hightlight用 CSS
+import "prismjs/themes/prism-tomorrow.css";
+
+export default async function Page() {
+  return (
+    <article>
+      <MdxContent />
+    </article>
+  )
+}
+```
+
+MDXファイルは、GitHub Flavored MarkDownの拡張部分（テーブル）とシンタックス・ハイライト部分が分かるように、以下の内容にしてみます。
+
+````markdown
+# MDX TEST!!!
+
+## bash script
+
+```bash
+cd ~
+mkdir test
+```
+
+```python
+def test():
+  print("hello,world!")
+
+test()
+```
+
+## テーブルのテスト
+
+| foo | bar |
+| --- | --- |
+| baz | bim |
+````
+
+ブラウザで見てみると、ちゃんとtableタグに変換されていることと、シンタックス・ハイライトがされていることが分かります。
+
+<Image src={pluginExample} width={653} height={576} alt="plugin-example"/>
+
+<h3 id="front-matter">Front-Matterの代替</h3>
+
+MDファイルにFront-Matterを埋め込んでいる方は、[gray-matter](https://www.npmjs.com/package/gray-matter)のようなパッケージを使ってパースをされていると思います。
+
+ただし、MDXでは同じような使い方は出来ません。少なくとも、私はドキュメントからは見つけられませんでした。
+
+しかし、MDXではimportだけでなくexportも利用することができます。なので、Front-Matterを使わなくても、以下のように、MDXファイル内で直接exportしてしまえば良いのです。
+
+```markdown
+export const meta = {
+  title: "テスト",
+  author: "全力君",
+};
+
+# Hello,World
+
+情報をエクスポートします。
+```
+
+後は、page.jsx内でimportすればOKです。
+
+```tsx
+// MDXのコンテンツ
+import MdxContent from "./page.mdx";
+// MDX内のexportしたオブジェクトをimport
+import { meta } from "./page.mdx"
+
+// syntax hightlight用 CSS
+import "prismjs/themes/prism-tomorrow.css";
+
+export default async function Page() {
+  return (
+    <article>
+      <div>{meta.title}</div>
+      <div>{meta.author}</div>
+      <MdxContent />
+    </article>
+  )
+}
+```
+
+ブラウザで見てみると、MDX内でexportした```meta```のtitleとauthorが取得出来ていることが分かります。
+
+<Image src={exportExample} width={387} height={227} alt="export-example"/>
+
+<h3 id="typescript">TypeScript利用時の注意点</h3>
+
+MDXファイル内でexportしたデータをimportする際、TypeScript利用時は注意点があります。
+
+上記の例で、page.tsx内で```import { meta } from "./page.mdx"```とすると、以下のエラーになってしまいます。
+
+> Module '"*.mdx"' has no exported member 'metadata'. Did you mean to use 'import metadata from "*.mdx"' instead?
+
+TypeScriptがMDXファイルをモジュールとして解釈するのですが、型情報が無いため発生してしまうエラーです。なので、```.d.ts```ファイルを作成して、型情報を定義する必要があります。
+
+#### 型定義ファイルを作成
+
+プロジェクト直下に```mdx.d.ts```の名前でファイル作成します。
+
+今回exportするデータの型に合わせて、以下の内容で保存します。なお、拡張子が.d.tsであれば、ファイル名は何でも良いです。
+
+```ts
+declare module "*.mdx" {
+    interface Meta {
+        title: string;
+        author: string;
+    }
+    export const meta: Meta
+}
+```
+
+#### tsconfig.jsonに反映
+
+tsconfigの**include**に、さきほど作成した```mdx.d.ts```を追加します。compilerOptionsの中身等は関係がないため省略しています。
+
+```json
+{
+  "compilerOptions": {},
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "mdx.d.ts"
+  ]
+}
+```
+
+これで、MDXファイルは*Meta*型のデータをexportすることをTypeScriptも理解してくれるので、エラーが出なくなります！
+
+#### 別の回避策
+
+.d.tsファイルの作成が面倒であれば、page.tsx内で```@ts-ignore```を入れてTypeScriptのエラーを無視する方法もあります。
+
+```tsx
+import MdxContent from "./page.mdx";
+// @ts-ignore
+import { meta } from "./page.mdx"
+
+export default function Page(){/* 省略　*//}
+```
+
+ただ、型情報は取得できなくなります。
+
+<h2 id="other-functions">その他の機能</h2>
+
+私もまだ使えていませんが、Next.jsのMDX関連のその他の機能を紹介します。
+
+<h3 id="rust">Rustのコンパイラ</h3>
+
+MDXのパースにRustのコンパイラを使うこともできます。高速に動作してくれるそうです。
+
+```next.config```の**nextConfig**に、```experimental:{mdxRs:true}```のオプションをつけると有効化できます。
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    mdxRs: true,
+  },
+}
+ 
+const withMDX = require('@next/mdx')()
+module.exports = withMDX(nextConfig)
+```
+
+少し試してみたところ、体感ですがページの表示は少し早くなったように感じます。
+
+ただし、残念ながらこちらはまだexperimentalな機能です。「本番では使わないで」とドキュメントにも記載されています。
+
+<h3 id="use-mdx-as-page"> MDXファイルを直接ページとして使う</h3>
+
+App Routerなら```page.jsx|tsx|js|ts```がページとして解釈されますが、.mdxのファイルもページとして解釈させることも出来ます。
+
+```next.config```の**pageExtensions**に、ページとして解釈する拡張子を羅列し、その中にmdxを含めればOKです。
+
+```js
+const nextConfig = {
+  pageExtensions: ["jsx","tsx","js","ts","mdx"],
+}
+ 
+const withMDX = require('@next/mdx')()
+module.exports = withMDX(nextConfig)
+```
+
+こうすれば、```/app/blog/page.mdx```は、```/blog```のページとして解釈されます。layout.jsxも適用されますし、なんならMDXファイル内でコンポーネントをimportできるので、もしかするとこれで十分な場合も多いかもしれません。
+
+<h3 id="customize">MDXから変換されたHTMLをカスタムする</h3>
+
+MDXのMarkDown部分は上述のとおり、remarkとrehypeでHTMLの各タグに変換されます。この変換されたタグにスタイルをつけたり、カスタムすることができます。
+
+プロジェクト直下においた```mdx-components.jsx|tsx```に、カスタムしたいタグを指定します。ドキュメントのコメント欄に記載があるので、それに沿って記述すればOKです。
+
+```tsx
+import type { MDXComponents } from "mdx/types";
+
+// This file allows you to provide custom React components
+// to be used in MDX files. You can import and use any
+// React component you want, including components from
+// other libraries.
+
+function MyH1({ children }: { children: any }) {
+    return <h1 style={{ backgroundColor: "blue" }}>{children}</h1>
+}
+
+export function useMDXComponents(components: MDXComponents): MDXComponents {
+    return {
+        // Allows customizing built-in components, e.g. to add styling.
+        // h1: ({ children }) => <h1 style={{ fontSize: "100px" }}>{children}</h1>,
+        h1: ({ children }) => <MyH1>{children}</MyH1>,
+        h2: ({ children }) => <h2 style={{ backgroundColor: "pink" }}>{children}</h2>,
+        ...components,
+    };
+}
+```
+
+h1タグを```MyH1```コンポーネントにカスタムし、h2タグはスタイルをつけてカスタムしています。自作のコンポーネントも使えるのは便利ですね。
+
+以下のMarkDownをブラウザに表示させて、スタイルを確認してみます。
+
+```markdown
+# H1タグ
+
+よう
+
+## H2タグ
+
+へい
+```
+
+<Image src={customExample} width={450} height={283} alt="custom-example"/>
+
+ちゃんと適用されています。
+
+<h2 id="trouble">少し困ったこと</h2>
+
+MDファイルを、Next.jsのDynamic Routing機能を使って動的にページ作成していたのですが、MDXファイルだと出来ません。
+
+例えば、```/app/post/[dir]/page.tsx```で、以下のように動的にページを生成しようとするとエラーになります。
+
+```tsx
+export async function generateStaticParams(){
+  /*
+   * 省略
+   * ディレクトリ一覧を返す関数
+   */
+}
+
+function getProps(dir){
+  // mdxのパスを生成する関数
+  const mdxPath = genMdxPath(dir);
+  // ここが悪さしている。。。？import(mdxPath)でも同じ。
+  return require(mdxPath)
+}
+
+export default function ({params}){
+  const {dir} = params;
+  const content = genProps(dir)
+  return (/**省略 */)
+}
+```
+
+```Cannot find modules パス名```とエラーになりますが、実際にパスを確認するとちゃんとMDXファイルは存在しています。
+
+おそらく動的にrequireしているのが良くないのだと思いますが、、、ちなみに```import(dir)```にしても同じです。
+
+もし解決方法を御存知の方がいたら教えてください。
+
+<h2 id="last">最後に</h2>
+
+Next.jsのApp Routerで、MDXファイルを扱う方法を解説しました。
+
+このサイトでも、このページがMDXを使ったページ第一弾となります。今のところ、MDファイルよりカスタム性が高く、結構便利だなと感じています。
+
+今後ページが増えていった時に、管理のしやすさがどうなるかですね。当面、新規の記事はMDXファイルを使って更新していこうと思います。
+
+<h2 id="ref">参考</h2>
+
+- MDX: https://nextjs.org/docs/app/building-your-application/configuring/mdx

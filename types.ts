@@ -130,3 +130,40 @@ export interface Production {
     alt: string,
     posted: string,
 }
+
+
+/**
+ * mdx.d.tsで使用。.mdxでexportするmdxMetaの型。
+ * Next.js13のmetadataオブジェクトに設定するmeta情報。
+ */
+export interface MdxMeta {
+    title: string;
+    description: string;
+    openGraph?: {
+        type: string;
+        title: string;
+        url?: string;
+        images?: {
+            url: string;
+            width: number;
+            height: number;
+            alt?: string;
+        }[]
+    };
+    twitter?: {
+        site: string;
+        title: string;
+        description: string;
+    };
+}
+
+
+/**
+ * mdx.d.tsで使用。.mdxでexportするgrayMatterの型。
+ * 従来の.mdファイルのgray-matter部分から、meta部分を取り除いたもの。
+ */
+export interface FrontMatter {
+    author: string;
+    postedDate: string;
+    amazonLink?: string;
+}

@@ -56,3 +56,9 @@ export const ICON = {
     },
 
 };
+
+// url内のディレクトリ文字列。変わる可能性あるので変数に。
+export const URL_DIR = {
+    MD: "post",
+    MDX: "new-post",
+}

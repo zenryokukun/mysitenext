@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { findBlogDocs } from "../../lib/db/func";
 import { dateToString } from "../../lib/util";
+import blogRoute from "../../lib/blog-route";
 import sortByDate from "../../lib/db/sort-bloginfo";
 import styles from "../../styles/Blog.module.css";
 
@@ -15,6 +16,7 @@ interface BlogInfoOverrides {
   posted: string;
   title: string;
   summary: string;
+  md: string;
 }
 
 
@@ -53,13 +55,17 @@ interface BlogLinkProp {
   i: number;
 }
 function BlogLink({ blog, i }: BlogLinkProp) {
-  const { assetsDir, thumb, posted, title, summary } = blog;
+  const { assetsDir, thumb, posted, title, summary, md } = blog;
   const thumbClass = thumb.length > 0 ? styles.thumb : styles.logo
-  //EX:/public/posts/201102_1 
+
+  // EX:/public/posts/201102_1 
+  // サムネのパス。mdでもmdxでも、/public/postsにある。
   const thumbPath = thumb.length > 0
     ? "/posts/" + assetsDir + "/" + thumb
     : "/zen_logo.png";
-  const route = `/post/${assetsDir}`;
+  // ページのパス。md:/post/記事名、mdx:/new-post/記事名
+  const route = blogRoute({ assetsDir, md });
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.imgWrapper}>

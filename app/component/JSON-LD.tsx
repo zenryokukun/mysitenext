@@ -6,6 +6,7 @@
  */
 
 import { usePathname } from "next/navigation";
+import { URL_DIR } from "../../component/constants";
 
 type ItemListType = "ListItem";
 
@@ -79,9 +80,10 @@ export default function JSON_LD() {
     /**
      * 変則ルートあれば記載
      */
-    if (name === "post") {
+    if (name === URL_DIR.MD || name === URL_DIR.MDX) {
       itemList.push({ name: "blog", item: root + "blog" })
       // 現状 /blog -> /post/article-folder-name　の遷移となる。
+      // もしくは/blog -> /new-post/article-folder-nameの遷移。
       // そのため、/post 単体のリンクは存在せず、パンくずリスト不要となる。
       // だからpostの時は、/blogのリンク追加後、continueする
       continue;
