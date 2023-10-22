@@ -1,0 +1,335 @@
+import Image from "../ImageWrapper";
+import clientExample from "./client-example.png";
+
+export const mdxMeta = {
+    title:"Next.jsのWebサーバ機能でSocket.IOを使う",
+    description:"Express.jsのような専用Webサーバを使わずに、Next.jsのWebサーバ機能でSocket.IOを使う方法を解説します。",
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2023/10/25",
+};
+
+# Next.jsのWebサーバ機能でSocket.IOを使う
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#about">Socket.IOとは</a></li>
+<li><a href="#scope">記事の範囲</a></li>
+<li><a href="#install">インストール</a></li>
+<li><a href="#simple-example-server">使用例：サーバ編</a></li>
+<li><a href="#simple-example-client">使用例：クライアント編</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+以前、対戦型オセロ・ゲームを作ってこのサイトで公開しようと試みました。結局、開発環境ではReactのホット・リロードでサーバ側の変数も初期化されてしまい、テストがうまく出来ずに途中で諦めてしまったのですが、、、
+
+何も残せないまま終わるのも悔しいので、せめてその中で覚えたことを共有していきたいと思います。
+
+オセロでは相手の操作に合わせてデータを更新する必要があるので、Socket.IOのようなパッケージを使って、サーバとクライアントで双方向通信を行う必要があります。
+
+Express.jsのようなWebフレームワークを使えば、Socket.IOの実装は比較的簡単にできますが、Next.jsの標準Webサーバ機能で使おうとすると、ちょっと勝手が変わってきます。
+
+今回はNext.jsの標準Webサーバ機能でSocket.IOを使う方法や、注意点を解説します。
+
+
+<h2 id="about">Socket.IOとは</h2>
+
+[Socket.IO](https://socket.io/)は、クライントとサーバの双方向通信を可能にするライブラリです。
+
+例えば対戦型オセロだと、相手の操作するタイミングに合わせてデータを更新する必要があります。通常のhttpリクエストだと、クライアント側からサーバに対してリクエストを送らないとデータの取得はできません。なので、「相手の操作に合わせて」データを更新することは、httpのリクエストだけでは対応できません。
+
+Socket.IOを使えば、接続されているクライアントに対して、クライアント側からhttpのリクエストがなくても、サーバ側からデータを送ることが可能になります。
+
+もっと身近な例だと、Teamsのようなチャットもそうですね。実際、「チャットアプリを作ってみよう」的なチュートリアルにSocket.IOはよく出てきます。
+
+<h2 id="scope">この記事の範囲</h2>
+
+Next.jsのWebサーバ機能である[API Routes](https://nextjs-ja-translation-docs.vercel.app/docs/api-routes/introduction)を使って、Socket.IOを利用する方法を解説します。
+
+API RoutesやSocket.IOの使い方の詳細は範囲外となります。
+
+また、Next.jsではカスタムサーバ（Express.jsのような、Next.js以外のWebサーバ・ライブラリ）を使うことも可能ですが、ここではNext.jsのWebサーバ機能を使うのが前提となります。
+
+<h2 id="install">インストール</h2>
+
+Next.jsでSocket.IOを利用するには、```socket.io```と```socket.io-client```の２つのパッケージのインストールが必要です。前者がサーバ用、後者がクライアント用のパッケージです。
+
+以下のコマンドでインストールしておきます。
+
+```bash
+npm install socket.io socket.io-client
+```
+
+バージョンは以下のようになりました、ちなみに、私の環境ではNext.jsのバージョンは```13.5.5```です。
+
+```json
+{
+  "next": "13.5.5",
+  "socket.io": "^4.7.2",
+  "socket.io-client": "^4.7.2"
+}
+```
+
+<h2 id="simple-example-server">使用例：サーバ編</h2>
+
+### 概要
+
+例えばExpress.jsのようなWebフレームワークを使う場合、Webサーバの起動時の処理も自分で実装することになります。データベースの接続や、Socket.IOサーバ等、利用する機能をここで盛り込むことができます。
+
+一方、Next.jsではエンドポイント単位でWebサーバの機能を書くことは出来ますが、Webサーバの起動時の処理は自分では制御できません。基本はNext.js任せになります。
+
+なので、Socket.IOを使うページを開いた時に、Socket.IOサーバが起動していなければ起動させる、というのが基本的なアプローチになります。
+
+データベースの接続も同じやり方だと思うので、既に実装されている方はイメージが掴みやすいかもしれません。
+
+### 使用例
+
+シンプルに、以下の例で考えてみようと思います。
+
+- サーバとconnectしたら```connected```とブラウザのコンソールに出力
+- 接続されたクライアントに```hello,from server```の文字列を送信
+
+まず、```/pages/api```フォルダに```simple-socket.ts```のファイル名でサーバ側の処理を書いてみます。
+
+後述しますが、Next.js13で導入された**App RouterのWebサーバ機能では、Socket.IOを使うことは出来ません**。ここではPages RouterのWebサーバ機能を使います。
+
+```ts
+import { NextApiRequest, NextApiResponse } from "next";
+import { Server } from "socket.io";
+import type { Socket } from "socket.io";
+
+
+export default function handler(
+    req: NextApiRequest,
+    res: NextApiResponse,
+) {
+
+    if (req.method !== "POST") {
+        return res.status(405).end();
+    }
+
+    // socket.ioサーバが起動済ならリターン
+    if (res.socket.server.io) {
+        return res.send("server is already running")
+    }
+
+    // socker serverが起動していない状態なので、起動。
+    const io = new Server(res.socket.server, { addTrailingSlash: false });
+    // 各イベントを設定
+    io.on("connection", (socket: Socket) => {
+        socket.on("disconnect", () => console.log("disconnected"))
+        socket.emit("msg", "hello, from server!")
+    })
+    res.socket.server.io = io;
+
+    return res.end();
+}
+```
+
+Socket.IOのサーバが起動していない場合に起動させて、```res.socket.server.io```にSocket.IOサーバを設定するのがポイントです。
+
+```ts
+res.socket.server.io = io;
+```
+
+の部分ですね。これで、クライアント側でSocket.IOサーバに接続することができるようになります。
+
+ここで、注意点が2つあります。
+
+#### TypeScriptのエラーについて
+
+上記のコードだと、TypeScriptのエラーが出てしまいます。
+
+```bash
+'res.socket' is possibly 'null'.
+Property 'server' does not exist on type 'Socket'.
+```
+
+```res.socket.server.io```と書いているところで、「Socket型のres.socketには、serverなんていうプロパティは無いよ」と怒られてしまっています。
+
+なので、NextApiResponse型が、```socket.server.io```のプロパティを持てるように型情報を拡張する必要があります。１行目の型エラーも一緒に解消させます。
+
+```ts
+import { NextApiRequest, NextApiResponse } from "next";
+import { Server } from "socket.io";
+
+import type { Socket as NetSocket } from "net";
+import type { Server as HttpServer } from "http";
+import type { Server as IOServer } from "socket.io";
+import type { Socket } from "socket.io";
+
+
+interface SocketServer extends HttpServer {
+    io?: IOServer;
+}
+
+interface SocketServerWithIO extends NetSocket {
+    server: SocketServer;
+}
+
+interface ResponseWithSocket extends NextApiResponse {
+    socket: SocketServerWithIO;
+}
+
+export default function handler(
+    req: NextApiRequest,
+    res: ResponseWithSocket,
+) {
+
+    if (req.method !== "POST") {
+        return res.status(405).end();
+    }
+
+    if (res.socket.server.io) {
+        return res.send("server is already running")
+    }
+
+    // socker serverが起動していない状態なので、起動。
+    const io = new Server(res.socket.server, { addTrailingSlash: false });
+    // 各イベントを設定
+    io.on("connection", (socket: Socket) => {
+        socket.on("disconnect", () => console.log("disconnected"))
+        socket.emit("msg", "hello, from server!")
+    })
+    res.socket.server.io = io;
+
+    return res.end();
+}
+```
+
+型情報のinterfaceを追加し、handler関数の第二引数を```NextApiResponse型```から、カスタムした```ResponseWithSocket型```に変更しています。
+
+これでTypeScriptのエラーは出なくなります。
+
+この型情報の拡張に一番苦戦しました。
+
+こちらの[stackoverflow](https://stackoverflow.com/questions/74023393/working-with-typescript-next-js-and-socket-io)に同じ内容の投稿があり、参考にしています（参考というか、これで全て解決できました）。
+
+#### Socket.IOサーバ起動時のオプションについて
+
+```ts
+const io = new Server(res.socket.server, { addTrailingSlash: false })
+```
+
+上記のオプションの```{addTrailingSlash: false}```部分ですが、これがないとNext.js13のバージョンによってはクライント側で**404エラー**が出てしまいます。
+
+Next.js13.2.5～13.4.Xだと、URLのパスの最後に"/"が付与されるようで、それが悪さをしてしまっているようです。
+
+上記のオプションをつければエラー回避できます。もしクライント側で404エラーが出てしまう場合、このオプションを入れてみてください。
+
+なお、13.5以降のバージョンでは解消しているようです。
+
+詳細は[GItHubのissue](https://github.com/vercel/next.js/issues/49334)に記載されています。
+
+### Next.js13のRoute Handlersでの利用について
+
+Next.jsはバージョン13から、[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)と呼ばれる新しいwebサーバ機能が導入されています。
+
+ただし、現時点ではRoute HandlersではSocket.IOを利用することが出来ないようです。
+
+これは、従来の[API Routes](https://nextjs-ja-translation-docs.vercel.app/docs/api-routes/introduction)はNode.jsのhttpパッケージのResponseを拡張しているのに対し、Route HandlersではNode.jsのグローバル変数であるResponseを拡張しているため、上記の```res.socket.server.io = io```のように、Socket.IOサーバをResponseに紐づけることができなくなったため、と私は理解しています。
+
+なので、Socket.IOを使いたい場合、従来のAPI Routesを使う必要があります。
+
+とはいえ、API Routesもサポートされていますし、Route Handlersとの併用も可能なので、現時点ではそういうものだと割り切るしかありません。
+
+<h2 id="simple-example-client">使用例：クライアント編</h2>
+
+<a href="#simple-example-server">使用例：サーバ編</a>のサーバに繋げるクライントを実装してみます。接続時、```connected!```と出力させるとともに、```hello, from server!```とメッセージがサーバから送られてくるので、併せてブラウザのコンソールに出力してみます。
+
+以下のようにReactのコンポーネントを作ってみます。
+
+```tsx
+"use client";
+import { useEffect } from "react";
+import { io } from "socket.io-client";
+
+const socket = io({ autoConnect: false });
+
+export default function Content() {
+
+  // １回だけ実行
+  useEffect(() => {
+    // socket.ioサーバを起動するapiを実行
+    fetch("/api/simple-socket", { method: "POST" })
+      .then(() => {
+        // 既に接続済だったら何もしない
+        if (socket.connected) {
+          return;
+        }
+        // socket.ioサーバに接続
+        socket.connect();
+        // socket.ioのイベント登録する場合はここに
+        socket.on("connect", () => { console.log("connected!") })
+        // socket.ioサーバから送られてきたメッセージを出力
+        socket.on("msg", (msg) => { console.log(msg) })
+      })
+
+    return () => {
+      // 登録したイベントは全てクリーンアップ
+      socket.off("connect")
+      socket.off("msg")
+    }
+  }, [])
+
+  return (
+    <>
+      <h1>socket.io シンプルな接続例</h1>
+    </>
+  );
+}
+```
+
+```useEffect```で、ロード時にサーバ側で作ったエンドポイント```/api/simple-socket```を実行し、Socket.IOサーバと接続を行っています。
+
+App Routerを使っているので、冒頭に"use client"を使っています。App Routerを使っていない場合、この行は削除して問題ありません。
+
+後は、```/app/simple-socket/page.tsx```で上記のコンポーネントをimportして表示してみます。
+
+```tsx
+import Content from "./Content";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "シンプルなsocket.io",
+    description: "Next.jsでのシンプルなsocket.ioの接続例",
+}
+
+export default function Page() {
+    return (
+        <Content />
+    );
+}
+```
+
+実際に動かしてブラウザのコンソールを見てみます。
+
+<Image src={clientExample} width={716} height={444} alt="client-example"/>
+
+ちゃんと「connected!」と、サーバからのメッセージである「hello, from server」が出力されています。
+
+開発環境のため、Reactの**reactStrictMode**設定によりuseEffect内の処理が２回実行されています。そのため２回ずつ出力されています。next.configの**reactStrictMode**をfalseにすれば、開発環境でも出力は１回になります。
+
+私も正直useEffectの使い方はあまり上手くなく、もっと制御は工夫できるかもしれません。しかし、基本的なアプローチはこれでOKかと思います。
+
+<h2 id="last">最後に</h2>
+
+Next.jsのWebサーバ機能を使って、Socket.IOを使う方法を解説しました。
+
+Next.jsのバージョン13で導入されたWebサーバ機能ではSocket.IOが使えなかったり、特定のバージョンでは末尾の"/"が悪さしてSocket.IOに接続できなったり、ちょっと分かりにくい状況にありますが、無事使うことはできそうです。
+
+私も、Socket.IOはまだ本格的に利用が出来ていないので、時間を見つけて対戦型オセロを実装してみたいですね。実装できたとしても、２人集まらないとゲームが始まらないので、そこもハードルになるかもしれませんが。。
+
+<h2 id="ref">参考</h2>
+
+- Socket.IO: https://socket.io/
+- Working with TypeScript, Next.js, and Socket.io: https://stackoverflow.com/questions/74023393/working-with-typescript-next-js-and-socket-io
+- Socket.IO Not working anymore from Next.js 13.2.5-canary.27 to latest Next.js 13.4.1: https://github.com/vercel/next.js/issues/49334
