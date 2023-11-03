@@ -11,6 +11,18 @@ export async function POST(req: NextRequest) {
     // json形式でbodyがセットされている。{user:string,password:string}の型
     const identifier = await req.json() as Identifier
     const { user, password } = identifier;
+
+    // userとpasswordが定義されていなかったらエラー。想定外だがログでエラーになっていたので。
+    if (!user || !password) {
+        return new NextResponse(
+            `user and password are not defined. user:${user} password:${password}`,
+            {
+                status: 400,
+                statusText: "user and password are not defined."
+            }
+        )
+    }
+
     // userとpasswordが入力されていなかったらエラー
     if (user.length === 0 || password.length === 0) {
         return new NextResponse(
