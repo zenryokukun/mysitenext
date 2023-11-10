@@ -21,6 +21,7 @@ export default async function Page() {
   const prods = await getProps();
   return (
     <main className={styles.container}>
+      <h1 style={{ textAlign: "center", marginBlockEnd: "0px" }}>作品物リンク集</h1>
       {prods.map((prod, i) => <Product key={i} {...prod} />)}
     </main>
   )
@@ -34,9 +35,9 @@ function Product({ title, summary, href, imgPath, alt }: Production) {
           style={{ width: "100%", height: "100%" }} />
       </div>
       <div className={styles.info}>
-        <h1 className={styles.title}>
+        <div className={styles.title}>
           <a href={href}>{title}</a>
-        </h1>
+        </div>
         <p className={styles.summary}>{summary}</p>
       </div>
     </div>

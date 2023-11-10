@@ -30,6 +30,10 @@
 
 .title {
     text-align: center;
+    font-size: 1.7em;
+    margin-top: 21px;
+    margin-bottom: 21px;
+    font-weight: bold;
 }
 
 .summary {
