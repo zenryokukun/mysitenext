@@ -76,7 +76,16 @@ export default function Board({ comments }: { comments: WithId<CommentInfo>[] })
   return (
     <>
       {isLoading && <Loader text="ナウ、アップローディン..."></Loader>}
+      {/* <h1 className={styles.bg}>みんなの掲示板</h1>
+      <div className={styles.bg} >
+        <div style={{ width: "90%", margin: "auto" }}>仲良く会話しましょう。<br />新規のスレッドを立てる場合は、「Post Comment」ボタンから投稿してください。</div>
+      </div> */}
       <main className={styles.main}>
+        <h1>みんなの掲示板</h1>
+        <div className={styles.descriptionWrapper}>
+          <div>仲良く会話しましょう。</div>
+          <div>新規のスレッドを立てる場合は、「Post Comment」ボタンから投稿してください。</div>
+        </div>
         <Message comments={commentState} showModal={(seq: number) => showModal(seq)} />
         <div className={styles.commentButton} onClick={() => showModal(null)}>Post Comment</div>
         {isModal && <Modal post={postComment} close={hideModal} parentSeq={threadHandler.seq}></Modal>}

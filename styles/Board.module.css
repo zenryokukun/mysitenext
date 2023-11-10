@@ -19,6 +19,12 @@
     word-wrap: break-word;
 }
 
+.descriptionWrapper {
+    /* width: 60%; */
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
 
 .topic {
     text-align: center;
@@ -117,24 +123,29 @@
 }
 
 @media (prefers-color-scheme:dark) {
+
     .main {
-        background-color: #333;
+        background-color: #333
     }
 
     .commentWrapper {
-        background-color: #404040;
+        background-color: #505050;
     }
 
     .topic {
         color: black;
         background: linear-gradient(90deg, #f6aeae, #fbdfdf);
     }
+
+    .name {
+        color: #f6aeae;
+    }
 }
 
 /*hoverはPCのみ有効に。タップ後残るので。*/
 @media screen and (min-width:1024px) {
     .showReply:hover {
-        background-color: #555;
+        background-color: #222;
         color: #fff;
     }
 
@@ -154,19 +165,23 @@
         border-radius: 0%;
     }
 
-    .commentWrapper {
+    .commentWrapper,
+    .descriptionWrapper {
         width: 80%;
     }
 }
 
 @media screen and (max-width:850px) {
+
     .commentButton {
         width: 50%;
     }
 }
 
 @media screen and (max-width:600px) {
-    .commentWrapper {
+
+    .commentWrapper,
+    .descriptionWrapper {
         width: 90%;
     }
 }
