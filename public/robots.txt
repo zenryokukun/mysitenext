@@ -5,3 +5,9 @@ Disallow: /login
 Disallow: /admin
 Disallow: /usr/local/lib/node_modules
 Disallow: /test/crop
+Disallow: /api/submit
+Disallow: /pages/api
+Disallow: /app/simple-socket/page.tsx
+Disallow: /app/post/[dir]/page.tsx
+DDisallow: /post/test_conf.json
+Disallow: /app/mdx
