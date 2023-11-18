@@ -1,0 +1,167 @@
+import Image from "../ImageWrapper";
+import dlPage from "./dl-page.jpg";
+import dlPreviousRelease from "./dl-previous-release.jpg";
+import dlPreviousList from "./dl-previous-list.jpg";
+import dlPreviousMSI from "./dl-previous-msi.jpg";
+import dlPreviousMSIMinor from "./dl-previous-msi-minor.jpg";
+import dlPreviousAll from "./dl-previous-all.jpg";
+import schedule from "./schedule.svg";
+
+export const mdxMeta = {
+  title: "Windowsで古いバージョンのNode.jsをインストールする方法",
+  description: "古いバージョンのWindows用Node.jsのインストーラの探し方と、Node.jsのライフサイクルについて解説します。",
+}
+
+export const frontMatter = {
+  author: "全力君",
+  postedDate: "2023/11/18",
+};
+
+# Windowsで古いバージョンのNode.jsをインストールする方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#premise">前提</a></li>
+<li>
+  <a href="#installer">インストーラの在処</a>
+  <ul>
+    <li><a href="#with-minor-ver">マイナー版も指定したい場合</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#node-life-cycle">Node.jsのライフサイクル</a>
+  <ul>
+    <li><a href="#odd-even">奇数版と偶数版</a></li>
+    <li><a href="#status">ライフサイクルのステータス</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+私は先日までWindowsでNode.jsのバージョン**18.16**を使っていたのですが、試したかった外部パッケージの都合でバージョン**18.17以降**にアップデートする必要が出てきました。
+
+ここで一気に最新バージョンの**20**にあげても良かったのですが、ちょっと外部パッケージを試すためだけにメジャー版をあげるのも躊躇われたので、**18**の最新版（v18.18）に更新することにしました。
+
+しかし、公式サイトを探しても古いバージョンのインストーラが見当たらない、、、、そういえば、以前も同じように探してしまった気が、、、、
+
+何はともあれ、無事見つかったのですが、古いバージョンのインストーラは少しわかりにくい場所にありました。
+
+少し迷いましたが、自分が忘れないようにするためにも記事にして共有します。バージョン**20**が比較的最近リリースされてるため、同じように探してしまう方もいるかもしれませんし、、、。
+
+また、この機にNode.jsのライフサイクル（新バージョンがリリースされてからサポート終了するまでのサイクル）についても学んだので、併せて記載します。
+
+<h2 id="premise">前提</h2>
+
+最新の**LTS**（Long-Term-Support）ではない、古いバージョンのNode.jsのWindows用インストーラの入手方法について解説します。
+
+バージョン管理ツールを使っていないことが前提となります。
+
+### 余談
+
+Linuxでは[nvm](https://github.com/nvm-sh/nvm/blob/master/README.md)のように有名なバージョン管理ツールがあり、プロジェクトによってバージョンの切替が可能です。残念ながら、nvmはWindowsではサポートされていません。
+
+Windowsでは、[nvm-windows](https://github.com/coreybutler/nvm-windows)というwindows用のバージョン管理ソフトがあるようです。私は使っていないのですが、マイクロソフト社の[Windows での NodeJS のインストール](https://learn.microsoft.com/ja-jp/windows/dev-environment/javascript/nodejs-on-windows)でも案内されているので、私が知らないだけで結構メジャーなのかもしれませんね。
+
+<h2 id="installer">インストーラの在処</h2>
+
+[nodejs.orgのダウンロードページ](https://nodejs.org/en/download/)を開いてみましょう。
+
+<Image src={dlPage} alt="top-download-page" width={1332} height={862}/>
+
+最新のLTSであるv20のダウンロードページとなります。WindowsやMac、LinuxのOSごとに、アーキテクチャ別にインストーラがあります。
+
+緑色の「LTS」と横の薄い緑の「Current」がタブになっていて、「LTS」が選択された状態となっています。「Current」を押すとv21のインストーラに切り替えることができますが、これはちょっと特殊なものです。LTSやCurrentについては後述します。
+
+同ページを下までスクロールすると、[Previous Releases](https://nodejs.org/en/about/previous-releases)のリンクがあります。
+
+<Image src={dlPreviousRelease} alt="previous-download-page" width={1260} height={650}/>
+
+クリックしてページ下部にスクロールすると、各メジャー版ごとの最新版のリンクがあります。今回はv18の**Releases**をクリックします。
+
+<Image src={dlPreviousList} alt="previous-download-list-page" width={1034} height={581}/>
+
+v18の最新版のインストーラの一覧が表示されます。後はmsiをクリックしてダウンロードするだけです！
+
+<Image src={dlPreviousMSI} alt="previous-msi-page" width={845} height={662}/>
+
+ちなみに、私のPCは64bitなので*node-v18.18.2-x64.msi*をダウンロードしました。
+
+<h3 id="with-minor-ver">マイナー版も指定したい場合</h3>
+
+各メジャー版の最新版なら、上記の手順で問題ありません。
+
+しかし、例えば**18.15**とか**18.6**のように、特定のマイナー版が必要な場合、別の場所を探す必要があります。
+
+上記のインストーラがあるページ上部の「../」をクリックします。
+
+<Image src={dlPreviousMSIMinor} alt="link-previous-msi-minor-page" width={845} height={662}/>
+
+[https://nodejs.org/download/release/](https://nodejs.org/download/release/)が開きます。マイナー版も含め、Node.jsの各バージョンのインストーラのリンクがあります。
+
+<Image src={dlPreviousAll} alt="link-previous-msi-all-page" width={845} height={662}/>
+
+後は、欲しいバージョンのリンクをクリックして、同じようにmsiをダウンロードするだけです！
+
+<h2 id="node-life-cycle">Node.jsのライフサイクル</h2>
+
+※ [endoflife.date](https://endoflife.date/nodejs)というOSやソフトウェアのサポート期限をまとめているサイトと、[Node.jsのRelease Schedule](https://nodejs.org/en/about/previous-releases)を参考にしています。
+
+<h3 id="odd-even">奇数版と偶数版</h3>
+
+Node.jsでは、メジャー版が奇数と偶数の場合では用途が異なります。サポート期間も大きく異なるので、インストールの際には注意が必要です。
+
+奇数版は、主にライブラリ開発者向けのバージョンとなります。新バージョンを先行して提供し、ライブラリ側で対応を行うためのバージョンなので、サポート期間は６か月と短いです。
+
+偶数版がサポート期間が30か月保証されるバージョンです。**LTS**(Long Term Support)と呼ばれるのも、偶数版です（厳密には、「Activeステータスに移行した偶数版」です）。
+
+Node v18（2025.4まで）のほうが、v21（2024.1まで）よりサポート期間が長いのも、上記のように偶数版と奇数版で目的が異なるのが理由です。
+
+なので、ライブラリ開発者でもない限り、基本的には偶数版を入れることになります。
+
+<h3 id="status">ライフサイクルのステータス</h3>
+
+Node.jsは、リリースされてから**Current**、**Active**、**Maintenance**という3つのステータスを経て、サポート終了を迎えます。
+
+[Node.jsのRelease Schedule](https://nodejs.org/en/about/previous-releases)の図が分かりやすいので貼っておきます。
+
+<Image src={schedule} alt="release-schedule" width={950} height={500}/>
+
+- Currentステータス
+
+リリースされてから半年間はCurrentステータスとなります。ライブラリ開発者が対応をするための期間です。
+
+半年後、偶数版は次のActiveステータスに移行します。奇数版は移行せず、そのままサポート終了します。
+
+- Activeステータス、Maintenanceステータス
+
+偶数版はCurrentステータス後に、30か月のサポート期間に移行します。この期間では致命的なバグの修正等が保証されます。
+
+Activeステータス後にMaintenanceステータスに移行しますが、それぞれの期間は明確に定められてはいないようです。表を見る限り、だいたい1:1みたいですね。
+
+[GitHub](https://github.com/nodejs/Release)を見る限り、ActiveでもMaintenanceでも、バグ修正、セキュリティ対応は行わます。新機能の追加は、Activeの場合は積極的に行われるようですが、Maintenanceの場合は必要な場合のみ行われるようです。
+
+Activeステータスに移行したバージョンは**LTS**と呼ばれます。公式サイトには、「本番で使う場合、ActiveかMaintenanceのバージョンを使うように」と記載されているので、インストールする場合は自身の用途を一度確認したほうが良さそうですね。
+
+また、偶数版であってもリリースから半年間は**Current**ステータスとなり、Activeに移行するまでは本番利用は推奨されない点は留意が必要です。
+
+<h2 id="last">最後に</h2>
+
+今回は、古いバージョンのWindows用Node.jsインストーラの探し方と、Node.jsのライフサイクルについて記載しました。
+
+やっぱり1つのバージョンしか入れられないのは不便ですね、、、毎回msiをダウンロードしてインストールするのも手間です。
+
+windows-nvmのようなバージョン管理ツールの導入も検討したいと思います。
+
+<h2 id="ref">参考</h2>
+
+- About Node.js: https://nodejs.org/en/about
+- endoflife.date :https://endoflife.date/nodejs
+- Previous Releases :https://nodejs.org/en/about/previous-releases
+- nodejs/Releases :https://github.com/nodejs/Release
+- nvm-windows: https://github.com/coreybutler/nvm-windows
