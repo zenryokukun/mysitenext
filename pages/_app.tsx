@@ -7,9 +7,9 @@ import "../styles/prism-overrides.css"; // syntax hightlightをカスタム
 
 // font-awesomeのNext.js対策。ページ単位でやるの面倒なので、ここで全ページ適用にしちゃう。
 // 詳細：https://fontawesome.com/v5/docs/web/use-with/react
-import { config } from "@fortawesome/fontawesome-svg-core";
-import '@fortawesome/fontawesome-svg-core/styles.css'
-config.autoAddCss = false;
+// import { config } from "@fortawesome/fontawesome-svg-core";
+// import '@fortawesome/fontawesome-svg-core/styles.css'
+// config.autoAddCss = false;
 
 
 function MyApp({ Component, pageProps, router }: AppProps) {

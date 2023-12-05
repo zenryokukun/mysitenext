@@ -1,8 +1,7 @@
 "use client"
 import { useState } from "react";
 import Link from "next/link.js";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { Bar } from "./Icons";
 import { MODE } from "./constants.js";
 import styles from "./Menu.module.css";
 
@@ -127,7 +126,7 @@ function MenuHam({ tap }: HamProp) {
   return (
     // リンクでは無いため、aタグをdivに変更。
     <div className={styles.ham} onClick={tap}>
-      <FontAwesomeIcon icon={faBars} />
+      <Bar width="17px" />
     </div>
   );
 }

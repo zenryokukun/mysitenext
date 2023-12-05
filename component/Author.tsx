@@ -4,9 +4,8 @@
  * レイアウトから切り離したため、レスポンシブ対応発動時の幅を変更する場合は、
  * レイアウトとこのComponentのcssそれぞれ修正が必要になるので留意。
  */
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPerson, faClock, faAddressCard } from "@fortawesome/free-solid-svg-icons";
-import { faTwitter } from "@fortawesome/free-brands-svg-icons";
+
+import { Person, Clock, AddressCard, Twitter } from "./Icons";
 
 import { LINK } from "./constants";
 import styles from "./Author.module.css";
@@ -23,8 +22,7 @@ export default function Author({ name, postedDate, containerStyle }: AuthorP) {
       <div className={`${styles.item} ${styles.itemRow}`}>
         <div className={styles.field}>
           <div className={styles.iconWrapper}>
-            {/* <i className="fa-solid fa-person"></i> */}
-            <FontAwesomeIcon icon={faPerson} />
+            <Person width="10px" />
           </div>
           <div className={styles.fieldText}>Author</div>
         </div>
@@ -34,8 +32,7 @@ export default function Author({ name, postedDate, containerStyle }: AuthorP) {
         <div className={`${styles.item} ${styles.itemRow}`}>
           <div className={styles.field}>
             <div className={styles.iconWrapper}>
-              {/* <i className="fa-regular fa-clock"></i> */}
-              <FontAwesomeIcon icon={faClock} />
+              <Clock width="16px" />
             </div>
             <div className={styles.fieldText}>Posted</div>
           </div>
@@ -45,8 +42,7 @@ export default function Author({ name, postedDate, containerStyle }: AuthorP) {
       <div className={`${styles.item} ${styles.itemRow}`}>
         <div className={styles.field}>
           <div className={styles.iconWrapper}>
-            {/* <i className="fa-brands fa-twitter"></i> */}
-            <FontAwesomeIcon icon={faTwitter} />
+            <Twitter width="16px" />
           </div>
           <div className={styles.fieldText}>Contact</div>
         </div>
@@ -55,8 +51,7 @@ export default function Author({ name, postedDate, containerStyle }: AuthorP) {
       <div className={`${styles.item} ${styles.itemColumn}`}>
         <div className={styles.field}>
           <div className={styles.iconWrapper}>
-            {/* <i className="fa-solid fa-address-card"></i> */}
-            <FontAwesomeIcon icon={faAddressCard} />
+            <AddressCard width="18px" />
           </div>
           <div className={styles.fieldText}>紹介</div>
         </div>

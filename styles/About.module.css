@@ -55,9 +55,17 @@
 }
 
 .icon {
-  display: inline-block;
+  box-sizing: border-box;
   margin-right: 1rem;
+  width: 19px;
 }
+
+.iconSmall {
+  box-sizing: border-box;
+  margin-right: 7px;
+  width: 17px;
+}
+
 
 .noDec {
   color: #383838
@@ -112,6 +120,8 @@
   .nextPic {
     height: auto;
   }
-}
 
-@media screen and (max-width:600px) {}
+  .iconSmall {
+    width: 21px;
+  }
+}

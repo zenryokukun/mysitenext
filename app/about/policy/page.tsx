@@ -1,7 +1,5 @@
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBuildingShield, faKey, faCopyright, faTriangleExclamation, faRectangleAd } from "@fortawesome/free-solid-svg-icons"
-import { faInternetExplorer } from "@fortawesome/free-brands-svg-icons"
+import { BuildingShield, Key, CopyRight, TriangleExclamation, RectangleAd, InternetExplorer } from "../../../component/Icons"
 
 import styles from "../../../styles/Policy.module.css"
 import type { Metadata } from "next";
@@ -17,7 +15,7 @@ export default function Page() {
       <main className={styles.wrapper}>
         <section className={styles.underline}>
           <h1 className={styles.header}>
-            <FontAwesomeIcon icon={faBuildingShield} />
+            <BuildingShield width="27px" />
             サイトポリシー
           </h1>
           <p>
@@ -26,7 +24,7 @@ export default function Page() {
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
-            <FontAwesomeIcon icon={faKey} />
+            <Key width="24px" />
             プライバシーポリシー
           </h2>
           <p>
@@ -41,14 +39,14 @@ export default function Page() {
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
-            <FontAwesomeIcon icon={faCopyright} />
+            <CopyRight width="24px" />
             著作権
           </h2>
           <p>当サイト上のコンテンツは、特段の記載がない限り、サイト運営者が所有・管理しているものです。著作権法による認められる場合を除き、サイト運営者に無断で複製・改変することは禁止されています。</p>
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
-            <FontAwesomeIcon icon={faTriangleExclamation} />
+            <TriangleExclamation width="24px" />
             免責事項
           </h2>
           <ul className={styles.listWrapper}>
@@ -60,7 +58,7 @@ export default function Page() {
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
-            <FontAwesomeIcon icon={faRectangleAd} />
+            <RectangleAd width="27px" />
             サイト内の広告について
           </h2>
           <p>
@@ -70,7 +68,7 @@ export default function Page() {
         </section>
         <section className={styles.postit}>
           <h2 className={styles.header2}>
-            <FontAwesomeIcon icon={faInternetExplorer} />
+            <InternetExplorer width="24px" />
             動作環境
           </h2>
           <p>当サイトはChrome 109.0.5414.75(64bit)以上のバージョンでテストしています。</p>

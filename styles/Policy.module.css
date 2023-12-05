@@ -18,8 +18,8 @@
   text-align: center;
 }
 
-.header>svg,
-.header2>svg {
+.header>i,
+.header2>i {
   margin-right: 0.5rem;
 }
 

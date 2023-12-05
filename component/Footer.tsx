@@ -2,10 +2,7 @@ import React from "react";
 import { ICON } from "./constants";
 import styles from "./Footer.module.css";
 import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopyright } from "@fortawesome/free-regular-svg-icons"
-import { faTwitter, faInstagram, faGithub } from "@fortawesome/free-brands-svg-icons"
-import { faBuildingShield } from "@fortawesome/free-solid-svg-icons"
+import { CopyRightRegular, Twitter, Instagram, GitHub, BuildingShield } from "./Icons";
 
 export default function Footer() {
   let contStyle = styles.container;
@@ -15,9 +12,8 @@ export default function Footer() {
       <div className={contStyle}>
         <div className={`${styles.message} ${styles.large}`}>
           <div className={styles.messageItem}>全力君より、愛を込めて。</div>
-          <div className={styles.messageItem}>
-            {/* <i className="fa-regular fa-copyright"></i> */}
-            <FontAwesomeIcon icon={faCopyright} />
+          <div className={`${styles.messageItem} ${styles.copyRightMessage}`}>
+            <CopyRightRegular className={styles.copyRightIcon} width="17.6px" height="17.6px" />
             {` ${year} 全力君`}
           </div>
         </div>
@@ -48,16 +44,16 @@ function AboutFooter() {
 function IconFooter() {
   return (
     <div className={styles.flexOne}>
-      <div className={`${styles.light} ${styles.large}`}>Feel free to follow me.</div>
-      <div>
+      <div className={`${styles.light} ${styles.large} ${styles.topMargin}`}>Feel free to follow me.</div>
+      <div className={styles.iconRow}>
         <a className={styles.iconLink} aria-label={ICON.TWITTER.LABEL} href={ICON.TWITTER.LINK}>
-          <FontAwesomeIcon icon={faTwitter} size="2x" />
+          <Twitter width="32px" height="32px" />
         </a>
         <a className={styles.iconLink} aria-label={ICON.INSTAGRAM.LABEL} href={ICON.INSTAGRAM.LINK}>
-          <FontAwesomeIcon icon={faInstagram} size="2x" />
+          <Instagram width="32px" height="36.5px" />
         </a>
         <a className={styles.iconLink} aria-label={ICON.GITHUB.LABEL} href={ICON.GITHUB.LINK}>
-          <FontAwesomeIcon icon={faGithub} size="2x" />
+          <GitHub width="32px" height="31px" />
         </a>
       </div>
     </div>
@@ -69,8 +65,7 @@ function SitePolicy() {
     <div className={`${styles.light} ${styles.flexOne}`}>
       <div className={`${styles.underline} ${styles.large}`}>
         <Link className={styles.iconLink} href="/about/policy">
-          {/* <span className={`${styles.sidePadding} fa-solid fa-building-shield`}></span> */}
-          <FontAwesomeIcon icon={faBuildingShield} className={styles.sidePadding} width={20} height={18} />
+          <BuildingShield className={styles.sideMargin} width={"22px"} height={"20px"} />
           <span>Site Policy</span>
         </Link>
       </div>

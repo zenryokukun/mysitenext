@@ -71,6 +71,14 @@
     position: static;
   }
 
+  /* 
+   * 直下のaタグのカーソルをdefaultにする。
+   * aタグのカーソル（pointer）だと、タップ時に背景色が変わってしまうため。
+   */
+  .container a {
+    cursor: default;
+  }
+
   .myol {
     position: absolute;
     z-index: 2;
@@ -86,7 +94,8 @@
     position: absolute;
     top: 0px;
     right: 0px;
-
+    /* タップ時にaタグの背景色が反転するのを防ぐ。 */
+    cursor: default;
   }
 
   .spread {

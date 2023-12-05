@@ -1,7 +1,5 @@
 import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTwitter, faInstagram } from "@fortawesome/free-brands-svg-icons";
-import { faEnvelope, faToriiGate, faPoo, faAddressCard } from "@fortawesome/free-solid-svg-icons";
+import { Twitter, Instagram, Envelope, ToriiGate, Poo, AddressCard } from "../../component/Icons";
 import { LINK } from "../../component/constants";
 import styles from "../../styles/About.module.css";
 
@@ -30,8 +28,7 @@ export default function Page() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              {/* <i className={`fa-solid fa-torii-gate ${styles.icon}`}></i> */}
-              <FontAwesomeIcon icon={faToriiGate} className={styles.icon} />
+              <ToriiGate className={styles.icon} />
               About This Site
             </div>
           </h3>
@@ -56,8 +53,7 @@ export default function Page() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              {/* <i className={`fa-solid fa-poo ${styles.icon}`}></i> */}
-              <FontAwesomeIcon icon={faPoo} className={styles.icon} />
+              <Poo className={styles.icon} />
               About The Author
             </div>
           </h3>
@@ -83,8 +79,7 @@ export default function Page() {
         <section className={`${styles.wrapper} ${styles.textContent}`}>
           <h3 className={styles.title}>
             <div>
-              {/* <i className={`fa-solid fa-address-card ${styles.icon}`}></i> */}
-              <FontAwesomeIcon icon={faAddressCard} className={styles.icon} />
+              <AddressCard className={styles.icon} />
               Contact
             </div>
           </h3>
@@ -93,14 +88,14 @@ export default function Page() {
             {/* <li className={styles.item}><a href={"mailto:" + LINK.MAIL}><i className={`fa-solid fa-envelope ${styles.prs}`}></i>Mail</a></li> */}
             <li className={styles.item}>
               <a href={"mailto:" + LINK.MAIL}>
-                <FontAwesomeIcon icon={faEnvelope} className={styles.prs} />
+                <Envelope className={styles.iconSmall} />
                 Mail
               </a>
             </li>
             {/* <li className={styles.item}><a href={LINK.TWITTER}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter</a></li> */}
             <li className={styles.item}>
               <a href={LINK.TWITTER}>
-                <FontAwesomeIcon icon={faTwitter} className={styles.prs} />
+                <Twitter className={styles.iconSmall} />
                 Twitter
               </a>
             </li>
@@ -113,14 +108,14 @@ export default function Page() {
             {/* <li className={styles.item}><a href={LINK.TWITTER2}><i className={`fa-brands fa-twitter ${styles.prs}`}></i>Twitter(bot)</a></li> */}
             <li className={styles.item}>
               <a href={LINK.TWITTER2}>
-                <FontAwesomeIcon icon={faTwitter} className={styles.prs} />
+                <Twitter className={styles.iconSmall} />
                 Twitter(bot)
               </a>
             </li>
             {/* <li className={styles.item}><a href={LINK.INSTAGRAM}><i className={`fa-brands fa-instagram ${styles.prs}`}></i>Instagram</a></li> */}
             <li className={styles.item}>
               <a href={LINK.INSTAGRAM}>
-                <FontAwesomeIcon icon={faInstagram} className={styles.prs} />
+                <Instagram className={styles.iconSmall} />
                 Instagram
               </a>
             </li>
