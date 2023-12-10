@@ -130,7 +130,10 @@ function Thread({ thread, conversation, showModal }: ThreadProp) {
         <div className={styles.name}>[投稿者]: {name}</div>
         <div className={styles.msg}>{msg}</div>
         <div className={styles.when}>{posted}</div>
-        {showConversation && <div>{conversation.map((cmt, i) => <Comment key={i} {...cmt} />)}</div>}
+        {showConversation &&
+          <div className={styles.repliesContainer}>
+            {conversation.map((cmt, i) => <Comment key={i} {...cmt} />)}
+          </div>}
         <button className={styles.showReply} onClick={() => setShowConversation(() => !showConversation)}>
           {showConversation ? "返信を非表示にする" : `返信を表示する ${conversation.length}件`}
         </button>
