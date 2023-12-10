@@ -131,7 +131,7 @@ function Thread({ thread, conversation, showModal }: ThreadProp) {
         <div className={styles.msg}>{msg}</div>
         <div className={styles.when}>{posted}</div>
         {showConversation &&
-          <div className={styles.repliesContainer}>
+          <div>
             {conversation.map((cmt, i) => <Comment key={i} {...cmt} />)}
           </div>}
         <button className={styles.showReply} onClick={() => setShowConversation(() => !showConversation)}>
