@@ -8,7 +8,7 @@ import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import { FancyBlogLinks } from "../../component/BlogLinks";
 import Amazon from "../../component/Amazon";
-import Menu from "../../component/Menu";
+import Navigation from "../../component/Navigation";
 import { MODE } from "../../component/constants";
 import { findByDir, newBlogs, popularBlogs, relatedBlogs } from "../../lib/db/extract";
 import { blogInfoToLinkItem } from "../../lib/typecast";
@@ -51,7 +51,7 @@ export default async function MdxLayout({ dir, frontMatter, children }: LayoutP)
   const { related, latest, popular } = await getProps(dir);
   return (
     <>
-      <Menu iniMode={MODE.BLOG} />
+      <Navigation iniMode={MODE.BLOG} />
       <Layout>
         <Main>
           <Link className={styles.back} href="/blog">記事一覧に戻る</Link>

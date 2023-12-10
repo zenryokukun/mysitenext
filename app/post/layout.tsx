@@ -1,10 +1,10 @@
-import Menu from "../../component/Menu";
+import Navigation from "../../component/Navigation";
 import { MODE } from "../../component/constants";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Menu iniMode={MODE.BLOG} />
+      <Navigation iniMode={MODE.BLOG} />
       {children}
     </>
   );

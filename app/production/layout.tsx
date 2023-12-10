@@ -1,4 +1,4 @@
-import Menu from "../../component/Menu";
+import Navigation from "../../component/Navigation";
 import { MODE } from "../../component/constants";
 
 export default function Layout(
@@ -6,7 +6,7 @@ export default function Layout(
 ) {
   return (
     <>
-      <Menu iniMode={MODE.PRODUCTION} />
+      <Navigation iniMode={MODE.PRODUCTION} />
       {children}
     </>
 

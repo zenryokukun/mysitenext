@@ -1,4 +1,4 @@
-import Menu from "../../component/Menu"
+import Navigation from "../../component/Navigation"
 import { MODE } from "../../component/constants"
 import type { Metadata } from "next"
 
@@ -13,7 +13,7 @@ export default function Layout(
 ) {
   return (
     <>
-      <Menu iniMode={MODE.BLOG} />
+      <Navigation iniMode={MODE.BLOG} />
       {children}
     </>
   )

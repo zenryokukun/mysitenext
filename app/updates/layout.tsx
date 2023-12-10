@@ -1,4 +1,4 @@
-import Menu from "../../component/Menu";
+import Navigation from "../../component/Navigation";
 import { MODE } from "../../component/constants";
 
 // import "prismjs/themes/prism-tomorrow.css"; // syntax hightlight用
@@ -7,7 +7,7 @@ import { MODE } from "../../component/constants";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Menu iniMode={MODE.UPDATES} />
+      <Navigation iniMode={MODE.UPDATES} />
       {children}
     </>
   );

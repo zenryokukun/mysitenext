@@ -1,6 +1,6 @@
 // Components
 import Image from "next/image";
-import Menu from "../component/Menu";
+import Navigation from "../component/Navigation";
 import Layout, { Main, Side } from "../component/layouts/sidebar/Layout";
 import { FancyBlogLinks } from "../component/BlogLinks";
 import Twitter from "../component/Twitter";
@@ -41,7 +41,7 @@ export default async function Page() {
   const [newBlogLinks, prodLinks] = await getProps();
   return (
     <>
-      <Menu iniMode={MODE.HOME} />
+      <Navigation iniMode={MODE.HOME} />
       <aside className={styles.bgimage}>
         <section className={styles.catchWrapper}>
           <div className={styles.catchHeader}>Zen-Production</div>
