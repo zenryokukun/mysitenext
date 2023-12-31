@@ -1,0 +1,430 @@
+import Image from "../ImageWrapper";
+import loginPic from "./login.jpg";
+
+export const mdxMeta = {
+    title:"Linuxサーバにパスワードレスで接続する方法",
+    description:"SSHキーを使って、Linux系サーバにパスワード無しで接続する方法について解説します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2023/12/31",
+};
+
+# Linuxサーバにパスワードレスで接続する方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#env">環境</a></li>
+<li><a href="#ssh-password">SSHで普通に繋げる場合（要パスワード）</a></li>
+<li>
+  <a href="#ssh-keys">SSHキーで接続する場合</a>
+  <ul>
+    <li><a href="#ssh-key-gen">ローカル端末でSSHキーを生成</a></li>
+    <li><a href="#register-public-key">公開鍵をサーバに登録</a></li>
+    <li><a href="#check">接続して確認してみる</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#example">自動化の例</a>
+  <ul>
+    <li><a href="#example-bash-server">サーバでbashコマンドを実行</a></li>
+    <li><a href="#example-sh-server">サーバにあるスクリプトを実行</a></li>
+    <li><a href="#example-sh-local">localのスクリプトをサーバで実行</a></li>
+  </ul>
+</li>
+<li><a href="#manual-register">ssh-copy-idが無い場合</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+私はこのWebサイトの更新を行う際、手動でサーバにSSHコマンドで接続し、gitコマンドやらnpmコマンドを打ってリリース作業を行っていました。
+
+毎回決まったコマンドを打っているので、「何とか自動化できないかなぁ」と長らく思っていました。しかしSSHでログインする際、サーバのユーザ名とパスワードの入力を求められるため、自動化ができずにいました。
+
+しかしちょっと調べてみると、SSHキー（公開鍵と秘密鍵のペア）を生成してサーバに登録しておくことで、パスワードレスで接続が可能なことが分かりました。GitHubをリモート・リポジトリに指定する際、SSHキーの登録が必須になっていると思いますが、その方式と同じですね。
+
+私もこの方式で、リリース作業の自動化（スクリプト化）が無事できました！
+
+ということで、今回はSSHキーの生成方法から、パスワード無しでサーバに接続する方法について解説します。なお、Linuxにあまり慣れていない方を想定した内容になっていますので、ご了承ください。
+
+なお、秘密鍵や公開鍵の仕組み自体については、この記事では触れません。
+
+<h2 id="env">環境</h2>
+
+### サーバ
+
+私のサーバのOSやバージョンです。
+
+```bash
+NAME="Ubuntu"
+VERSION="20.04.4 LTS (Focal Fossa)"
+```
+
+パスワード方式であれSSHキー方式であれ、SSHで接続することに変わりはありません。そのため、サーバのSSH用のポート（22）が許可されていることが前提となります。
+
+もしまだ許可されていない場合、以下のコマンドで許可できます。
+
+```bash
+sudo ufw allow 22
+```
+
+また、サーバはLinux系であることを前提にしています。WindowsサーバでもSSH接続は出来ると思いますが、手順は異なりますので本記事では対象外です。
+
+### ローカル端末
+
+接続元となる端末をここではローカル端末と呼ばせてもらいます。
+
+私のローカル端末情報です。
+
+```bash
+NAME="Debian GNU/Linux"
+VERSION="11 (bullseye)"
+```
+
+この記事用にchromebookのLinux仮想環境を使っています。WindowsであればWSL2(Windows Subsystem for Linux2)なら大丈夫ですし、Windows 10 (ビルド 1809 以降) であればpowershellでも大丈夫です。
+
+ただし、この記事ではローカル端末もLinuxを前提に記述します。powershellの場合、細かい部分は異なる可能性がありますので、ご了承ください。
+
+powershellでは、昔はSSHキーの生成がサポートされていなかったようなので、バージョン等の詳細はMicorosoft社の[OpenSSH for Windows の概要](https://learn.microsoft.com/ja-jp/windows-server/administration/openssh/openssh_overview)をご確認ください。
+
+<h2 id="ssh-password">SSHで普通に繋げる場合（要パスワード）</h2>
+
+SSHキーを使ったパスワードレスのログインの前に、SSHコマンドで手動で繋げる場合の手順を確認してみます。
+
+ローカル端末がLinux系であればWindowsであれ、以下のコマンドで接続させると思います。
+
+```bash
+ssh username@hostname
+```
+
+**username**はサーバのログイン先のユーザ名で、**hostname**はサーバのホスト名（もしくはIPアドレス）です。
+
+上記のコマンドを打つと、以下のようにユーザ名とパスワードが求められます。ユーザ名やIPはボカしてあります。
+
+```powershell
+ssh my-username@160.xx.xx.xxx
+my-username@160.xx.xx.xxx's password:
+```
+
+ここでパスワードを入力すれば無事ログインできます。サーバのメンテナンス等を手動で行う場合はこれで十分かと思いますが、パスワードを手動で入力する必要があるため、リリース作業のような定型の処理を自動化するには向きません。
+
+パスワード無しでサーバに接続し、決まった処理を自動化するには、後述するSSHキーを使った認証方式がベターです。
+
+<h2 id="ssh-keys">SSHキーで接続する場合</h2>
+
+SSHキーでサーバに接続させるためには、以下の作業を事前に行う必要があります。
+
+1. ローカル端末でSSHキー（公開鍵、秘密鍵のペア）を生成
+2. 公開鍵をサーバに登録
+
+<h3 id="ssh-key-gen">ローカル端末でSSHキーを生成</h3>
+
+キーの生成は全てローカル端末（接続元の端末）側の操作になります。サーバ側で実行しないようにご注意ください。
+
+#### 1. 保存先のフォルダを確認
+
+キーを生成する前に、保存先となるフォルダが存在するか確認をします。
+
+保存先は、通常はホームディレクトリ直下の```.ssh```フォルダに格納します。なのでこのフォルダが存在するかまず確認します。
+
+```bash
+# ホームディレクトに移動
+cd ~
+# 非表示フォルダも含めて表示
+ls -a
+```
+
+非表示フォルダなので、```ls -a```のオプションを付けています。
+
+```.ssh```フォルダがあればOKです。SSHキーを生成したことがなくても、パスワード方式でSSHで接続したことがある場合、既にフォルダは自動で作成されていると思います。
+
+無い場合、以下のコマンドで作っておきましょう。
+
+```bash
+mkdir .ssh
+```
+
+#### 2. SSHキーを生成
+
+```ssh-keygen```コマンドを使って公開鍵と秘密鍵のペアを生成します。
+
+ここで、暗号化のアルゴリズムを指定できます。強度等、様々な種類がありますが、ここでは[RSA](https://ja.wikipedia.org/wiki/RSA%E6%9A%97%E5%8F%B7)を利用します。明示的に指定をしなかった場合、デフォルトでRSAが使われますが、バージョンによっては異なるかもしれません。
+
+GithubへのSSHキー登録では、よりモダンな[ed25519](https://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%89%E3%83%AF%E3%83%BC%E3%82%BA%E6%9B%B2%E7%B7%9A%E3%83%87%E3%82%B8%E3%82%BF%E3%83%AB%E7%BD%B2%E5%90%8D%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0)がドキュメント上に記載されていますが、特段セキュリティに関して強い要求が無いのであれば、RSAで問題ないと思います。とはいえ、セキュリティに関連する部分ではあるので、拘りがある場合は適宜調べていただければと思います。
+
+暗号化のアルゴリズムに深く踏み込んでしまうと脱線していまいますので、ここでは割愛し、RSA方式で生成します。
+
+以下のコマンドで生成します。
+
+```bash
+ssh-keygen -t rsa -f ~/.ssh/id_rsa_chromebook
+```
+
+```-f```オプションで、保存先と鍵名を指定しています。このオプションを省略しても、次に保存先を聞かれます。
+
+鍵の名前は、**id_rsa_chromebook**にしています。指定しなかった場合、鍵名は**id_rsa**になるかと思います。複数キーを作成する場合もあると思うので、後でわかる名前にしておきましょう。
+
+次に、鍵に対するパスワードの設定を求められます。パスワードレスで接続させたいので、ここは何も入力せずエンターを押します。
+
+```bash
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase): 
+```
+
+確認用に再度同じパスワードの入力を求められます。同じく何も入力せず、エンターを押します。
+
+```bash
+Enter same passphrase again:
+```
+
+キーが正常に生成されたとメッセージが表示されます。他にもfingerprintやrandomart等の複雑な文字列や記号の羅列が表示されますが、特段メモらなくて大丈夫です。
+
+```powershell
+Your identification has been saved in /home/my-username/.ssh/id_rsa_chromebook
+Your public key has been saved in /home/my-username/.ssh/id_rsa_chromebook.pub
+The key fingerprint is:
+SHA256:y*************************************** my-username@penguin
+The key's randomart image is:
++---[RSA 3072]----+
+|略               |
++----[SHA256]-----+
+```
+
+```.ssh```フォルダの中身を確認すると、公開鍵と秘密鍵が生成されていることが確認できます。
+
+```bash
+> ls ~/.ssh
+id_rsa_chromebook  id_rsa_chromebook.pub
+```
+
+```id_rsa_chromebook```が**秘密鍵**、```id_rsa_chromebook.pub```が**公開鍵**となります。役割が異なるため、混同しないように注意しましょう。
+
+これでキー生成は完了です！
+
+<h3 id="register-public-key">公開鍵をサーバに登録</h3>
+
+上記で生成した、**公開鍵**(id_rsa_chromebook.pub)をサーバに登録します。間違って**秘密鍵**を登録しないようにしてください。
+
+#### サーバの登録先について
+
+登録先は、サーバ側のホームディレクトリ直下の```~/.ssh/authorized_keys```ファイルです。このファイルに、公開鍵を書き込みます。もちろん、複数のキーの登録も可能です。
+
+ちなみに、上で生成した公開鍵を登録する前のauthorized_keysファイルは、私の場合は以下の内容になってます。別端末で生成した公開鍵が、既に1件登録されています。キーの値は伏せてあります。
+
+```bash
+> cat ~/.ssh/authorized_keys
+ssh-rsa AAAAB3N*******
+```
+
+#### 登録方法
+
+手動での登録も可能ですが、ローカル端末の鍵をサーバ側の```.ssh/authorized_keys```に自動で登録してくれるコマンド（```ssh-copy-id```）があります。今回はこれを使います。
+
+このコマンドを使えば、サーバ側の登録先のファイルが存在しない場合、自動で作成してくれます。ローカル端末の操作だけで登録が完結するので便利です。
+
+**ローカル端末**で以下のコマンドを実行します。**username**はサーバのユーザ名、**hostname**はサーバのホスト名（もしくはIPアドレス）です。
+
+```bash
+ssh-copy-id -i ~/.ssh/id_rsa_chromebook.pub username@hostname
+```
+
+```-i```オプションで、登録する公開鍵を指定しています。このオプションを省略した場合は、ローカルの公開鍵(.pubで終わるファイル)が全て登録されるようです。不要な鍵が残っていた場合も登録されるので、複数まとめて登録したい場合を除き、基本は鍵名を指定したほうが良いかと思います。
+
+いきなり本登録するのが怖い場合、dry-run（登録される内容が確認できる。本登録はされない。）することも出来ます。以下のように```-n```オプションをつけるだけです。
+
+```bash
+ssh-copy-id -n -i ~/.ssh/id_rsa_chromebook.pub username@hostname
+```
+
+まずはdry-runで試してみます。はじめて接続するサーバの場合、以下のような確認メッセージが出る場合があります。**yes**と入力してエンターします。
+
+```powershell
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/my-username/.ssh/id_rsa_chromebook.pub"
+The authenticity of host '160.16.84.146 (160.16.84.146)' can't be established.
+ECDSA key fingerprint is SHA256:JVi******************.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? 
+```
+
+すると、登録対象となるキーの値が表示されます。dry-runなので登録自体はされません。
+
+```powershell
+usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+=-=-=-=-=-=-=-=
+Would have added the following key(s):
+
+ssh-rsa 
+AAAB3***********************
+```
+
+表示された値はさきほど生成された**id_rsa_chromebook.pub**と同じ内容なのでOKです。このまま、```ssh-copy-id -i ~/.ssh/id_rsa_chromebook.pub username@hostname```で登録をします。
+
+```powershell
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/my-username/.ssh/id_rsa_chromebook.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+username@160.xx.xx.xxx's password: 
+```
+
+接続先のユーザのパスワードが求められるため、入力します。
+
+```bash
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'username@160.xx.xx.xxx'"
+and check to make sure that only the key(s) you wanted were added.
+```
+
+１つのキーが登録されたとメッセージが表示されました。これで完了です。
+
+試しに、登録先となるサーバ側の```~/.ssh/authorized_keys```の中身を確認してみると、ちゃんと登録されていることが確認できます。私の場合、もともと１つ登録されていたので、２つ目として登録されています。
+
+```bash
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDOSTQID9wELU0j*******************************************
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDo3BSMKv4kJC5q*******************************************
+```
+
+<h3 id="check">接続して確認してみる</h3>
+
+それでは、ローカル端末からパスワードなしでサーバにSSH接続できるか確認してみます。
+
+以下のように、```-i```オプションで**秘密鍵**を指定してSSHコマンドを打ちます。ローカル端末で実行します。なお、指定する鍵は公開鍵でなく秘密鍵なのでご注意ください。
+
+くどいですが、usernameとホスト名（もしくはIPアドレス）は実際の接続先に書き換えてください。
+
+```bash
+ssh -i ~/.ssh/id_rsa_chromebook username@160.xx.xx.xxx
+```
+
+無事パスワードを入力しなくても接続されました！
+
+<Image src={loginPic} width={875} height={170} alt="login-successful" />
+
+#### 鍵の指定について
+
+```-i```オプションで秘密鍵を指定すればパスワード登録なしで接続が可能になりました。しかし、指定を省くと従来同様にパスワードを求められる場合もあります。
+
+鍵の指定を省略させるためには、```ssh-add```というコマンドでSSHの認証エージェントに鍵を登録する必要があるのですが、今回は割愛させていただきます。
+
+<h2 id="example">自動化の例</h2>
+
+例えば、サーバに接続し、サーバ上でbashコマンドを実行したいとします。しかし、残念ながら、直感的に以下のようにスクリプトを書いても想定通りに動きません。
+
+```bash
+#!/bin/bash
+ssh -i ~/.ssh/id_rsa_chromebook crypto@160.16.84.146
+# ローカルで実行される、、、
+ls -l ~/fitbit
+```
+
+sshコマンドでサーバに接続されるものの、lsコマンドはローカル端末で実行されてしまいます。
+
+サーバ側で処理を実行させる方法は少しがクセがあるので、例と言うほどではありませんが、使い方のパターンをいくつか紹介したいと思います。
+
+<h3 id="example-bash-server">サーバでbashコマンドを実行</h3>
+
+サーバでbashコマンドを実行するには、以下のように記述します。私のサーバのホームディレクトリにある、fitbitフォルダの中身を表示するだけのスクリプトです。
+
+```bash
+#!/bin/bash
+ssh -i ~/.ssh/id_rsa_chromebook crypto@160.16.84.146 'ls -l ~/fitbit'
+```
+
+SSHコマンドに、直接サーバ側で実行されるbashコマンドを記述しています。実際に実行してみると、ちゃんとサーバ側のfibitフォルダにあるファイルの一覧が表示されました。
+
+```bash
+total 132
+-rw-rw-r-- 1 crypto crypto  2353 Apr  9  2023 README.md
+drwxrwxr-x 2 crypto crypto  4096 Sep  6 23:00 __pycache__
+-rw-rw-r-- 1 crypto crypto  7835 Apr  9  2023 api.py
+-rw-r--r-- 1 crypto crypto   718 Dec 30 23:00 conf.json
+-rw-rw-r-- 1 crypto crypto   355 Apr  9  2023 consts.py
+-rw-rw-r-- 1 crypto crypto  5085 Sep  5 23:27 graph.py
+-rw-rw-r-- 1 crypto crypto  4091 Sep  5 23:27 main.py
+drwxrwxr-x 4 crypto crypto  4096 Apr  9  2023 pytweet
+-rw-rw-r-- 1 crypto crypto 87078 Dec 30 23:00 tweet.png
+-rw-r--r-- 1 crypto crypto   400 Mar 20  2023 twitter_conf.json
+```
+
+<h3 id="example-sh-server">サーバにあるスクリプトを実行</h3>
+
+今度はサーバにおいてあるbashスクリプトを実行する例です。ローカル端末から、サーバの```~/test/hello.sh```を実行してみます。なお、実行されるスクリプトはコンソールにhello,world!を出力するだけです。
+
+以下のように、sshコマンドに実行するスクリプトのパスを渡します。理屈的には１つ目の例と同じです。
+
+```bash
+ssh -i ~/.ssh/id_rsa_chromebook crypto@160.16.84.146 '~/test/hello.sh'
+```
+
+実行すると、ちゃんと指定のスクリプトが動きました。
+
+```bash
+hello,world!
+```
+
+<h3 id="example-sh-local">localのスクリプトをサーバで実行</h3>
+
+ローカルにあるbashスクリプトをサーバで実行することも可能です。
+
+私もこの方式でこのサイトのデプロイ作業を自動化しています。ローカル端末側でもbashスクリプトが動く環境がないと厳しいかもしれませんが、サーバにスクリプトのファイルを置かなくても済むので便利です。
+
+以下のように記述します。
+
+```bash
+ssh -i ~/.ssh/id_rsa_chromebook crypto@160.16.84.146 'bash -s' < local.sh
+```
+
+こちらも、原理は他の例と同じです。SSHコマンドに、ローカルにあるbashスクリプト（local.sh）のファイルの中身を、bashコマンドとして渡しています。
+
+なお、今回のlocal.shの中身は以下のとおりです。
+
+```bash
+#!/bin/bash
+cd test
+ls -l
+```
+
+サーバにあるtestディレクトリにcdし、ファイルの一覧を表示しています。
+
+コマンドを打つと、ちゃんとファイルの一覧が表示されました。
+
+```bash
+total 4
+-rwxrwxr-x 1 crypto crypto 29 Dec 31 20:17 hello.sh
+```
+
+<h2 id="manual-register">ssh-copy-idが無い場合</h2>
+
+<a href="#register-public-key">公開鍵をサーバに登録</a>で、```ssh-copy-id```コマンドが使えない場合の手順を記載します。大体のLinuxなら利用できると思いますが、軽量なバージョンだったりすると使えない場合もあるかと思います。私自身、手動での登録は行ったことがないので試せていませんが、念のため記載します。
+
+サーバ側の```~/.ssh/authorized_keys```に生成した公開鍵の値を書き込めば大丈夫です。なので、.sshフォルダを作成し、authorized_keysの空ファイルを作成し、鍵の値をコピペすればOKです。
+
+以下のコマンドで一発で登録できます。[DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)のサイトからの引用です。
+
+```bash
+cat ~/.ssh/your-public-key.pub | ssh username@remote-host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+```
+
+**your-public-key.pub**、**username**、**remote-host**は実際のものに書き換えてください。
+
+複雑に見えますが、公開鍵の値をサーバの登録先のファイルに追加しているだけです。実行するとユーザ名とパスワードの入力が求められるはずなので、入力してください。
+
+<h2 id="last">最後に</h2>
+
+SSHキーを生成し、サーバにパスワードなしで接続する方法を解説しました。
+
+普段何気なく使っていたsshコマンドですが、奥が深いですね！**ssh-add**のような、今回紹介できなかったコマンド等は、私も実際に試す機会が出てきたら別途記載したいと思います。
+
+それでは、今年も良い一年お世話になりました。良いお年を(^^)V。おそらくギリギリ2023年中にアップロードできていると思います、、、！
+
+<h2 id="ref">参考</h2>
+
+- How To Configure SSH Key-Based Authentication on a Linux Server: https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server
+- Ubuntu 20.04でSSHの鍵をセットアップする方法: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-ubuntu-20-04-ja
+- 公開鍵・秘密鍵とは？暗号化の仕組みをわかりやすく解説: https://it-trend.jp/encryption/article/64-0089
