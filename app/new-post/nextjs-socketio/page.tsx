@@ -25,7 +25,6 @@ export const metadata: Metadata = generateMeta(mdxMeta, DIR)
 
 export default function Page() {
   return (
-    /* @ts-expect-error Server Component */
     <MdxLayout dir={DIR} frontMatter={frontMatter} >
       <Content></Content>
     </MdxLayout >
