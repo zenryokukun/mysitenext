@@ -164,21 +164,22 @@ db.`collection-name`.find({`field-name`:{$gt:0}},`field-name2`:{$lte:9})
 
 next.config.jsで```output:"standalone"```にしておく必要あり。standaloneだと、public以外のフォルダへ動的にアクセスすることが出来ず、エラーになる（ビルド時はOK）。
 
-- docker-image作成
+#### docker-image作成
 
 ```bash
-docker-build -t nextjs-docker .
+docker build -t nextjs-docker .
 ```
 
-- container実行
+#### container実行
 
 standaloneだとビルド以降はpublic以外のフォルダにアクセスできないため、動的にアクセスする必要があるファイルはbindする。
 standaloneだとコピーされないファイルも出てしまうが、それはDockerfile内で手動でコピーする
 
-#### bind
+- bind内容（補足）：
 1. /lib/db/dbinfo.json
 2. /pages/api/genkidama/src/conf/conf.json
 3. /public/posts
+4. /lib/cred/line-notify.json
 
 ```bash
 # $pwdを使うためプロジェクトフォルダに移動した上で実行すること。
@@ -189,3 +190,35 @@ docker run -dp 5000:5000 --mount type=bind,src="$(pwd)\lib\db\dbinfo.json",targe
 docker run -dp 5000:5000 --mount type=bind,src="$(pwd)/lib/db/dbinfo.json",target=/app/lib/db/dbinfo.json --mount type=bind,src="$(pwd)/pages/api/genkidama/src/conf/conf.json",target=/app/pages/api/genkidama/src/conf/conf.json --mount type=bind,src="$(pwd)/public/posts",target=/app/public/posts --mount type=bind,src="$(pwd)/lib/cred/line-notify.json",target=/app/lib/cred/line-notify.json --restart on-failure --name nextblog nextjs-docker 
 ```
 
+#### container削除
+
+```bash
+docker rm -f nextblog
+```
+
+#### dockerのデプロイ手順
+
+以下の手順で実行。2,3はWSL2でスクリプトを作成してある。
+
+
+1. ローカルでイメージ作成
+
+```bash
+docker build -t nextjs-docker .
+```
+
+2. WSL2上でtarでイメージを固め、サーバに送信
+
+```bash
+# wsl2上で実行
+cd docker
+./deploy.sh nextjs-docker
+```
+
+3. サーバで解凍し、イメージからコンテナ起動
+
+```bash
+# wsl2上で実行
+cd docker
+./remote.sh
+```
