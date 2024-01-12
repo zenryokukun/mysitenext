@@ -4,7 +4,6 @@ import Author from "../../../component/Author";
 import Twitter from "../../../component/Twitter";
 import Like from "../../component/Like";
 import { FancyBlogLinks } from "../../../component/BlogLinks";
-import Amazon from "../../../component/Amazon";
 import { getMDBlogDirList } from "../../../lib/db/func"
 import { getBlogMd, formatMd } from "../../../lib/util";
 import parseMd from "../../../lib/parse-md";
@@ -87,7 +86,6 @@ export default async function Page({ params }: PageProp) {
   const { content, data, related, latest, popular } = await getProps(params.dir);
   const author = data.author || "全力君";
   const postedDate = data.postedDate || "2022年";
-  const { amazonLink } = data;
   return (
     <Layout>
       <Main>
@@ -104,7 +102,6 @@ export default async function Page({ params }: PageProp) {
         <FancyBlogLinks data={related} headline="関連記事" />
         <FancyBlogLinks data={latest} headline="最新記事" />
         <FancyBlogLinks data={popular} headline="人気記事" />
-        <Amazon src={amazonLink} />
         {/*
           重たいのでコメントアウトする。。。いつか使いたい。 
           <Twitter /> 

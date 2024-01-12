@@ -7,7 +7,6 @@ import Like from "../component/Like";
 import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import { FancyBlogLinks } from "../../component/BlogLinks";
-import Amazon from "../../component/Amazon";
 import Navigation from "../../component/Navigation";
 import { MODE } from "../../component/constants";
 import { findByDir, newBlogs, popularBlogs, relatedBlogs } from "../../lib/db/extract";
@@ -64,7 +63,6 @@ export default async function MdxLayout({ dir, frontMatter, children }: LayoutP)
           <FancyBlogLinks data={related} headline="関連記事" />
           <FancyBlogLinks data={latest} headline="最新記事" />
           <FancyBlogLinks data={popular} headline="人気記事" />
-          <Amazon src={amazonLink}></Amazon>
         </Side>
       </Layout>
     </>

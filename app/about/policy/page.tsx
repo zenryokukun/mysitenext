@@ -56,16 +56,16 @@ export default function Page() {
             <li>サイト運営者は、当サイトのコンテンツの内容の正確性、各種サービスの完全性を保証しません。</li>
           </ul>
         </section>
-        <section className={styles.postit}>
+        {/* <section className={styles.postit}>
           <h2 className={styles.header2}>
             <RectangleAd width="27px" />
             サイト内の広告について
           </h2>
           <p>
-            Amazonのアソシエイトとして、運営者（全力君）は適格販売により収入を得ています。<br />
+            のアソシエイトとして、運営者（全力Amazon君）は適格販売により収入を得ています。<br />
             広告であることが分かるように掲載することを心がけますので、ご了承ください。
           </p>
-        </section>
+        </section> */}
         <section className={styles.postit}>
           <h2 className={styles.header2}>
             <InternetExplorer width="24px" />
