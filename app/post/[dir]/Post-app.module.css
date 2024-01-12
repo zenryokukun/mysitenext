@@ -8,6 +8,7 @@
 
 .articleContainer>p>code,
 .articleContainer>ul>li>code,
+.articleContainer>ol>li>code,
 .articleContainer>code {
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   background-color: #e1e1e1;
@@ -100,7 +101,8 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 .articleContainer>p>img,
 .articleContainer>div>img,
 .articleContainer>picture>source,
-.articleContainer>picture>img {
+.articleContainer>picture>img,
+.articleContainer>aside>div>img {
   display: block;
   margin: 0 auto;
   max-width: 100%;
