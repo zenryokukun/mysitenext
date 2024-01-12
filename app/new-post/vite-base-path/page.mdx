@@ -1,0 +1,512 @@
+import Image from "../ImageWrapper";
+import buildPreview from "./build-preview.jpg";
+import devBase from "./dev-base.jpg";
+import buildPreviewBase from "./build-preview-base.jpg";
+import fixBuildPreview from "./fix-build-preview.jpg";
+import fix2Dev from "./fix2-dev.jpg";
+import fix2Preview from "./fix2-preview.jpg";
+
+export const mdxMeta = {
+  title: "Viteでルート・パスを変更したらハマった、、、",
+  description: "Viteでルート・パスを変更すると、ビルド時にCSSやJavaScript等のソースのパスも、変更した内容に基づいて設定してくれます。しかし場合によっては直感通りに動かない場合もあります。ルート・パスの変更時の挙動の解説と、対応方法を共有します。",
+}
+
+export const frontMatter = {
+  author: "全力君",
+  postedDate: "2024/1/12",
+};
+
+# Viteでルート・パスを変更する方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#preq">前提</a></li>
+<li><a href="#problem">ハマった箇所</a></li>
+<li>
+  <a href="#path">ビルド時のパスの生成について</a>
+  <ul>
+    <li><a href="#path-default">デフォルトの設定</a></li>
+    <li><a href="#path-change-root">ルート・パスの変更</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#no-base-path">baseが設定されない画像について</a>
+  <ul>
+    <li><a href="#no-base-path-import">importした画像をsrcに指定した場合</a></li>
+    <li><a href="#no-base-path-string">文字列でsrcを指定した場合</a></li>
+  </ul>
+</li>
+<li><a href="#fix1">対応策1：画像は全てimportする</a></li>
+<li>
+  <a href="#fix2">対応策2：開発環境と本番でbaseを使い分ける</a>
+  <ul>
+    <li><a href="#fix2-config">vite.config.js</a></li>
+    <li><a href="#fix2-app">アプリの修正</a></li>
+  </ul>  
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+今更ながら、[GitHub Pages](https://docs.github.com/ja/pages/getting-started-with-github-pages/about-github-pages)に静的なサイトを公開できることを知りました。
+
+ちょうど、ViteでセットアップしたReactで作った[マインスイーパーのリポジトリ](https://github.com/zenryokukun/minesweeper-vite)をもっていたので、これをビルドしたものをGitHub Pagesに登録しようと思ったのです。
+
+ご丁寧に、[Viteの公式ドキュメント](https://ja.vitejs.dev/guide/static-deploy.html#github-pages)にもGitHub Pagesに登録する手順も記載されています。
+
+しかし、手順通りにやっても、画像等のファイルのパス設定がうまく行われず、正しくページが表示されない、、、！
+
+結果的に、ビルド時に画像等のパスがどのように設定されるか、私が正しく理解していなかったのが原因でした。
+
+最終的にはなんとか対処できたのですが、新年早々苦戦してしまいましたので、今回はViteのビルド時のパス生成のハマりポイントと、対応方法を共有します。
+
+<h2 id="preq">前提</h2>
+
+[Vite](https://ja.vitejs.dev/)でセットアップしたReactのプロジェクトが前提となります。
+
+Viteの基本的な使い方については[ViteでReactプロジェクトを作成する方法](/new-post/vite)で記事にしているので、良かったら参考にしてください。
+
+なお、GitHub Pagesの登録手順自体はこの記事では触れませんので、[GitHubのドキュメント](https://docs.github.com/ja/pages/getting-started-with-github-pages/creating-a-github-pages-site)を参考にしてください。
+
+<h2 id="problem">ハマった箇所</h2>
+
+まず今回ハマってしまった部分を説明します。
+
+Viteの開発サーバのルート・パスは、デフォルトでは「/」になります。一方で、プロジェクトに紐づくGitHub Pagesでは、ルート・パスは「/リポジトリ名」になります。
+
+そのため、GitHub Pagesに登録するには、Viteのコンフィグをいじってルート・パスを変更する必要があります。しかし手順通りに設定しても、ビルド結果を確認すると一部の画像が正しく表示されなかった、というのが今回のトラブルです。
+
+<h2 id="path">ビルド時のパスの生成について</h2>
+
+ビルド時に、画像等のパスがどう設定されるのか確認してみます。
+
+プロジェクトの構成は以下のとおりです。
+
+- フォルダ構成
+
+```powershell
+C:.
+│  .eslintrc.cjs
+│  .gitignore
+│  index.html
+│  package-lock.json
+│  package.json
+│  README.md
+│  tsconfig.json
+│  tsconfig.node.json
+│  vite.config.ts
+│          
+├─public
+│      hato.jpg
+│      vite.svg
+│      
+└─src
+        App.tsx
+        index.css
+        main.tsx
+        sekirei.jpg
+        vite-env.d.ts
+```
+
+**public/hato.jpg**と、**src/sekirei.jpg**はアプリで表示する鳥の画像です。**public/vite.svg**は、ブラウザのタブの横に表示されるアイコンの画像（favicon）です。
+
+- App.tsx
+
+アプリ部分のReactコンポーネントです。**public/hato.jpg**と、**src/sekirei.jpg**を表示するためだけのシンプルなものです。
+
+```tsx
+// srcフォルダ直下の画像を直接import
+import sekireiPic from "./sekirei.jpg";
+
+function App() {
+
+  return (
+    <main className="container">
+      <h1 className="header">パスのテスト</h1>
+      <div className="img-wrapper">
+        {/* 直接importした画像 */}
+        <img src={sekireiPic} alt="sekirei" width={500} height={361} />
+        {/* /publicフォルダ直下の画像を直接指定 */}
+        <img src="/hato.jpg" alt="pigeon" width={500} height={361} />
+      </div>
+    </main>
+  )
+}
+
+export default App
+```
+
+動作確認をするため、**public/hato.jpg**はimgタグのsrcにパスを直接文字列で指定し、**src/sekirei.jpg**はimport文を使って値を設定しています。
+
+なお、publicフォルダは静的アセットを配置するフォルダです。ここに置いたファイルはクライアント側から、ルート・パス（「/」）でアクセスできます。そのため、hato.jpgは ```/public/hato.jpg``` ではなく ```/hato.jpg``` と指定しています。
+
+<h3 id="path-default">デフォルトの設定</h3>
+
+まず、デフォルトの**vite.config.js**の状態でビルドの結果を見てみます。
+
+#### vite.config.js
+
+デフォルトは以下のとおりです。
+
+```js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+```
+
+#### ビルド結果
+
+```npm run build```でビルドします。
+
+プロジェクト・フォルダ直下の**dist**フォルダにビルド後の資産が格納されます。構成は以下のとおりです。
+
+```powershell
+C:\USERS\ZEN\DOCUMENTS\PGM\VITE-PROJECT-TEST\DIST
+│  hato.jpg
+│  index.html
+│  vite.svg
+│
+└─assets
+        index-DofEVj8j.css
+        index-yvK3l2eu.js
+        sekirei-pd21b_hf.jpg
+```
+
+CSSやJavaScriptと、**src**フォルダから直接importした画像（sekirei.jpg）が**assets**フォルダに入っています。
+
+もともと**public**にあった画像（hato.jpg）と、favicon（vite.svg）は**dist**フォルダ直下に配置されていることが分かります。
+
+直下のHTMLは以下のようになっています。
+
+```html
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React: パスのテスト</title>
+  <script type="module" crossorigin src="/assets/index-yvK3l2eu.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DofEVj8j.css">
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>
+```
+
+linkタグやscriptタグのパスが、ビルド後の資産の配置に応じて設定されていることが確認できます。
+
+#### ビルド結果を確認
+
+```npm run preview```でビルド結果をブラウザに表示し、画像等が正しく表示されることを確認します。このコマンドは最近知りましたが、とても便利ですね。
+
+<Image src={buildPreview} width={1496} height={1001} alt="build-preview"/>
+
+Reactのコンポーネントから生成されたimgタグにも、ちゃんとビルド後の資産の配置に対応してパスが設定されていますね！
+
+余談ですが、写真は私が撮ったものです。かわいいですね。
+
+<h3 id="path-change-root">ルート・パスの変更</h3>
+
+上述のとおり、GitHub PagesのプロジェクトのサイトのURLは```<username>.github.io/<repository>```になります。リポジトリ名をルート・パスとして設定し、画像等のファイルのパスにも適用させる必要があります。
+
+ちゃんと[Viteの公式ドキュメント](https://ja.vitejs.dev/guide/static-deploy.html#github-pages)にも、GitHub Pagesに登録する際の説明があり、以下のように記述されています：
+
+> `https://<USERNAME>.github.io/<REPO>/ にデプロイする場合（例: リポジトリーは https://github.com/<USERNAME>/<REPO>）、base を '/<REPO>/' と設定してください。`
+
+**base**はルート・パスのことです。**vite.config.js**で簡単に変更できるので、試してみます。
+
+#### vite.config.jsにbaseを設定
+
+vite.config.jsに、**base**プロパティを設定します。デフォルトでは「/」ですが、**base**を設定した場合、その値がルート・パスになります。
+
+```js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  base: "/birds/",
+})
+```
+
+今回は鳥の画像なので、```/birds/```にしました！
+
+#### 開発環境
+
+ルート・パスを変更したので、```npm run dev```で開発環境を起動して確認してみます。
+
+```powershell
+  VITE v5.0.11  ready in 1466 ms
+
+  ➜  Local:   http://localhost:5173/birds/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+```
+
+既にurlにbaseで設定したbirdsが付与されていることが分かります。
+
+しかし、ブラウザで確認すると、鳩の画像が表示されていません。
+
+<Image src={devBase} width={1355} height={707} alt="lacking-bird-image"/>
+
+コンソールでimgタグのsrcを確認すると、import文で直接設定したハクセキレイの画像はbaseで指定した```/birds/```が付与されています。一方、パスを文字列でベタ打ちした鳩の画像には付いておらず、```/hato.jpg```のままです。
+
+ルート・パスを変更したので、```/birds/hato.jpg```と指定する必要があります。
+
+原因の前に、ビルドを確認してみます。
+
+#### ビルド
+
+```npm run build```でビルドします。
+
+ビルド後の**dist**フォルダの構成は、ルート・パスを変更する前と同じですね。
+
+```powershell
+C:\USERS\ZEN\DOCUMENTS\PGM\VITE-PROJECT-TEST\DIST
+│  hato.jpg
+│  index.html
+│  vite.svg
+│
+└─assets
+        index-DofEVj8j.css
+        index-F9a41MrQ.js
+        sekirei-pd21b_hf.jpg
+```
+
+生成されたHTMLファイルを見ると、CSSやJavaScript、favicon（vite.svg）等のパスに、baseで指定した値が付与されていることが分かります。
+
+```html
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/birds/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React: パスのテスト</title>
+  <script type="module" crossorigin src="/birds/assets/index-F9a41MrQ.js"></script>
+  <link rel="stylesheet" crossorigin href="/birds/assets/index-DofEVj8j.css">
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>
+```
+
+#### ビルド結果の確認
+
+```npm run preview```でビルド結果を確認してみます。
+
+<Image src={buildPreviewBase} width={1390} height={653} alt="preview-base"/>
+
+開発環境と同じで、鳩の画像のパスにはbaseで指定した```/birds```が付いていません。
+
+<h2 id="no-base-path">baseが設定されない画像について</h2>
+
+ここまでの挙動は、開発環境でもビルド結果でも、「imgタグのsrcに、importした画像を設定すればbaseが反映されるが、画像のパスを文字列で指定していると反映されない」です。私はここでしばらくハマってしまいましたが、冷静に考えると非常にシンプルでした。
+
+<h3 id="no-base-path-import">importした画像をsrcに指定した場合</h3>
+
+素のJavaScriptのimport文は、通常はJavaScriptのファイルにしか使えません。しかし、React等のフレームワークを使うと、CSSや画像などもimportすることができますよね。
+
+これは、ViteなりCreate-React-Appなり、Reactのセットアップ・ツールが、画像やCSSもモジュールとして扱えるように設定をしてくれるからです。本来は、[Rollup](https://rollupjs.org/)や[webpack](https://webpack.js.org/)などのバンドラの設定をしないと、CSSや画像をimportして使うことは出来ません。セットアップ・ツールが自動で設定してくれていた訳です。
+
+そのため、importした画像はモジュールとして扱われ、ビルド時に各設定に基づいてパスの再設定が行われます。CSSモジュールと同じですね。
+
+例えばハクセキレイの画像は、クライアント側からアクセス可能な**public**フォルダではなく、**src**フォルダに配置されていましたが、今回表示が出来ていました。これは、ビルド時に画像をアクセス可能なフォルダに配置し、その場所に応じたパスの設定を行ってくれるからです。
+
+<h3 id="no-base-path-string">文字列でsrcを指定した場合</h3>
+
+他方、imgタグのsrcを文字列で指定すると、ビルド時にパスの再設定は行われず、そのままになります。
+
+htmlの内容に基づいて、クライアント側がページに必要な画像やCSSをサーバから取ってくるのが通常の動作です。そのため、画像をモジュールとしてimportしていない限り、通常のimgタグと同様に扱われるため、srcに設定されているパスを参照しにいきます。
+
+<h2 id="fix1">対応策1：画像は全てimportする</h2>
+
+鳩の画像も、importして使えば開発環境でも本番（ビルドしたもの）でも表示されます。
+
+コンポーネントを以下のように、どちらの画像もimportするように修正してみます。
+
+```ts
+// srcフォルダ直下の画像を直接import
+import sekireiPic from "./sekirei.jpg";
+// 鳩の画像もimport
+import hatoPic from "/hato.jpg";
+
+function App() {
+
+  return (
+    <main className="container">
+      <h1 className="header">パスのテスト</h1>
+      <div className="img-wrapper">
+        {/* 直接importした画像 */}
+        <img src={sekireiPic} alt="sekirei" width={500} height={361} />
+        {/* こちらも直接importした画像 */}
+        <img src={hatoPic} alt="pigeon" width={500} height={361} />
+      </div>
+    </main>
+  )
+}
+```
+
+これをビルドして表示すると、どちらの画像も表示されます。
+
+<Image src={fixBuildPreview} width={1386} height={860} alt="fixed-build-preview"/>
+
+いずれの画像にも、**base**で指定したルート・パスが設定されていますね！エビデンスは省略しますが、もちろん開発環境でも表示されます。
+
+アプリの修正箇所が少ない場合なら、この対応方法でも良いと思います。ただ、場合によっては書き換えをしたくない場合もあるかと思います。
+
+余談ですが、今回はpublicフォルダにある画像を```/hato.jpg```とimportしていますが、```../public/hato.jpg```のように実際のファイルのパスを指定してしまうと、以下のようなワーニングが出ます。
+
+```powershell
+Assets in public directory cannot be imported from JavaScript.
+If you intend to import that asset, put the file in the src directory, and use /src/hato.jpg instead of /public/hato.jpg.
+If you intend to use the URL of that asset, use /hato.jpg?url.
+Files in the public directory are served at the root path.
+Instead of /public/hato.jpg, use /hato.jpg.
+```
+
+「importする画像はpublicに入れるな。srcフォルダに移せ。」、「publicフォルダにあるファイルはルート・パスに配置される。```/public/hato.jpg```じゃなく、```/hato.jpg```にしろ。」と注意されます。
+
+どっちなんだい！と正解は現時点で良く分かっていませんが、どちらでも良いと解釈しています。今回は後者で対応しています。
+
+<h2 id="fix2">対応策2：開発環境と本番でbaseを使い分ける</h2>
+
+私はこちらの方法で対応しています。
+
+viteでは、開発環境・本番環境等に応じて適用させるコンフィグを分岐させることが可能です。これを利用して、開発環境のルート・パスは```/```、開発環境以外では```/birds```となるように設定します。
+
+<h3 id="fix2-config">vite.config.js</h3>
+
+vite.config.jsのdefault exportの*defineConfig*は、以下のように関数を受け取ることができます。
+
+```js
+export default defineConfig(({ command, mode, isSsrBuild, isPreview })=>{
+  return {};
+})
+```
+
+関数が受け取る仮引数は4つありますが、今回使うのは**mode**のみです。他の仮引数はまだ使えていないため、割愛させていただきます。[公式ドキュメント](https://ja.vitejs.dev/config/#%E6%9D%A1%E4%BB%B6%E4%BB%98%E3%81%8D%E8%A8%AD%E5%AE%9A)に記載されていますので、参考にしてください。
+
+**mode**は、開発環境起動時(```npm run dev```)は **"development"** が設定され、ビルド時（```npm run build```）とプレビュー時（```npm run preview```）は **"production"** が設定されます。
+
+これを利用して、分岐を実現します。
+
+```js
+export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
+  // baseプロパティに設定する値
+  let base = "/"
+
+  // 本番時に適用させるbaseの値
+  if (mode === "production") {
+    base = "/birds/"
+  }
+
+  return {
+    plugins: [react()],
+    // baseプロパティをbase変数で指定
+    base: base,
+  };
+})
+```
+
+これで、**mode**がproductionならbaseは```/birds/```、以外なら```/```となります。
+
+<h3 id="fix2-app">アプリの修正</h3>
+
+App.tsxで、鳩の画像のパスは文字列で```/hato.jpg```と指定していました。しかし、本番時は```/birds/hato.jpg```とする必要があります。
+
+本番と本場以外、どちらにも対応させるには、画像のパスを「baseの値＋ファイル名」と設定すれば大丈夫そうですね。
+
+baseで設定した値は```import.meta.env.BASE_URL```で取得できるます。修正は発生しますが、とても簡単です。
+
+```tsx
+// srcフォルダ直下の画像を直接import
+import sekireiPic from "./sekirei.jpg";
+
+function App() {
+
+  // vite.config.jsのbaseプロパティの値は
+  // import.meta.env.BASE_URLで取得できる。
+  // 本番時は"/birds/"、以外は"/"となる。
+  const hatoPath = import.meta.env.BASE_URL + "hato.jpg";
+
+  return (
+    <main className="container">
+      <h1 className="header">パスのテスト</h1>
+      <div className="img-wrapper">
+        {/* 直接importした画像 */}
+        <img src={sekireiPic} alt="sekirei" width={500} height={361} />
+        <img src={hatoPath} alt="pigeon" width={500} height={361} />
+      </div>
+    </main>
+  )
+}
+
+export default App
+```
+
+鳩の画像はimportせず、コンポーネント内で動的に値を設定しています。以下の部分ですね。
+
+```js
+const hatoPath = import.meta.env.BASE_URL + "hato.jpg";
+```
+
+これで、画像のパスは本番環境以外なら```/hato.jpg```、本番環境なら```/base/hato.jpg```になります。
+
+後はこの値をimgタグのsrcに設定すればOKです。
+
+#### 開発環境
+
+開発環境を起動して確認してみます。
+
+<Image src={fix2Dev} width={1391} height={712} alt="another-fixed-development"/>
+
+両方の画像が正しく表示され、ルート・パスも```/```になっています。
+
+#### 本番環境
+
+今度はビルドした結果を```npm run preview```で確認します。
+
+<Image src={fix2Preview} width={1390} height={672} alt="another-fixed-preview"/>
+
+こちらも、両方の画像が正しく表示されています。ルート・パスは```/birds/```になっていますね！
+
+<h2 id="last">最後に</h2>
+
+今回は、Viteでルート・パス（base）を変更した際のハマりポイントとその対応方法について共有しました。
+
+baseで設定した値が、パスを直接指定した画像には設定されないとは、、、気が付くのに時間がかかってしまいましたが、冷静に考えれば当たり前だったかもしれません。
+
+普段何気なくセットアップするReactですが、TypeScriptなりRollup/Webpackなり、ビルド時に様々な処理が行われていることを、改めて思い知らされました。
+
+ネイティブのJavaScriptにビルドするというのも今や当たり前になりましたが、なかなか面白い方向に言語も進化していくのですね。
+
+なお、上記の対応策2の方法で、無事マインスイーパーはGitHub Pagesに登録できました。[こちら](https://zenryokukun.github.io/minesweeper-vite/)から飛べるので、良かったら遊んでみてください。
+
+参考にならば幸いです。
+
+<h2 id="ref">参考</h2>
+
+- 静的サイトのデプロイ: https://ja.vitejs.dev/guide/static-deploy.html
+- Vite の設定: https://ja.vitejs.dev/config
+- GitHub Pagesについて: https://docs.github.com/ja/pages/getting-started-with-github-pages/about-github-pages
