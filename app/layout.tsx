@@ -1,6 +1,7 @@
 // App専用 component
 import GA from "./component/GA"
 import JSON_LD from "./component/JSON-LD";
+import Adsense from "./component/Adsense";
 // Pagesと共通component
 import Footer from "../component/Footer";
 // その他
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <GA />
       <body>
         <JSON_LD />
+        <Adsense />
         {children}
         <Footer />
       </body>
