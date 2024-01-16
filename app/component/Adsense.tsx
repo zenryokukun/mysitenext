@@ -2,14 +2,18 @@
  * Google Adsense用Scriptコンポーネント
  */
 
-import Script from "next/script";
-
 export default function Adsense() {
+
+  // productionでない場合は設定しない
+  if (process.env.NODE_ENV !== "production") {
+    return null;
+  }
+
   return (
-    <Script
+    <script
+      async
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5798674593050703"
       crossOrigin="anonymous"
-      strategy="afterInteractive"
     />
   );
 }
