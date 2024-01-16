@@ -1,4 +1,6 @@
 blockquote>p>code {
     font-size: inherit !important;
     font-family: inherit !important;
+    background-color: #eaeaea !important;
+    color: #222 !important;
 }
