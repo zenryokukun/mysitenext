@@ -5,6 +5,7 @@
     align-items: center;
     min-height: 80vh;
     align-self: center;
+    background-color: #fff;
 }
 
 .mainWrapper {
@@ -72,8 +73,6 @@
     margin-top: 0.5rem;
 }
 
-
-
 .articleWrapper {
     width: 60%;
 }
@@ -131,6 +130,13 @@
 
 .section:first-of-type {
     border-top: #AAA 1px solid;
+}
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background-color: #333;
+        color: #fff;
+    }
 }
 
 /* :hoverはスマホの時、タップした時に発動し、もう1回タップしないと解除されない。

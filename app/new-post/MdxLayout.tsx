@@ -52,7 +52,7 @@ export default async function MdxLayout({ dir, frontMatter, children }: LayoutP)
     <>
       <Navigation iniMode={MODE.BLOG} />
       <Layout>
-        <Main>
+        <Main addStyle={styles.overrideBC}>
           <Link className={styles.back} href="/blog">記事一覧に戻る</Link>
           <article className={styles.articleContainer}>{children}</article>
           <Like />

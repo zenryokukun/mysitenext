@@ -88,7 +88,7 @@ export default async function Page({ params }: PageProp) {
   const postedDate = data.postedDate || "2022年";
   return (
     <Layout>
-      <Main>
+      <Main addStyle={styles.overrideBC}>
         <Link href="/blog" className={styles.back}>記事一覧に戻る</Link>
         <article
           className={styles.articleContainer}

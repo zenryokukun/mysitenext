@@ -141,9 +141,18 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
   row-gap: 2rem;
 }
 
+/* adsenseのマージン対策でbodyのbgを#333にしたため、上書きする */
+.overrideBC {
+  background-color: #fff;
+}
 
 /* mdから読み取った部分のダークテーマ */
 @media (prefers-color-scheme:dark) {
+
+  .overrideBC {
+    background-color: #333;
+  }
+
   .articleContainer {
     background-color: #333;
     color: #e0e0e0;

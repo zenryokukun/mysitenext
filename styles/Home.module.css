@@ -31,6 +31,7 @@
 .messageWrapper {
     padding-left: 7px;
     padding-right: 7px;
+    background-color: #fff;
 }
 
 .heading {
@@ -51,6 +52,10 @@
 
 .linkTitle {
     text-align: center;
+}
+
+.linkSection {
+    background-color: #fff;
 }
 
 .linkArea {
@@ -147,5 +152,14 @@
     min-heightを設定。 */
     .addLink {
         min-height: 10.3rem !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+
+    .messageWrapper,
+    .linkSection {
+        background-color: #333;
+        color: #fff;
     }
 }
