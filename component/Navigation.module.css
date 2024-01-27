@@ -1,205 +1,131 @@
-/* ************************************
-mobile優先で記述しているので注意
-mobile以外はmedia queryでmin-width:601pxで指定
-***************************************/
-
-/* navタグ用のラッパーセレクタ */
 .container {
+    position: sticky;
+    top: 0px;
+    z-index: 1;
     background-color: #333;
     color: #f2f2f2;
     font-size: 1.2rem;
-    /* 
-     * 3点リーダをnavタグの相対位置で指定させるため、追加
-     * アンカー広告でずれる可能性があるため、3点リーダは相対位置で指定する必要がある。
-     */
-    position: relative;
 }
 
-/* mobileのタイトルバー用セレクタ */
+.menuWrapper {
+    /* mobile以外はメニューを上部に固定したい。下の要素に重なるのを防ぐため`hidden`必要。*/
+    overflow: hidden;
+    width: 100%;
+}
+
 .mobileBar {
-    /* 
-    親要素にもbgつけているが、ここでも必要。つけないと、アニメーションがこの上を通って行ってしまう、、、
-    z-indexはアニメーションが下を通るようにするため。
-    positonはz-indexを効かすためにstatic以外が必要。
-    */
-    background-color: #333;
-    z-index: 2;
-    position: relative;
-    /* aタグなのでblock要素にしてpadding利くように */
-    display: block;
-    padding: 0.8rem 1rem;
-    font-size: 1.2rem;
-    /* aタグのデフォルトの色や下線を無効化 */
-    text-decoration: none;
-    color: inherit;
+    /* mobile時のみ表示するため、none */
+    display: none;
 }
 
-/* olタグ用のラッパーセレクター */
 .listWrapper {
+    /* デフォルトのliのスタイルを無効化 */
     list-style-type: none;
     margin: 0;
     padding: 0;
-    /* mobile時の色 */
-    background-color: #444;
-    /* 
-    menu展開時、下の要素の上に表示（下の要素をシフトさせない）ために、absolute設定。absoluteにすると幅が短くなるので、100%指定
-    下のコンテンツの上に表示されるように、z-indexを指定。
-     */
-    position: absolute;
-    width: 100%;
-    z-index: 1;
 }
 
-/* 
-選択されたメニューをハイライトするために必要なセレクタ。mobileでは非表示 */
-.active {
-    display: none;
+.listItem {
+    /* listを横に並べるため必要 */
+    float: left;
 }
 
-/* listWrapperのdisplay:none,blockを制御するセレクタ */
-.hide {
-    display: none;
-}
-
-/* リストの内のaタグ用セレクタ */
 .link {
-    /* aタグのデフォルト色や下線を無効 */
     text-decoration: none;
     color: inherit;
-    font-size: 1.2rem;
-    /* aタグなのでblock要素にしてpadding利くように */
     display: block;
     padding: 0.8rem 1rem;
 }
 
-/* 3点リーダ（hamburgher）用セレクタ */
 .hamWrapper {
-    /* 固定位置のためabosluteにし、位置を指定 */
-    position: absolute;
-    float: right;
-    right: 0px;
-    top: 0px;
-    padding: 0.8rem 1rem;
-    /* mobile用タイトルバーの上に表示するため、より大きなz-indexを指定 */
-    z-index: 3;
-
+    display: none;
 }
 
-/*ham回転用animation */
+
 .rotateForward {
-    animation-name: rotate-forward;
-    animation-duration: 0.5s;
-    animation-fill-mode: forwards;
+    transform: rotate(90deg);
 }
 
-@keyframes rotate-forward {
-
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(90deg);
-    }
-}
-
-/*ham回転を元に戻すanimation */
-.rotateBack {
-    animation-name: rotate-back;
-    animation-duration: 0.5s;
-    animation-fill-mode: forwards;
-}
-
-@keyframes rotate-back {
-
-    0% {
-        transform: rotate(90deg);
-    }
-
-    100% {
-        transform: rotate(0deg);
-    }
-}
-
-/* 3点リーダクリック時、メニューを展開するanimation */
-.spreadMenu {
-    animation-name: spread-menu;
-    animation-duration: 0.5s;
-}
-
-@keyframes spread-menu {
-    0% {
-        transform: translateY(-100%);
-    }
-
-    100% {
-        transform: translateY(0%);
-    }
-}
-
-/* 3点リーダクリック時、展開されたメニューを戻すanimation */
-.closeMenu {
-    animation-name: close-menu;
-    animation-duration: 0.5s;
-    /* これがないとanimation終了時に一瞬チカチカしてしまう、、、 */
-    animation-fill-mode: forwards;
-}
-
-@keyframes close-menu {
-    0% {
-        transform: translateY(0%);
-    }
-
-    100% {
-        transform: translateY(-100%);
-    }
-}
-
-/* mobile以外のCSS */
 @media screen and (min-width:601px) {
 
-    /* mobile用タイトルバーは非表示 */
-    .mobileBar {
-        display: none;
-    }
-
-    /* nav全体は画面上部で固定するためsticky。 */
-    .container {
-        overflow: hidden;
-        position: sticky;
-        top: 0px;
-        z-index: 1;
-    }
-
-    /* mobile以外はメニューは常時表示 */
-    .listWrapper {
-        position: static;
-        display: block;
-    }
-
-    /* ol内のliタグ。横に並べるためにfloat */
-    .listItem {
-        float: left;
-    }
-
-    /* .link {
-        display: block;
-    } */
-
-    /* 選択されたliタグ（ハイライト用） */
-    .active {
-        display: block;
-        background-color: #E91E63;
-        color: #f1f1f1;
-    }
-
-    /* 選択されていないliタグにhoverした時 */
+    /* 選択されていないliタグにhoverした時。mobileでは無効にする*/
     .listItem:hover:not(.active) {
         background-color: #1a1a1a
     }
 
-    /* 3点リーダは非表示 */
+    /* hoverはモバイルでは無効にする。タップ時に反応してしまうため。 */
+    .active {
+        background-color: #E91E63;
+        color: #f1f1f1;
+    }
+
+    .listWrapper .link:focus {
+        outline: none;
+        background-color: white;
+        color: black;
+    }
+}
+
+@media screen and (max-width:600px) {
+
+    .container {
+        position: relative;
+    }
+
+    /* mobile用タイトルバーを表示 */
+    .mobileBar {
+        /* noneなのでblockにする */
+        display: block;
+    }
+
+    .grid {
+        position: absolute;
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.3s;
+        width: 100%;
+        background-color: #444;
+    }
+
+    .listWrapper {
+        /* 
+         * gridの子要素に設定する必要あり。
+         * grid-template-rows:0fr -> 1frのアニメーション用。
+         * 0fr時にはみ出た子要素を非表示にしてくれる。
+         */
+        overflow: hidden;
+    }
+
+    /* アコーディオンを開くアニメーション用 */
+    .accordion {
+        grid-template-rows: 1fr;
+    }
+
+    .listItem {
+        /* listを縦に表示するため、rightを無効にする */
+        float: none;
+    }
+
     .hamWrapper {
+        display: block;
+        position: absolute;
+        float: right;
+        right: 0px;
+        /* 広告で上部にpaddingが入る可能性ある。メニューバーの下部に固定 */
+        bottom: 0px;
+        padding: 0.8rem 1rem;
+        z-index: 2;
+    }
+
+    .ham {
+        transition: transform 0.3s;
+    }
+
+    .active {
+        /* 
+         * mobileのメニューでは、選択されたメニューは表示しない
+         * mobileBarで既に表示されているため。
+         */
         display: none;
     }
 }
@@ -208,8 +134,7 @@ mobile以外はmedia queryでmin-width:601pxで指定
 @media (prefers-color-scheme:dark) {
 
     /* 訪問したリンクの色が変わらないので、色を継承 */
-    .link:visited,
-    .mobileBar:visited {
+    .link:visited {
         color: inherit;
     }
 }
