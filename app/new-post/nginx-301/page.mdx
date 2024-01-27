@@ -1,0 +1,671 @@
+import { Server } from "http";
+import Image from "../ImageWrapper";
+import GoogleError from "./google-error.jpg";
+import ServerComposition from "./server-composition.jpg";
+
+export const mdxMeta = {
+  title: "NGINXで「WWWなし」のURLを「WWWあり」のURLにリダイレクトする方法",
+  description: "NGINXで「WWWなし」「WWWあり」のURLを片方に寄せて、URLの正規化を行う方法を解説します。",
+}
+
+export const frontMatter = {
+  author: "全力君",
+  postedDate: "2024/1/27",
+};
+
+# NGINXでWWWなしのURLをWWWありのURLにリダイレクトする方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#nginx">NGINXについて</a></li>
+<li><a href="#preq">前提</a></li>
+<li><a href="#goal">目的</a></li>
+<li><a href="#normalize">URL正規化の是非</a></li>
+<li>
+  <a href="#init-config">NGINXのコンフィグの解説</a>
+  <ul>
+    <li><a href="#server">server directive</a></li> 
+    <li><a href="#server-name">server_name</a></li>
+    <li><a href="#listen">listen</a></li>
+    <li><a href="#location">location</a></li>
+    <li><a href="#summary">要約</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#ng-config">NG:リダイレクト設定</a>
+  <ul>
+    <li><a href="#ng-config-changes">設定変更箇所</a></li>
+    <li><a href="#ng-config-exec">稼働してみる！</a></li>
+    <li><a href="#ng-config-result">結果...</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#ok-config">OK:リダイレクト設定</a>
+  <ul>
+    <li><a href="#ok-config-changes">設定変更箇所</a></li>
+    <li><a href="#ok-config-exec">稼働してみる！</a></li>
+    <li><a href="#ok-config-result">結果...</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+先日、広告の登録をしました。
+
+自分のサイトのURL（ww.zenryoku-kun.com）を登録しようとしたのですが、「www」がサブドメインと認識されるようで、「サブドメインは登録できない」と怒られてしまいました。
+
+リバース・プロキシ・サーバ（NGINX）では、WWWの有無を問わず同じ内容を返すように設定していました。しかし、Googleのインデックス登録は全て「WWWあり」のURLで行ってきました。そのため、Google検索してもヒットするのは全て「WWWあり」のURLです。
+
+アクセス数が少ないほうのURLで審査をされては元も子もありません。これを機に、「WWWなし」のURLを「WWWあり」にリダイレクトする設定を加えようではありませんか！
+
+と意気込んだものの、NGINXの設定なんて初回リリースからほとんど触っていません。初回リリースでさえ、設定にかなり苦戦しました。しかし、背に腹は代えられません。
+
+意を決して、[Digital Ocean](https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-nginx-on-ubuntu-14-04)を参考に設定してみたものの、案の定うまくいかない、、、！
+
+悪戦苦闘しましたが、最終的にNGINXの設定ファイルを更新し、「WWWなしのURL」へのアクセスを「WWWありのURL」にリダイレクトさせることが出来ました。
+
+備忘も兼ねて、私がハマった箇所や、NGINXの設定変更内容を共有します。
+
+<h2 id="nginx">NGINXについて</h2>
+
+[NGINX](https://www.nginx.co.jp/)は、オープンソースのWebサーバーです。リバース・プロキシ・サーバやロード・バランサーとしても使うことができます。なお、日本語サイトのトップページは有料のサービス等の紹介が主ですが、今回使うのは[オープンソースのNGINX](https://nginx.org/en/)です。残念ながら英語です。
+
+[Apache](https://httpd.apache.org/)が類似のサービスで、よく比較されるようです。
+
+このサイトのリリース時、私もApacheとNGINXで悩みました。どちらも経験がなかったので、より新しいサービスのほうのNGINXを選びました。
+
+ちなみに、「ん・じんくす」ではなく、「えんじん・えっくす」と読みます。
+
+<h2 id="preq">前提</h2>
+
+この記事は以下の前提で記載しています。
+
+- OSはUbuntu 20.04以上
+- 「WWWあり」、「WWWなし」両方のURLをDNSに登録している。
+- NGINXをリバース・プロキシ・サーバとして利用している
+
+OSについては、Ubuntu以外だとNGINXの設定ファイルの保存場所やコマンドが異なる場合があります。しかし、設定ファイルの変更内容自体は変わらないので、そこまで問題はないと思います。
+
+参考までに、私のサイトの構成イメージです。
+
+<Image src={ServerComposition} width={792} height={537} alt="my-server-composition"/>
+
+Webサーバの代わりにNGINXが外部からのhttpsの通信を受け付け、Webサーバに受け渡しているのがポイントです。Webサーバ自体は、外部に公開していないポートで稼働しています。
+
+図には表現できていませんが、[Let's Encrypt](https://letsencrypt.org/ja/)でSSL/TLS暗号化しています。また、httpの通信も受け付けています。
+
+一般的な構成かと思われ、同じ構成のサイトも多いのではないでしょうか。
+
+<h2 id="goal">目的</h2>
+
+今回は、**WWWなし**のURLへの通信を、**WWWあり**に[301リダイレクト](https://developer.mozilla.org/ja/docs/Web/HTTP/Status/301)させるのが目的です。もちろん逆の設定（あり→なしへのリダイレクト）も可能です。適宜読み替えてください。
+
+今回はNGINXのインストール方法や、初期設定方法や、SSL暗号化の手順などは対象外となりますのでご了承ください。
+
+<h2 id="normalize">URL正規化の是非</h2>
+
+設定変更の前に、URLを片方に寄せることの是非を調べてみました：
+
+通常、ドメインを取得すると「WWWあり」のURLと「WWWなし」のURLどちらも利用することができます。
+
+両URLともDNSに登録するのが一般的かと思います。後は、サーバ側でそれぞれのURLをどう処理するか定義していきます。
+
+インターネットにある情報の多くでは、WWWの有無を問わず、同じコンテンツを返すようにリバース・プロキシ・サーバを設定する方法が紹介されています。そのため、このサイトもそうでしたが、どちらのURLでもアクセスできるサイトも結構あるのではないでしょうか。
+
+「両方使えて何が悪いの？」と思われるかもしれません。現に、私も両URLを使えることについて問題意識はありませんでした。
+
+この点について、GMO TECH社の[URLのwwwあり・なしの違いは？統一させる必要性と設定方法を解説](https://gmotech.jp/semlabo/seo/blog/www-difference/)が参考になりました。
+
+要約すると、「WWWはあってもなくてもよいけど、SEOの観点から統一したほうが良い」とのことです。
+
+確かに、両方のURLでアクセスできるページがあると、Google Search Consoleでは「ページが重複している」とエラー扱いになります。SEO的には良くないのかもしれません。
+
+<Image src={GoogleError} width={1183} height={333} alt="page-duplicate-error"/>
+
+私の場合、「WWWあり」でインデックス登録されているので、「zenryoku-kun.com」のように「WWWなし」のURLが重複エラーになっています。
+
+SEOの観点以外でも、今回の私の広告申請のように、「片方のURLしか選択できない」といったトラブルも考えられるでしょう。
+
+なお、URLを統一することを「URL正規化」と言うようです。もっと調べたい方はググるといっぱい情報が出てきますので、ご参考まで。
+
+<h2 id="init-config">NGINXのコンフィグの解説</h2>
+
+私のNGINXの初期設定を基に、コンフィグの設定内容を簡単に解説します。
+
+Ubuntuの場合、設定ファイルは```/etc/nginx/sites-available/default```に格納されているはずです。
+
+CentOSなら```/etc/nginx/conf.d/my-website.com.conf```かと思いますので、OSに応じて適宜保存場所を調べて下さい。
+
+```powershell
+server {
+    root /var/www/html;
+
+    # Add index.php to the list if you are using PHP
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name zenryoku-kun.com www.zenryoku-kun.com;
+
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+         proxy_pass http://localhost:3000;
+         proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection 'upgrade';
+         proxy_set_header Host $host;
+         proxy_cache_bypass $http_upgrade;
+         #try_files $uri $uri/ =404;
+    }
+
+    client_max_body_size 10M;
+       
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/**/****/*****/*****/.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/**/****/*****/*****/.pem; # managed by Certbot
+    include /etc/letsencrypt/*******.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/******.pem; # managed by Certbot
+}
+
+
+server {
+    if ($host = www.zenryoku-kun.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = zenryoku-kun.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name zenryoku-kun.com www.zenryoku-kun.com;
+    
+    return 404; # managed by Certbot
+}
+```
+
+この設定で、`https://zenryoku-kun.com`と`https://www.zenryuoku-kun.com`両方とも受け付けられ、Webサーバにリクエストが渡されます。
+
+暗号化されていない通信は、`http://zenryoku-kun.com`ならば`https://zenryoku-kun.com`にリダイレクトされ、`http://www.zenryuoku-kun.com`ならば`https://www.zenryuoku-kun.com`にリダイレクトされます。
+
+次に、基本的な設定項目に簡単な解説を入れます。「詳細はいいから！」という場合、<a href="#summary">要約</a>まで飛んでください。
+
+<h3 id="server">server directive</h3> 
+
+私の設定ファイルには、2つ```server {}```と大きく括られている箇所があります。これをserver directiveと呼びます。これがNGINXの仮想サーバとして機能します。
+
+この中で、どのホストの、どのポートに対する通信を制御するか、設定が定義されています。
+
+<h3 id="server-name">server_name</h3>
+
+いずれのserver directiveの中にも、```server_name```と書かれている箇所があります。ここに、仮想サーバに処理してほしいホスト名を設定します。
+
+ルールは簡単で、```server_name```の後にホスト名を記述するだけです。スペースで区切って、複数のホストを設定することも可能です。
+
+私の場合、2つとも以下のように設定されています。
+
+```bash
+server_name zenryoku-kun.com www.zenryoku-kun.com;
+```
+
+NGINXが通信を受け付けたとき、リクエスト・ヘッダの**Host**の値と、各server directiveのserver_nameを突き合わせ、どの仮想サーバに処理をさせるか振り分けてくれます。
+
+また、私の場合は不要ですが、ホスト名に正規表現を入れたり、ホスト名ではなくIPアドレスでの指定もできるようです。
+
+正規表現を使う場合は、複数のサーバがマッチする可能性もあるので、[選択の優先順](https://nginx.org/en/docs/http/server_names.html)はドキュメントで確認しておいたほうがよさそうです。
+
+<h3 id="listen">listen</h3>
+
+いずれのserver directiveの中にも、```listen```と書かれている箇所があります。ここで、ポートを指定します。
+
+#### 1つ目のserver directive
+
+1つ目では、以下のように設定されています。
+
+```bash
+listen [::]:443 ssl ipv6only=on; # managed by Certbot
+listen 443 ssl; # managed by Certbot
+```
+
+２行ありますが、１行目がIPv6、２行目がIPv4に対応しています。`[::]`がIPv6のようですね。いずれも、ポート443（https）を指定しています。
+
+ポート443の後ろについている```ssl```は、ssl証明書で暗号化された通信を処理することを示しています。１つ目のserver directiveはLet's Encryptで暗号化した通信を処理するため、明示的に指定をしています。
+
+１行目のsslの後にある```ipv6only=on```は、IPv6の設定において、ワイルドカード`[::]`を使っているため、IPv6のみを対象にしていることを明示的にしています。とはいえ、IPv6の場合、デフォルトがonのようです。実際に試せてはいませんが、あってもなくても動作は変わらないかと思います。
+
+また、```ipv6only```はonとoff問わず１箇所しか指定できません。複数指定すると、以下のように「重複しているよ！」とエラーになります。
+
+> nginx: [emerg] duplicate listen options for [::]:443
+
+後ろについている```# managed by Certbot```のコメントは、Let's Encryptの設定をした時に自動で追加してくれた設定であることを示しています。
+
+#### 2つ目のserver directive
+
+２つ目では、```listen```は以下のように設定されています。
+
+```powershell
+listen 80 default_server;
+listen [::]:80 default_server;
+```
+
+ポート番号から分かる通り、こちらは暗号化されていないhttpの通信を制御してくれます。１行目がIPv4、2行目がIPv6です。
+
+ポート番号の後に続く```default_server```は、IPアドレスとポート番号の組み合わせで、デフォルトとなるサーバに設定します。
+
+```default_server```は省略も可能です。省略した場合、同じIPアドレスとポート番号の組み合わせを持つサーバのうち、**最初に登場するサーバ**がデフォルト扱いになるようです。
+
+<h3 id="location">location</h3>
+
+1つ目のserver directiveに、```location {}```と区切られたブロックがあると思います。location directiveと呼ばれます。以下の部分ですね。
+
+```powershell
+location / {
+   # First attempt to serve request as file, then
+   # as directory, then fall back to displaying a 404.
+   proxy_pass http://localhost:3000;
+   proxy_http_version 1.1;
+   proxy_set_header Upgrade $http_upgrade;
+   proxy_set_header Connection 'upgrade';
+   proxy_set_header Host $host;
+   proxy_cache_bypass $http_upgrade;
+   #try_files $uri $uri/ =404;
+}
+```
+
+location directiveでは、```/post```や```/news```のように、URIごとの処理を設定できます。今回はNGINXをリバース・プロキシとして使うため、全ての通信（```/```）を、localhostのポート3000で稼働しているWebサーバに通信を渡しています。
+
+主題のWWWなし→ありのリダイレクトには関係しない部分なので、詳細は割愛させていただきます。
+
+<h3 id="summary">要約</h3>
+
+私のNGINXの設定では、http/httpsの通信を処理するための仮想サーバが２つ登録されています。いずれのサーバも、「WWWあり」「WWWなし」どちらでも同じように受け付けます。また、IPv4・IPv6どちらの通信にも対応しています。
+
+１つ目のサーバは、httpsの通信に対応しており、ここに来た通信は全てWebサーバに渡しています。
+
+２つ目のサーバは、httpの通信に対応しています。上記の設定の部分では触れませんでしたが、httpの通信はhttpsの通信に301リダイレクトしています。以下のif文の部分ですね。
+
+```powershell
+if ($host = www.zenryoku-kun.com) {
+    return 301 https://$host$request_uri;
+} # managed by Certbot
+
+if ($host = zenryoku-kun.com) {
+    return 301 https://$host$request_uri;
+} # managed by Certbot
+```
+
+```$host```はNGINXの変数で、リクエスト・ヘッダの`Host`に該当します。server_nameにWWWあり・なしをそれぞれ登録してあるので、httpで来たらそれぞれhttpsをつけてリダイレクトさせています。これもLet's Encryptで自動生成されたものです。
+
+<h2 id="ng-config">NG:リダイレクト設定</h2>
+
+まず、ダメだった時の設定変更を紹介します。
+
+「WWWなし」から「WWWあり」にリダイレクトさせる前提で記載していますので、逆方向にしたい場合は適宜読み替えてください。
+
+<h3 id="ng-config-changes">設定変更箇所</h3>
+
+[How To Redirect www to Non-www with Nginx on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-nginx-on-ubuntu-14-04)を参考に、まずは設定をしてみました。
+
+例示ではLet's EncryptでSSL化は行われていないため、私の環境と異なる部分はあります。しかし、他のサイトでも同じような修正方法が紹介されており、一般的なやり方だと思います。
+
+要約すると、必要な設定変更は以下のとおりです。
+
+- 既存のserver directiveのserver_nameには、「WWWあり」のURLだけ登録する
+- 「WWWなし」のURLを、「WWWあり」にリダイレクトするserver directiveを追加する
+
+なお、２点目は以下のような設定となります。```$scheme```は通信プロトコル(http/https)を取得できるNGINXの変数です。```$request_uri```はurlの後のディレクトリ部分の値です。
+
+```bash
+server {
+    server_name my-website.com;
+    return 301 $scheme://www.my-website.com$request_uri;
+}
+```
+
+これで、例えば```my-website.com/user```の通信は```www.my-website.com/user```といった具合に、全て「WWWあり」にリダイレクトされるはずです。
+
+これを踏まえて、私の設定ファイルを以下のように修正しました。関係がない部分は一部略しています。
+
+```powershell
+# 新設！ wwwなしをwwwありにリダイレクトするサーバ
+server {
+    server_name zenryoku-kun.com;
+
+    # $sheme: httpかhttps
+    # $request_uri: /blogとか/newsのようなディレクトリ部分
+    return 301 $scheme://www.zenryoku-kun.com$request_uri;
+}
+
+server {
+    # 略
+
+    # 変更。「www」なしのURLを削除
+    server_name www.zenryoku-kun.com;
+
+    location / {
+       # 略
+    }
+
+    client_max_body_size 10M;
+
+       
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    
+    # 略
+}
+
+server {
+    # http通信用サーバ。こちらは修正なし。
+    # 「www」なしのhttp -> 「www」なしのhttps -> 「www」ありのhttpsと
+    # リダイレクトされるはずだから
+
+    if ($host = www.zenryoku-kun.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = zenryoku-kun.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name zenryoku-kun.com www.zenryoku-kun.com;
+    return 404; # managed by Certbot
+}
+```
+
+コメントにも記載のとおり、３つ目のserver directiveには手を加えませんでした。httpの通信はhttpsをつけてリダイレクトするだけですので、以下の順序でリダイレクトされると思ったからです。
+
+1. WWWなしのhttp
+2. WWWなしのhttps
+3. WWWありのhttps
+
+<h3 id="ng-config-exec">稼働してみる！</h3>
+
+以下のコマンドで、コンフィグの内容をテストできます。再稼働する前に実行すると良いでしょう。
+
+```bash
+sudo nginx -t
+```
+
+エラーが無ければ、以下のメッセージが出ます。
+
+```bash
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+エラーは無かったので、以下のコマンドでNGINXを再起動させ、設定変更を反映させます。
+
+```bash
+sudo service nginx restart
+```
+
+OSによっては、```sudo systemctl restart nginx```のようにコマンドが異なる場合があります。
+
+<h3 id="ng-config-result">結果...</h3>
+
+既に修正してしまっているため、申し訳ないことにエビデンスは貼れません。しかし、結果は以下のようになりました。
+
+- OK: ```http://zenryoku-kun.com``` → ```https://www.zenryoku-kun.com```
+- OK: ```http://www.zenryoku-kun.com``` → ```https://www.zenryoku-kun.com```
+- OK: ```https://www.zenryoku-kun.com```→ リダイレクトなし
+- NG: ```https://zenryoku-kun.com``` → リダイレクトなし（```https://zenryoku-kun.com```）
+
+httpの通信はいずれも「WWWあり」のhttpsにリダイレクトされ、問題ありません。しかし、肝心の「WWWなし」のhttpsがリダイレクトされず。「WWWなし」のまま使えている状態でした。
+
+#### 考察
+
+原因の切り分けは出来きていないのですが、私なりに考えてみました：
+
+「WWWなしのhttps」は**リダイレクトされず、そのままアクセス**されています。つまり、リダイレクト処理がある１つ目と3つ目のserver directiveは適用されず、２つ目のserver directiveで処理が行われていることが推察されます。
+
+ここで引っかかるのが、次の二点です。
+
+1. 「WWWなし」なのに、何故１つ目のserver directiveが適用されないのか
+2. server_nameが一致しないのに、何故２つ目のserver directiveが適用されるのか
+
+１つ目の理由ですが、ドキュメントに記載されていました：
+
+> If the directive is not present then either *:80 is used if nginx runs with the superuser privileges, or *:8000 otherwise.
+
+```listen```が無い場合、スーパーユーザ権限でNGINXを動かしている場合、ポート80が使われ、スーパーユーザ以外の権限ならポート8000が使われる仕様のようです。
+
+私の１つ目のserver directiveは、以下のとおりです。
+
+```powershell
+server {
+    server_name zenryoku-kun.com;
+
+    # $sheme: httpかhttps
+    # $request_uri: /blogとか/newsのようなディレクトリ部分
+    return 301 $scheme://www.zenryoku-kun.com$request_uri;
+}
+```
+
+```listen```がないため、デフォルトのポート（80）で稼働します。そのため、「WWW」の有無を問わず、httpsの通信は処理対象になりません。
+
+続いて理由2つ目です。２つ目のserver directiveの```server_name```には、「WWW**あり**」のURLしか登録していません。名前が一致しないのに、何故「WWW**なし**」のURLがここに流れるのでしょうか。
+
+NGINXでは、一致するサーバ名がない場合、デフォルト・サーバで処理を行います。```listen```のパラメタに```default_server```を指定したサーバがデフォルト・サーバになります。無い場合、一致するポート（厳密には、一致するIPとポートの組み合わせ）のサーバのうち、**最初に登場するサーバ**がデフォルト・サーバになります。
+
+今回のケースでは、ポート443（https）を指定しているのは、2つ目のserver directiveのみです。「WWWなしのhttps」はserver_nameが一致しないものの、このserver directiveがデフォルト・サーバとして機能します。
+
+「WWWなしのhttps」通信は、server_nameは一致していないものの、結局２つ目のserver directiveがデフォルト・サーバとして適用されるため、リダイレクトがされない、という訳です。
+
+これも、NGINXの基本的な仕様だったようですね。
+
+<h2 id="ok-config">OK:リダイレクト設定</h2>
+
+「WWWなしのhttps」がリダイレクトされない原因について、NGのケースから以下の仮説を立てました。
+
+- 追加した1つ目のserver directiveに```listen```が無いため、デフォルトのポート（80）が適用されている。
+- 2つ目のserver directiveが、server_nameは不一致なものの、ポートが一致するためdefault_serverとして適用されている。
+
+これを踏まえて、1つ目のserver directiveがhttpsを扱えるように、```listen```でポート443を指定して対応してみます。
+
+<h3 id="ok-config-changes">設定変更箇所</h3>
+
+#### １つ目のserver directive
+
+```powershell
+server {
+    # wwwなし→ありにリダイレクトさせるサーバ
+    server_name zenryoku-kun.com;
+    
+    # 追加: ipv6 - https
+    listen [::]:443 ssl;
+    # 追加: ipv4 - https
+    listen 443 ssl;
+    
+    return 301 https://www.zenryoku-kun.com$request_uri;
+}
+```
+
+```listen [::]:443 ssl;```がIPv6のhttps、```listen 443 ssl;```がIPv4のhttpsで、今回の追加部分です。
+
+#### ３つ目のserver directive
+
+ここは、WWWなし→ありのリダイレクトとは**関係ありません**。しかし、気になるので１箇所修正しています。
+
+- 修正前
+
+```powershell
+server {
+   # 略
+   if ($host = zenryoku-kun.com) {
+        return 301 https://$host$request_uri;
+   } # managed by Certbot
+   # 略
+}
+```
+
+- 修正後
+
+```powershell
+server {
+    # 略
+    if ($host = zenryoku-kun.com) {
+        return 301 https://www.zenryoku-kun.com$request_uri;
+    } # managed by Certbot
+    # 略
+}
+```
+
+修正前では、「WWWなしのhttp」は、「WWWなしのhttps」にリダイレクトさせていましたが、直接「WWW**あり**のhttps」にリダイレクトさせています。
+
+「WWWなしのhttp」→「WWWなしのhttps」→「WWWありのhttps」と２回リダイレクトされるのがどうしても気になってしまったからです。原因の切り分けをしているときは、余計な修正はしないほうが良いとは思いつつ、、、。
+
+<h3 id="ok-config-exec">稼働してみる！</h3>
+
+設定ファイルを保存し、エラーがないかテストします。
+
+```bash
+> sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+OKですね。```sudo service nginx restart```でNGINXを再起動し、検証してみます。
+
+<h3 id="ok-config-result">結果...</h3>
+
+それでは、以下のコマンドを打ってリダイレクトを確認してみます。WSL2(ubuntu)から実行しています。
+
+```bash
+curl -IL url
+```
+
+*url*は実際のurlです。
+
+```-I```オプションでレスポンスのヘッダのみ表示させ、```-L```オプションでリダイレクトに従うようにしています。これにより、想定どおりリダイレクトが効いているか確認することができます。
+
+- `http://zenryoku-kun.com`の場合
+
+```bash
+> curl -IL http://zenryoku-kun.com
+HTTP/1.1 301 Moved Permanently
+Server: nginx
+Date: Fri, 26 Jan 2024 12:47:12 GMT
+Content-Type: text/html
+Content-Length: 162
+Connection: keep-alive
+Location: https://www.zenryoku-kun.com/
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 26 Jan 2024 12:47:12 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 52061
+Connection: keep-alive
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept-Encoding
+x-nextjs-cache: HIT
+X-Powered-By: Next.js
+Cache-Control: s-maxage=31536000, stale-while-revalidate
+ETag: "1b2iqyn0qrz15"
+```
+
+リダイレクト先は```Location```で確認できます。ちゃんと「WWWありのhttps」に301リダイレクトされていますね。
+
+- `http://www.zenryoku-kun.com`の場合
+
+```bash
+> curl -IL http://www.zenryoku-kun.com
+HTTP/1.1 301 Moved Permanently
+Server: nginx
+Date: Fri, 26 Jan 2024 13:09:14 GMT
+Content-Type: text/html
+Content-Length: 162
+Connection: keep-alive
+Location: https://www.zenryoku-kun.com/
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 26 Jan 2024 13:09:14 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 52061
+Connection: keep-alive
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept-Encoding
+x-nextjs-cache: HIT
+X-Powered-By: Next.js
+Cache-Control: s-maxage=31536000, stale-while-revalidate
+ETag: "1b2iqyn0qrz15"
+```
+
+こちらも大丈夫です！
+
+- `https://zenryoku-kun.com`の場合
+
+```bash
+curl -IL https://zenryoku-kun.com
+HTTP/1.1 301 Moved Permanently
+Server: nginx
+Date: Fri, 26 Jan 2024 13:09:53 GMT
+Content-Type: text/html
+Content-Length: 162
+Connection: keep-alive
+Location: https://www.zenryoku-kun.com/
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 26 Jan 2024 13:09:53 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 52061
+Connection: keep-alive
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept-Encoding
+x-nextjs-cache: HIT
+X-Powered-By: Next.js
+Cache-Control: s-maxage=31536000, stale-while-revalidate
+ETag: "1b2iqyn0qrz15"
+```
+
+これが問題のURLでしたが、ちゃんと「WWWありのhttps」にリダイレクトされてます！
+
+- `https://www.zenryoku-kun.com`の場合
+
+```bash
+> curl -IL https://www.zenryoku-kun.com
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 26 Jan 2024 13:14:03 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 52061
+Connection: keep-alive
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept-Encoding
+x-nextjs-cache: HIT
+X-Powered-By: Next.js
+Cache-Control: s-maxage=31536000, stale-while-revalidate
+ETag: "1b2iqyn0qrz15"
+```
+
+これは想定どおり、リダイレクトされません。OKです！
+
+<h2 id="last">最後に</h2>
+
+NGINXで「WWWなし」のURLを「WWWあり」のURLにリダイレクトさせる方法を解説しました。
+
+NGINXの設定は初回リリース以降、ほとんど触ってこなかったので、かなり苦戦してしまいました。なんとか克服できて良かったです。
+
+しかし、URLのWWWの有無なんて今まで気にしておらず、片方に寄せるなんて考えたこともありませんでした。でも、「URL正規化」と名前が付いているくらい一般的なんですね。
+
+いろいろ勉強になった気がします。参考になれば幸いです。
+
+<h2 id="ref">参考</h2>
+
+- URLのwwwあり・なしの違いは？統一させる必要性と設定方法を解説: https://gmotech.jp/semlabo/seo/blog/www-difference/
+- How To Redirect www to Non-www with Nginx on Ubuntu 14.04: https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-nginx-on-ubuntu-14-04
+- 301 Moved Permanently: https://developer.mozilla.org/ja/docs/Web/HTTP/Status/301
