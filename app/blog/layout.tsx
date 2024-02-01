@@ -1,4 +1,5 @@
 import Navigation from "../../component/Navigation"
+import Footer from "../../component/Footer"
 import { MODE } from "../../component/constants"
 import type { Metadata } from "next"
 
@@ -15,6 +16,7 @@ export default function Layout(
     <>
       <Navigation iniMode={MODE.BLOG} />
       {children}
+      <Footer />
     </>
   )
 }

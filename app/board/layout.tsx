@@ -1,4 +1,5 @@
 import Navigation from "../../component/Navigation";
+import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 
 export default function Layout(
@@ -8,6 +9,7 @@ export default function Layout(
     <>
       <Navigation iniMode={MODE.BOARD} />
       {children}
+      <Footer />
     </>
   )
 }

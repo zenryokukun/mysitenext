@@ -1,6 +1,7 @@
 // Components
 import Image from "next/image";
 import Navigation from "../component/Navigation";
+import Footer from "../component/Footer";
 import Layout, { Main, Side } from "../component/layouts/sidebar/Layout";
 import { FancyBlogLinks } from "../component/BlogLinks";
 import Twitter from "../component/Twitter";
@@ -148,6 +149,7 @@ export default async function Page() {
           <Twitter />
         </Side>
       </Layout>
+      <Footer />
     </>
   );
 }

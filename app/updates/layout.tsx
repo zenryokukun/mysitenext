@@ -1,4 +1,5 @@
 import Navigation from "../../component/Navigation";
+import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 
 // import "prismjs/themes/prism-tomorrow.css"; // syntax hightlight用
@@ -9,6 +10,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <>
       <Navigation iniMode={MODE.UPDATES} />
       {children}
+      <Footer />
     </>
   );
 }

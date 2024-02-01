@@ -8,6 +8,7 @@ import Layout, { Main, Side } from "../../component/layouts/sidebar/Layout";
 import Author from "../../component/Author";
 import { FancyBlogLinks } from "../../component/BlogLinks";
 import Navigation from "../../component/Navigation";
+import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 import { findByDir, newBlogs, popularBlogs, relatedBlogs } from "../../lib/db/extract";
 import { blogInfoToLinkItem } from "../../lib/typecast";
@@ -65,6 +66,7 @@ export default async function MdxLayout({ dir, frontMatter, children }: LayoutP)
           <FancyBlogLinks data={popular} headline="人気記事" />
         </Side>
       </Layout>
+      <Footer />
     </>
   )
 }

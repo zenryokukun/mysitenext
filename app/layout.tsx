@@ -2,8 +2,7 @@
 import GA from "./component/GA"
 import JSON_LD from "./component/JSON-LD";
 import Adsense from "./component/Adsense";
-// Pagesと共通component
-import Footer from "../component/Footer";
+
 // その他
 import "./globals.css";
 import type { Metadata } from "next";
@@ -40,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JSON_LD />
         <Adsense />
         {children}
-        <Footer />
       </body>
     </html>
   );
