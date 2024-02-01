@@ -2,7 +2,6 @@
 import React, { useState, useRef, useReducer, FormEvent, useEffect } from "react";
 import Footer from "../../component/Footer";
 import styles from "../../styles/Admin.module.css";
-import { GetServerSidePropsContext } from "next";
 import { useBlogs } from "../../lib/admin/use-blogs";
 import { ACTIONS, blogItemReducer } from "../../lib/admin/blog-reducer";
 import { useBlogForm, ACTIONS as FORM_ACTIONS } from "../../lib/admin/use-blog-form";
@@ -170,44 +169,48 @@ export default function Admin() {
   }
 
   return (
-    <>
-      <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
-      <div className={styles.dummyBody}>
-        <KeywordList list={keywords} />
-        <main className={styles.container}>
-          <div className={styles.modeContainer}>
-            <button
-              onClick={e => switchMode("insert")}
-              className={mode === "insert" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
-              ブログ登録
-            </button>
-            <button
-              onClick={e => switchMode("update")}
-              className={mode === "update" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
-              更新
-            </button>
+    <div className={styles.container}>
+      <KeywordList list={keywords} />
+      <div className={styles.contentContainer}>
+        <div className={styles.header}><h1 className={styles.title}>全力ブログ・システム</h1></div>
+        <div className={styles.dummyBody}>
+          <div>
+            <div className={styles.mainContainer}>
+              <div className={styles.modeContainer}>
+                <button
+                  onClick={e => switchMode("insert")}
+                  className={mode === "insert" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
+                  ブログ登録
+                </button>
+                <button
+                  onClick={e => switchMode("update")}
+                  className={mode === "update" ? `${styles.modeButton} ${styles.underline}` : styles.modeButton}>
+                  更新
+                </button>
+              </div>
+              {/* genreListがロードされるまで描写しない */}
+              {mode === "insert" &&
+                <InsertMode
+                  reload={setCurrentBlogs}
+                  checkNewKeyword={checkNewKeyword}
+                  genreList={genreList}
+                />
+              }
+              {mode === "update" &&
+                <UpdateMode
+                  genreList={genreList}
+                  checkNewKeyword={checkNewKeyword}
+                  reload={setCurrentBlogs}
+                  currentBlogs={currentBlogs}
+                />
+              }
+            </div>
+            <Footer></Footer>
           </div>
-          {/* genreListがロードされるまで描写しない */}
-          {mode === "insert" &&
-            <InsertMode
-              reload={setCurrentBlogs}
-              checkNewKeyword={checkNewKeyword}
-              genreList={genreList}
-            />
-          }
-          {mode === "update" &&
-            <UpdateMode
-              genreList={genreList}
-              checkNewKeyword={checkNewKeyword}
-              reload={setCurrentBlogs}
-              currentBlogs={currentBlogs}
-            />
-          }
-        </main>
-        <SideMenu />
+          <SideMenu />
+        </div>
       </div>
-
-    </>
+    </div>
   );
 }
 
@@ -233,26 +236,9 @@ function SideMenu() {
   }
 
   return (
-    <div style={{
-      backgroundColor: "#333",
-      paddingLeft: "1rem", paddingRight: "1rem",
-      position: "fixed",
-      right: "0px",
-      height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      top: "0px"
-    }}>
+    <div className={styles.sideMenuWrapper}>
       <button
-        style={{
-          backgroundColor: "#E91E63",
-          color: "#f3f3f3",
-          border: "1px solid #555",
-          fontWeight: "bold",
-          fontSize: "1.3rem",
-          top: "3rem",
-          position: "relative"
-        }}
+        className={styles.compile}
         onClick={build}
       >コンパイル</button>
     </div>
