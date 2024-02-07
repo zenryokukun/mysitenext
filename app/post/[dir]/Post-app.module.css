@@ -167,12 +167,23 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
     background-color: #383838;
   }
 
-  .articleContainer code {
+  /* ```some-text```で生成されるcode */
+  .articleContainer>p>code,
+  .articleContainer>ul>li>code,
+  .articleContainer>ol>li>code,
+  .articleContainer>code {
     background-color: #707070;
-    color: #222;
+    color: #fff;
+  }
+
+  /* > で生成される引用部分に適用。 */
+  .articleContainer>blockquote>p {
+    background-color: #3f3f3f;
+    color: white;
   }
 
   .articleContainer blockquote:not(.articleContainer pre) {
+    /*効いてないかも。様子見て削除、、*/
     color: #222;
   }
 

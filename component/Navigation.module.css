@@ -133,6 +133,11 @@
 /* dark mode用CSS */
 @media (prefers-color-scheme:dark) {
 
+    /* 下のコンテンツと同じ色なので、下線を追加 */
+    .container {
+        border-bottom: 1px solid #555;
+    }
+
     /* 訪問したリンクの色が変わらないので、色を継承 */
     .link:visited {
         color: inherit;
