@@ -52,6 +52,25 @@
   padding: 1rem;
 }
 
+/* codeにファイル名を付けるためのCSS。md内でコード前に<div class="fn">fname</div>のように使う。 */
+.fn {
+  display: inline-block;
+  margin: 1rem 0 0 0 !important;
+  width: auto !important;
+  align-self: flex-start;
+  padding: 0.2rem 1rem 0.2rem 1rem;
+  /* background-color: #4d6d6d; */
+  background-color: #4f5f5f;
+  color: white;
+  border-radius: 7px 7px 0px 0px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+  font-size: 15px;
+}
+
+.fn+pre {
+  margin-top: 0px !important;
+}
+
 
 @media screen and (max-width:650px) {
   .table-of-contents {
