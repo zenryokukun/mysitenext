@@ -1,0 +1,652 @@
+import Image from "../ImageWrapper";
+import tbrInit from "./tbr-init.jpg";
+import tbrUpdate from "./tbr-update.jpg";
+import odrInit from "./odr-init.jpg";
+import odrAdmin from "./odr-admin.jpg";
+import odrUpdate from "./odr-update.jpg";
+import dp500Err from "./dp-500-err.jpg";
+import dpAdd from "./dp-add.jpg";
+import dp404Err from "./dp-404-err.jpg";
+
+export const mdxMeta = {
+    title:"Next.jsのApp RouterでISRを検証したぞ！",
+    description:"Next.jsでは、サイト全体のビルド後に特定のページだけ更新・生成する機能があります。従来はISRと呼ばれていましたが、App Routerではこの名称もあまり使われなくなり、使い方も大きく変わりました。App RouterでISRを行うための機能を検証してみたので、共有します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/2/13",
+};
+
+# Next.jsのApp RouterでISRを検証したぞ！
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#preq">前提</a></li>
+<li>
+  <a href="#isr">ISRとは</a>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#isr-app-router">App RouterでのISR</a></li>
+  </ul>
+</li>
+<li><a href="#caution">注意点</a></li>
+<li>
+  <a href="#tbr">既存ページを更新１（Time-Based Revalidation）</a>
+  <ul>
+    <li><a href="#tbr-page">ページの構成</a></li>
+    <li><a href="#tbr-build">ビルドして稼働</a></li>
+    <li><a href="#tbr-update">テキストファイルの更新</a></li>
+    <li><a href="#tbr-constraint">制約</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#odr">既存ページを更新２（On-Demand Revalidation）</a>
+  <ul>
+    <li><a href="#odr-page">ページの構成</a></li>
+    <li><a href="#odr-build">ビルドして稼働</a></li>
+    <li><a href="#odr-update">テキストファイルの更新</a></li>
+    <li><a href="#obr-constraint">制約</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#dynamic-params">新規ページのみ生成</a>
+  <ul>
+    <li><a href="#dp-page">ページの概要</a></li>
+    <li><a href="#dp-build">ビルドして稼働</a></li>
+    <li><a href="#dp-add">ページを追加してみる</a></li>
+    <li><a href="#dp-constraint">制約</a></li>
+    <li><a href="#dp-404">おまけ：存在しないパスには404ページを表示したい場合</a></li>
+  </ul>
+</li>
+<li><a href="#summary">まとめ</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+Next.jsは、従来からSSR(Server Side Rendering)、SSG(Static Site Generation)、ISR(Incremental Static Regeneration)といったページ生成機能で知られています。
+
+このサイトもNext.jsに移行し、早くも１年以上経過しました。様々なページ生成方法を導入しているのかと思いきや、実はページのほとんどがSSGで生成されています。そのため、ページの追加や変更があった場合、基本的には全ページをビルドし、デプロイしています。
+
+ISRを使えば、追加・更新したページのみ再生成することも可能なことは、知ってはいたのですが、、、。実はNext.js13にアップデートした時、メモリが足らずサーバー側でビルドが出来なくなってしまったことがあります。そのため、なんとなくISRもメモリを消費しそうな気がしてしまい、ドキュメントを斜め読みした程度の知識しかありませんでした。
+
+しかし、だんだんとビルドからデプロイにかかる時間が苦痛になってきました。。。幸い、Next.jsが大きくメモリを消費してしまう問題は、Next.jsの13.5へのアップデートで解消しているとの話もあります。
+
+今回は、今後のISRの導入に向けて、App RouterでISRを実現する機能を検証してみました。良かったら参考にしてください。
+
+<h2 id="preq">前提</h2>
+
+### 環境
+
+私の環境では、Next.jsのバージョンは```14.0.4```、Node.jsのバージョンは```v18.18.2```です。
+
+App Routerが安定版になったのはバージョン13からですが、**revalidatePath**（バージョン13.5で追加）のようにマイナーアップデートで追加されている機能もあります。バージョン13台の方はご注意ください。
+
+### 内容
+
+App Routerで従来のISRを実現するための機能について解説します。
+
+```revalidate```、```dynamicParamas```といった[Route Segment Config](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config)、および[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)関数の検証が中心になります。
+
+App Routerの使い方や、Server Componentsの仕組み等は範囲外になりますので、ご了承ください。
+
+<h2 id="isr">ISRとは</h2>
+
+<h3 id="overview">概要</h3>
+
+ISRはIncremental Static Regenerationの略称です。直訳すると「増分静的再生成」です。
+
+旧Pages Routerのドキュメントでは、以下のように説明されています。
+
+> Next.js allows you to create or update static pages after you’ve built your site. Incremental Static Regeneration (ISR) enables you to use static-generation on a per-page basis, without needing to rebuild the entire site.
+
+「サイトをビルドした後に、静的にページの追加や更新ができる。ISRを使えば、サイト全体を再ビルドしなくても、ページ単位で静的生成することが可能になる。」とのことです。
+
+<h3 id="isr-app-router">App RouterでのISR</h3>
+
+ひとえにISRといっても、様々なケースが考えられます。それぞれ検証していく前に、各ケースをおさらいします。
+
+#### 1. Time-based Revalidation
+
+**既存ページを更新**する方法です。指定した**時間経過後**にページにアクセスがあると、裏でデータの再取得(revalidate)がされます。
+
+[Next.js版fetch関数](https://nextjs.org/docs/app/api-reference/functions/fetch)を使っている場合、```revalidate```オプションで秒数を指定します。以下の例では60秒を指定しています。
+
+```tsx
+export default async function Page(){
+    const data = await fetch("https://....",{next:{revalidate:60}})
+    return (
+        <div>{data}</div>
+    );
+}
+```
+
+CMSとかを使っている方はfetch関数を使えるかもしれませんが、私の場合ページの生成に必要な情報は全てローカルにあります。なのでこの使い方は出来ません。
+
+fetch関数を使えない場合は、```page```もしくは```layout```ファイル内で、```revalidate```定数を定義してexportすれば大丈夫です。
+
+```tsx
+// fetch使えない場合
+// revalidateに秒数を指定してexport
+export const revalidate = 60
+
+export default async function Page(){
+    // ローカルからデータ取得する自作関数とか
+    const data = await getDataFromLocal()
+    return (
+        <div>{data}</div>
+    )
+}
+```
+
+いずれの場合でも、「指定した秒数の間隔」で更新されるのではなく、「指定した秒数経過後にアクセスがあった場合」に更新が行われます。
+
+#### 2. On-Demand Revalidation
+
+こちらも、**既存ページを更新**する方法です。しかし、時間のような間隔ではなく、所定のタイミングで更新することができます。
+
+```next/cache```の[revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)関数を使います。サーバー側で動く関数なので、[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)や[Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)経由で実行する必要があります。
+
+```revalidate("/post/food")```のようなURL単位の指定が可能です。また、```revalidate("/post/[slug]","page")```のように、動的パスのページを一括で指定することもできます。
+
+formタグでのPOST等、何らかの操作をトリガーにサーバー側で```revalidatePath```を実行すればOKです。
+
+[revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)関数でより細かい指定も可能なようですが、私もまだ試せていないため今回は触れません。
+
+#### 3. 新しく追加したページのみを生成
+
+ここは理解にするのに時間がかかりました。詳細は検証部分で触れます。
+
+簡単に言うと、新ページのみの生成は```/app/[slug]/page.jsx```のような[dynamic routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)でのみ有効です。
+
+dynamic routesでは、[generateStaticParams](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)関数でパスの一覧を取得し、各ページのビルドが行われます。ビルド後に、この関数で生成されなかったパスにアクセスがあった場合、そのパスに対応するページの生成が行われます。
+
+これがデフォルトの動作なので、dynamic routesであれば新ページ（ビルド時にgenerateStaticParamsで生成されなかったパスに対応するページ）の生成は行われます。
+
+新ページの生成を無効にするには、以下のように```page```か```layout```ファイル内の```dynamicParams```にfalseを設定してexportします。この場合、404エラーページが表示されます。
+
+```tsx
+// 新ページのビルドを無効化。
+// ビルド時にgenerateStaticParamsで生成されなかった
+// パスに対するアクセスがあった場合、404ページが表示される。
+export const dynamicParams = false;
+
+export async function generateStaticParams(){
+    ...
+}
+
+export default async function Page(){
+    ...
+}
+```
+
+新ページの生成は、あくまでdynamic routes内でのみ有効となるのがポイントです。例えば「```/blog```」のように、新しいrouteを追加した場合、ビルド後にblogページのみを生成することはません。全体をビルドする必要があります。
+
+試せていないですが、旧Pages Routerでも同じかと思います。間違えていたら教えてください。
+
+<h2 id="caution">注意点</h2>
+
+これから上記の３パターンを検証します。
+
+いずれのパターンでも、開発サーバー（```npm run dev```）では全てのページが**リクエスト時**にレンダリングされます。
+
+「全体ビルド後に特定のページだけ更新・生成する」のがISRですので、今回の検証は開発サーバーではできません。面倒ですが、```npm run build```でビルドを行い、```npm start```で本番稼働を行って検証する必要があります。
+
+<h2 id="tbr">既存ページを更新１（Time-Based Revalidation）</h2>
+
+まずは、指定した秒数の経過後にアクセスがあった場合、そのページを更新する機能です。
+
+<h3 id="tbr-page">ページの構成</h3>
+
+以下のようなページで検証してみます。
+
+<div class="fn">`app/test/page.tsx`</div>
+
+```tsx
+import { readFile } from "fs/promises";
+import path from "node:path";
+
+// ポイント：５秒間隔で再検証。
+// 最後のアクセスから５秒経過していたらデータ更新してくれる
+export const revalidate = 5;
+
+// サーバ側でレンダリングするデータ。
+// ローカルにあるテキストファイルの中身をそのまま返す
+async function getProp() {
+  const fpath = path.join(path.resolve(), "app/test", "data.txt")
+  return await readFile(fpath, { encoding: "utf-8" })
+}
+
+export default async function Page() {
+  const data = await getProp()
+  return (
+    <>
+      <h1>Time-based Revalidationのテスト</h1>
+      <div>{data}</div>
+    </>
+  )
+}
+```
+
+ページへのroute（パス）は```/test```です。直下にあるテキストファイルの中身をページに表示するという、非常にシンプルなものです。
+
+ポイントは```export const revalidate = 5```の部分です。これにより、ページにアクセスがあった時、最後のアクセスから５秒以上経過していた場合に、データのrevalidate（再取得）が行われます。
+
+テキストファイルの中身は、初期状態では「テスト！」となっています。
+
+この状態でビルドを行い、テキストファイルの中身の更新をします。そして、```npm run build```をしなくても、更新内容がページに反映されるか確認していきます。
+
+なお、私はNext.js版fetch関数は使えないので```export const revalidate = 5```としています。使える場合は、```fetch('https://...', { next: { revalidate: 5 } })```のようにオプションとして指定することも出来ます。
+
+<h3 id="tbr-build">ビルドして稼働</h3>
+
+```npm run build```でビルドし、```npm start```でNext.jsを本番稼働させます。
+
+```bash
+> revalidate@0.1.0 start
+> next start
+
+   ▲ Next.js 14.0.4
+   - Local:        http://localhost:3000
+
+ ✓ Ready in 548ms
+```
+
+```http://localhost:3000/test```をブラウザで開いてみると、ちゃんとテキストファイルの内容が表示されていることが確認できます。
+
+<Image src={tbrInit} width={694} height={202} alt="initial-page-content"/>
+
+<h3 id="tbr-update">テキストファイルの更新</h3>
+
+本番稼働させたままテキストファイルを更新し、```npm run build```をせずとも更新内容が反映されるか確認します。
+
+テキストファイルの内容を「テスト！更新したぞ！」で上書き保存し、再度```http://localhost:3000/test```を開いてみます。
+
+<Image src={tbrInit} width={694} height={202} alt="initial-page-content"/>
+
+まだ変わってないですね。しかし、```npm run build```してから指定の５秒は経過しているので、このアクセスを契機に裏では更新がかかっているはずです。「指定した秒数経過後にアクセスがあった場合」に更新するのが仕様なので、**経過後の初アクセスは古い内容が表示される**のは想定内です。
+
+ブラウザでF5を押して再度ページを読み込んでみます。
+
+<Image src={tbrUpdate} width={704} height={202} alt="updated-page-content" />
+
+ちゃんとページの内容が更新されていますね！
+
+<h3 id="tbr-constraint">制約</h3>
+
+上記のページは、外部データ（テキストファイルの中身）をビルド時にサーバー側でレンダリングしています。その外部データについては、ビルド後に更新しても、ページにその内容が反映されることが確認できました。
+
+外部データ以外の箇所を更新した場合の動作を見てみたいと思います。ページのコンポーネント自体を少し変えてみます。
+
+<div class="fn">`app/test/page.tsx`</div>
+
+```tsx
+import { readFile } from "fs/promises";
+import path from "node:path";
+
+export const revalidate = 5;
+
+async function getProp() {
+  const fpath = path.join(path.resolve(), "app/test", "data.txt")
+  return await readFile(fpath, { encoding: "utf-8" })
+}
+
+export default async function Page() {
+  const data = await getProp()
+  return (
+    <>
+      {/* styleを追加 */}
+      <h1 style={{ backgroundColor: "lime" }}>Time-based Revalidationのテスト</h1>
+      <div>{data}</div>
+      {/* 日付を追加 */}
+      <div>{new Date().toLocaleString()}</div>
+    </>
+  )
+}
+```
+
+h1タグにスタイルを追加したのと、最後に現在日付を表示するdivタグを追加しています。
+
+これが反映されるかブラウザで見てみます。
+
+<Image src={tbrUpdate} width={704} height={202} alt="updated-page-content" />
+
+コンポーネントの更新部分は反映されていないです。
+
+Next.jsのrevalidateは「ページを再ビルド」しているというのは正確ではなさそうですね。外部データを再取得し、それをページに埋め込んではくれますが、ページを構成するコンポーネントやCSSのビルドまではしてくれないようです。
+
+あくまでServer Components内で、async関数（もしくはNext.js版fetch関数）で取得したデータのみがrevalidateの対象となるようです。今回の例だと、```getProp```関数の部分だけが対象になる、ということです。
+
+エビデンスは省略しますが、この変更を反映させるためには再度```npm run build```でビルドする必要があります。
+
+<h2 id="odr">既存ページを更新２（On-Demand Revalidation）</h2>
+
+On-Demand Revalidationは、時間ではなく指定のタイミングでデータ更新を行う手法です。```next/cache```の```revalidatePath```を使います。
+
+今回は更新用のボタンを別のページに設置して、ボタン押下で更新がされるか見ていきます。
+
+<h3 id="odr-page">ページの構成</h3>
+
+#### 検証するページ
+
+検証するページのrouteは```/test2```にします。内容は以下のようにします。
+
+<div class="fn">`app/test2/page.tsx`</div>
+
+```tsx
+import { readFile } from "fs/promises";
+import path from "node:path";
+
+async function getProp() {
+  const fpath = path.join(path.resolve(), "app/test2", "data.txt")
+  return await readFile(fpath, { encoding: "utf-8" })
+}
+
+export default async function Page() {
+
+  const data = await getProp()
+
+  return (
+    <>
+      <h1>On-Demand Revalidation</h1>
+      <div>{data}</div>
+    </>
+  )
+}
+```
+
+内容は<a href="#tbr">既存ページを更新１（Time-Based Revalidation）</a>とほとんど同じです。同じ階層にあるテキストファイルの中身をページに表示させています。異なる点は、今回は時間間隔によるデータ更新は行わないので、```export const revalidate = 5```の部分はありません。
+
+なお、テキストデータの中身は「初期表示２」にしておきます。
+
+#### 更新ボタンを設置するページ
+
+もう一つ、更新のトリガーとなるボタンを設置するページを作ります。routeは```/admin```にしておきます。ページの内容は以下のとおりです。
+
+<div class="fn">`app/admin/page.tsx`</div>
+
+```tsx
+import { revalidatePath } from "next/cache";
+
+export default function Page() {
+
+  async function updateData() {
+    "use server";
+    // 更新するパスを指定
+    revalidatePath("/test2")
+  }
+
+  return (
+    <form action={updateData} >
+      <button
+        type="submit"
+        style={{ margin: "5px", padding: "5px" }}
+      >データ更新
+      </button>
+    </form>
+  );
+}
+```
+
+ボタンを押すとformのsubmitが実行されます。sumbitの処理内容は、Server Actionsで指定しています。```updateData```の部分ですね。ここは、Route Handlersで実装してもOKです。
+
+```updateData```内の```revalidatePath("/test2")```の部分がポイントです。ここが実行されると、```/test2```のパスのデータ更新が行われます。
+
+<h3 id="odr-build">ビルドして稼働</h3>
+
+```npm run build```でビルドし、```npm start```で本番稼働させます。
+
+ブラウザで```http://localhost:3000/test2```を開いてみます。
+
+<Image src={odrInit} width={540} height={193} alt="initial-page-content"/>
+
+ビルド時のテキストファイルの内容である、「初期表示２」が表示されています。
+
+<h3 id="odr-update">テキストファイルの更新</h3>
+
+本番稼働させたまま、テキストファイルの中身を「更新ボタンで更新したぞ！」に更新します。そしてadminページの更新ボタンを押してみます。ポチっとな。
+
+<Image src={odrAdmin} width={407} height={159} alt="admin-page"/>
+
+そして再度、test2ページを開いてみます。
+
+<Image src={odrUpdate} width={566} height={197} alt="updated-page-content"/>
+
+ちゃんとテキストファイルの更新内容が反映されていますね！
+
+<h3 id="obr-constraint">制約</h3>
+
+Time-based Revalidationと同じ制約があります。
+
+Server Componentsからasync関数で取得した外部データは、更新がされます。今回の例だと、```getProp```関数で取得したデータです。
+
+CSSや、JSXにhtmlのタグ等の変更を加えても、その部分は更新されません。これらの変更を反映させるためには、```npm run build```でビルドを行う必要があります。
+
+<h2 id="dynamic-params">新規ページのみ生成</h2>
+
+今までの例は、既存ページを更新する内容でした。今度は、**新規ページ**を生成する例です。
+
+上述のとおり、新規ページの生成は、「ビルド時に```generateStaticParams```で生成されなかったパス」に対して行われます。そのため、```generateStaticParams```を使っているページでのみ使用可能です。
+
+いわゆる、[dynamic routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)のページでのみ有効な機能です。
+
+<h3 id="dp-page">ページの概要</h3>
+
+#### 検証するroute
+
+dynamic routesにする必要があるので、```app/post/[slug]```フォルダを作りました。
+
+#### 取得するパスの一覧
+
+```generateStaticParams```で取得するパスの一覧は、```public/posts```直下にあるフォルダ名にします。
+
+以下のようなフォルダ構成です。
+
+```powershell
+PUBLIC\POSTS
+├─p1
+│    test.txt
+│
+├─p2
+│    test.txt
+│
+└─p3
+     test.txt
+```
+
+これで、```/post/p1```、```/post/p2```、```/post/p3```のページが生成されます。
+
+#### パスに対応したページのコンテンツ
+
+```public/posts/```の直下の各フォルダには、テキストデータ（test.txt）が配置されています。そのファイルの中身をページのコンテンツとしてレンダリングします。
+
+#### pageのソース
+
+<div class="fn">`app/post/[slug]/page.tsx`</div>
+
+```tsx
+import fs from "node:fs/promises";
+import path from "node:path";
+
+// trueだと、後から追加したページもアクセス時に生成してくれる。
+// デフォルト値がtrueなので、省略可能。
+// falseにすると、後から追加したページへのアクセスは404エラーになる。
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  // パス一覧を生成する関数。
+  // public/postsフォルダ配下のフォルダ名をパスにしている。
+  const paths = [];
+  const dirpath = path.join(path.resolve(), "public/posts");
+  const dir = await fs.readdir(dirpath);
+  for (const f of dir) {
+    const check = path.join(dirpath, f);
+    const stat = await fs.stat(check);
+    if (stat.isDirectory()) {
+      paths.push(f);
+    }
+  }
+  return paths.map(p => { dir: p })
+}
+
+async function getProps(dir: string) {
+  const fpath = path.join(path.resolve(), "public/posts", dir, "test.txt");
+  const content = await fs.readFile(fpath, { encoding: "utf-8" });
+  return content;
+}
+
+interface PageProp {
+  params: {
+    dir: string;
+  }
+}
+
+export default async function Page({ params }: PageProp) {
+  const { dir } = params;
+  const content = await getProps(dir);
+  return (
+    <>
+      <h1>dynamic routesのページ</h1>
+      <div>{content}</div>
+    </>
+  );
+}
+```
+
+```generateStaticParams```は、```public/posts```直下にあるフォルダ名の一覧を返しています。
+
+```getProps```では、```public/posts```直下のフォルダ内にある、テキストファイルの中身を返しています。
+
+ポイントになるのは、```export const dynamicParams = true```の部分です。```dynamicParams```がtrueだと、ビルド後に追加されたパスに対しても、アクセス時にページの生成が行われます。
+
+コメントにあるとおり、デフォルトがtrueのため省略しても大丈夫です。逆に無効にしたい場合は明示的にfalseに設定する必要があります。
+
+<h3 id="dp-build">ビルドして稼働</h3>
+
+```npm run build```でビルドし、```npm start```で本番稼働させます。
+
+ビルド時点では、```public/posts```には「p1,p2,p3」の３つのフォルダが存在していました。なので、ページとしては```/post/p1```から```/post/p3```までは生成されている状態です。
+
+本番稼働している状態で、ビルド時に存在しなかった```public/posts/p4```フォルダを作成し、そこに「ビルド後に追加！」と書いたテキストファイルを保存してみます。そして、```http://localhost:3000/post/p4```にアクセスし、ページが表示されるか検証していきます。
+
+<h3 id="dp-add">ページを追加してみる</h3>
+
+#### 追加前に挙動を確認
+
+フォルダを作る前に、```http://localhost:3000/post/p4```にアクセスしてどんな動きになるか確認してみます。
+
+<Image src={dp500Err} width={493} height={640} alt="500-err-page" />
+
+ページを追加していないので、エラーは想定内です。404（Not Found）エラーではなく、500（Internal Server Error）になっていますね。「post/p4」のパスに対して、
+ページを生成しようとしたことが伺えます。
+
+#### 追加した上で確認
+
+今度は、p4フォルダを作成し、テキストファイルを保存した上で確認してみます。
+
+ちゃんとファイルが入っているか確認します。
+
+```powershell
+> ls .\public\posts\p4\test.txt
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        2024/02/11     22:48             24 test.txt
+```
+
+大丈夫ですね。ブラウザで開いてみてみます。
+
+<Image src={dpAdd} width={544} height={195} alt="added-page" />
+
+ちゃんと追加したテキストファイルの内容で表示されてますね！
+
+なお、今回の検証では新ページの生成のみ確認していますが、Time-based RevalidationやOn-Demand Revalidationと組み合わせることも可能です。使い方は同じです。
+
+<h3 id="dp-constraint">制約</h3>
+
+既に述べたように、新ページの生成の対象となるのは、```generateStaticParams```を使っているdynamic routesのみです。```/blog```とか```/news/updates```のように新しいrouteを追加した場合、これらは対象にはなりません。```npm run build```で再度ビルドを行う必要があります。
+
+これに加えて、Time-based RevalidationやOn-Demand Revalidationと同じ制約があります。
+
+つまり、Server Componentsからasync関数で取得した外部データ部分（今回の例の```getProps```関数）のみ、データ生成がされます。pageのコンポーネントに変更を加えたり、CSSの変更をしても、これらの変更は再度反映されません。この場合も、```npm run build```する必要があります。
+
+<h3 id="dp-404">おまけ：存在しないパスには404ページを表示したい場合</h3>
+
+さきほど、「p4」フォルダを作成する前にアクセスした時、**500エラー**のページが表示されました。
+
+これは少し気持ちが悪いです。「新ページは生成して欲しいけど、存在しないパスに対しては404エラーのページを表示したい」、というケースもあると思います。
+
+これは、```"next/navigation"```の[notFound](https://nextjs.org/docs/app/api-reference/functions/not-found)関数を使うことで、簡単に解決できます。この関数を呼び出すと、not-foundページを表示してくれます。自作のファイルを置いていない場合、デフォルトの404ページが表示されます。
+
+今回の例では、```getProps```関数を以下のように修正すれば大丈夫です。
+
+<div class="fn">`app/post/[slug]/page.tsx`</div>
+
+```tsx
+// ~略
+import { notFound } from "next/navigation";
+
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  // ~略：変更なし
+}
+
+async function getProps(dir: string) {
+  const fpath = path.join(path.resolve(), "public/posts", dir, "test.txt");
+  try {
+    const content = await fs.readFile(fpath, { encoding: "utf-8" });
+    return content;
+  } catch (err) {
+    // 存在しないパスを渡すと、dynamicParams=true（デフォルト）の場合は500エラーになる。
+    // notFoundを呼び出すことで404エラーを返すことができる。
+    return notFound();
+  }
+}
+
+export default async function Page({ params }: PageProp) {
+  // ~略：変更なし
+}
+```
+
+```getProps```関数で、テキストファイルを取得する際に、取得できなかった場合にnotFound関数を呼び出しています。これで、まだフォルダやファイルが作成されていないパスに対しては404ページが表示されます。
+
+試しに、まだフォルダ作成されていない```http://localhost:3000/post/p5```にアクセスしてみます。
+
+<Image src={dp404Err} width={492} height={601} alt="404-err-page" />
+
+500エラーでなく、404エラーが表示されました！
+
+<h2 id="summary">まとめ</h2>
+
+ビルド後に、既存ページを更新する方法を2つと、新ページを生成する方法を1つ検証しました。結果をまとめます。
+
+### 既存のページの更新
+
+更新をする間隔を秒数で指定、もしくはformの送信処理等、所定のタイミングで更新をすることが可能です。ただし、更新されるのはServer Components内でasync関数で取得したデータ部分のみとなります。ページ内で使用しているコンポーネントやCSSの変更は、更新対象にならず、```npm run build```を実行する必要があります。
+
+### 新ページの更新
+
+```app/post/[slug]```のようなdynamic routesであれば、デフォルトで新ページも生成してくれます。Server Components内のasync関数で新しいデータの取得はされますが、ページ内で使用しているコンポーネントやCSSの変更までは反映されません（ビルド時の内容のまま）。これらを反映するには、```npm run build```を実行する必要があります。
+
+<h2 id="last">最後に</h2>
+
+Next.jsのApp Routerで、Time-based Revalidation、On-Demand Revalidation、およびdynamic routesでの新ページの生成方法を検証してみました。
+
+いずれも、旧Pages RouterでIncremental Static Regenerationの機能の代替となるものですが、結構理解に苦労しました。
+
+検証するまでは、「ISRは全体ビルド後に、特定のページのみ**ビルド**をしてくれる機能」と理解してしまっていました。しかしHTML(JSX)やCSSの部分などは、変更しても反映されないので、ビルドという表現は正確ではありませんね。ページ全体をビルドしているというより、async関数等で外部から取得しているデータのみ更新・生成している、というほうが適切でしょうか。
+
+まぁ、確かにJSXやCSSも含めてビルドするとなると、結構負荷がかかりそうですからね、、そこまで求めてはいけないのかもしれません。
+
+しかしこれで、ISRとして何ができて、どういう制約があるのか、ある程度掴めてきました。このサイトも、ページ追加や修正のたびに全体をビルドしなくても良いように、移行を前向きに検討していきたいと思います。
+
+<h2 id="ref">参考</h2>
+
+- Revalidating-data: https://nextjs.org/docs/app/building-your-application/data-fetching/fetching-caching-and-revalidating#revalidating-data
+- Route Segment Config: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+- revalidatePath: https://nextjs.org/docs/app/api-reference/functions/revalidatePath
