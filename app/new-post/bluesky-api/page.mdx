@@ -1,0 +1,232 @@
+import Image from "../ImageWrapper";
+import myBot from "./my-bot.jpg";
+import account from "./account.jpg";
+import appPwd from "./app-pwd.jpg";
+import addPwd from "./add-pwd.jpg";
+import generatePwd from "./generate-pwd.jpg";
+import completePwd from "./complete-pwd.jpg";
+import postText from "./post-text.jpg";
+import postImage from "./post-image.jpg";
+
+export const mdxMeta = {
+    title:"Bluesky APIで自動投稿する方法",
+    description:"Blueskyは、Twitter社の社内プロジェクトが独立した分散型SNSです。今回はPythonを使って、BlueskyのAPIで自動投稿する方法を解説します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/2/19",
+};
+
+# Bluesky APIで自動投稿する方法
+
+<nav class="table-of-contents">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li>
+  <a href="#prep">準備</a>
+  <ul>
+    <li><a href="#account-id">アカウントID</a></li>
+    <li><a href="#password">パスワード</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#at-protocol">AT Protocol</a>
+  <ul>
+    <li><a href="#at-protocol">At Protocolについて</a></li>
+    <li><a href="#install-at-protocol">インストール</a></li>
+    <li><a href="#pip-error">インストール後にpipが動かなくなった場合</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#api-exec">API実行</a>
+  <ul>
+    <li><a href="#api-login">ログイン</a></li>
+    <li><a href="#api-text">テキスト投稿</a></li>
+    <li><a href="#api-image">画像投稿</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+[Bluesky](https://bsky.app/)というSNSをご存知でしょうか？
+
+Twitterの社内プロジェクトから独立したSNSで、いわゆる[分散型SNS](https://ja.wikipedia.org/wiki/%E5%88%86%E6%95%A3%E5%9E%8B%E3%82%BD%E3%83%BC%E3%82%B7%E3%83%A3%E3%83%AB%E3%83%BB%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF)と呼ばれるものです。
+
+2023年頃にサービスを開始してから、しばらくは招待制だったようですが、ついに2024年2月からは誰でも使えるようになりました！
+
+しかもAPIも充実しており、これを使ってサードパーティ製のアプリの作成もして良いようです。昔のTwitterみたいですね。
+
+さっそく、Pythonを使って自動投稿を試してみました。こんな感じで、物語を自動投稿するBotです。
+
+<Image src={myBot} alt="bot-exapmle" width={708} height={396}/>
+
+ということで、今回はAPIを実行するための準備と、Pythonの[atproto](https://pypi.org/project/atproto/)というパッケージを使ってBlueskyにテキストの投稿と画像投稿をする方法を紹介します。
+
+<h2 id="prep">準備</h2>
+
+APIを使うためには、アカウントのIDとパスワードが必要です。
+
+<h3 id="account-id">アカウントID</h3>
+
+名前の下にある@を除いた文字列が、アカウントです。**@は不要**なのでご注意を。
+
+<Image src={account} alt="account-name" width={733} height={297}/>
+
+<h3 id="password">パスワード</h3>
+
+API実行用のパスワードを生成します。
+
+Blueskyにログインし、左のサイドバーにある歯車マークをクリックします。そして、「高度な設定」セクションにある「アプリパスワード」をクリックします。
+
+<Image src={appPwd} alt="app-password" width={662} height={674}/>
+
+「アプリパスワードを追加」をクリックします。
+
+<Image src={addPwd} alt="add-password" width={754} height={356}/>
+
+パスワードにつける名前を入力します。デフォルトで英語で色の名前が生成されているので、拘りがなければそのまま使って良いと思います。そして、「アプリパスワードを作成」をクリックします。
+
+<Image src={generatePwd} alt="generate-password" width={732} height={360}/>
+
+パスワードが表示されるので、コピペしておきましょう。画面上でも、再表示はしないと言われていますので、ここでコピペを忘れないようにしましょう。
+
+<Image src={completePwd} alt="complete-password" width={771} height={403}/>
+
+<h2 id="at-protocol">AT Protocol</h2>
+
+<h3 id="at-protocol">At Protocolについて</h3>
+
+Blueskyでは[AT Protocol](https://atproto.com/)というプロトコルでAPIを実行します。いわゆるREST APIとは実行の仕方は少し異なります。この辺りが分散型SNSたる所以なのでしょう。
+
+TypeScript、Python、Go、DartではAPIを実行するためのパッケージが準備されています。投稿するだけなら、パッケージの使い方が分かれば、AT Protocolの仕様や、APIの仕様を詳細に理解していなくても問題はありません。
+
+私もAPIの仕様自体はあまり確認できていないので、今回は割愛させていただきます。
+
+ちなみに、公式が作成しているのはTypeScriptのパッケージとのことです。
+
+今回紹介する[Pythonのパッケージ](https://atproto.blue/en/latest/)は、有志のコミュニティが作成しているもので、現在バージョンは**0.0.41**です。バージョン**1.0.0**になるまでは、互換性は保証されない、と公式サイトでアナウンスされています。
+
+> Under construction. Until the 1.0.0 release compatibility between versions is not guaranteed.
+
+「製作中。1.0.0のリリースまで、バージョン間の互換性は保証されません」とのことです。まだ試験中のパッケージと捉えたほうが良さそうですね。とはいえ、Blueskyの公式サイトのチュートリアルにバッチリ使われていますが笑
+
+<h3 id="install-at-protocol">インストール</h3>
+
+pipで```atproto```をインストールします。Pythonのv3.7.1以上である必要があります。
+
+```bash
+pip install atproto
+```
+
+v0.0.41がインストールされました。
+
+```bash
+> pip freeze | findstr "atproto"
+atproto==0.0.41
+```
+
+これで準備完了です。
+
+<h3 id="pip-error">pipが動かなくなった場合</h3>
+
+私のLinux環境でatprotoをインストールした時、既にインストールされていた[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)のバージョンと嚙み合わせが悪かったのか、どんなpipコマンドを打っても、以下のようなエラーが出るにようになってしまいました。
+
+> AttributeError: module 'lib' has no attribute 'X509_V_FLAG_CB_ISSUER_CHECK'
+
+pipをインストールし直した上で、pyOpenSSLをアップデートしたら解消しました。もし同じエラーが出た場合は参考にしてみてください。
+
+pipや依存パッケージのバージョンによると思うので、一概には言えないと思いますが、あらからじめpyOpenSSLをアップデートしておくと発生しないかもしれません。
+
+もしくは、[venv](https://docs.python.org/ja/3/library/venv.html)環境にインストールすればリスクを減らせるかと思います。
+
+<h2 id="api-exec">API実行</h2>
+
+<h3 id="api-login">ログイン</h3>
+
+アカウントIDとさきほど生成したパスワードでログインをします。
+
+```python
+from atproto import Client
+
+# アカウントID
+account = "zenryoku-kun.bsky.social"
+# さきほど生成したパスワード
+pwd = "*******" 
+
+client = Client(base_url='https://bsky.social')
+client.login(account, pwd)
+```
+
+```atproto```から```Client```をimportし、```base_url="https://bsky.social"```で初期化しています。
+
+このurlは、BlueskyのメインPDS(Personal Data Store)とのことです。分散SNS特有の概念なのですかね。
+
+そして、clientの```login```メソッドにアカウントIDとパスワードを渡し、ログインしています。
+
+<h3 id="api-text">テキスト投稿</h3>
+
+ログイン後、clientの```send_post```メソッドに投稿したい文字列を指定します。
+
+```python
+client.send_post("今日は、世界")
+```
+
+実行すると以下のように投稿されました。
+
+<Image src={postText} alt="post-text-example" width={724} height={250}/>
+
+すごい簡単ですね！
+
+<h3 id="api-image">画像投稿</h3>
+
+投稿用の画像として、```test.jpg```を同じ階層に置いてあります。
+
+画像をバイナリで読み取り、clientの```send_image```メソッドに渡すのが基本的な使い方です。
+
+```python
+# 画像をバイナリで読み取る
+with open("test.jpg","rb") as f:
+    img = f.read()
+
+# 画像埋込投稿
+client.send_image("今日は、世界",img,"鳩")
+```
+
+```send_image```に3つ引数を渡しています。1つ目が投稿するテキスト、２つ目が画像データ、３つ目は画像の代替テキストです。
+
+実行すると、以下のように投稿されました。
+
+<Image src={postImage} alt="post-image-example" width={755} height={652}/>
+
+こちらもシンプルですね。
+
+なお、仕様上は画像は4つまで投稿することができるようです。TypeScriptの例を見ていると、確かに複数指定できそうなのですが、Pythonのatprotoではやり方が分かりませんでした。もしご存知の方いたら教えてください。
+
+<h2 id="last">最後に</h2>
+
+今回は、API利用に必要な準備と、Pythonでatprotoを使ってBlueskyに自動投稿する方法を解説しました。
+
+「分散型SNS」ということで、何か複雑な処理が必要かと思いましたが、パッケージがいい感じに抽象化してくれて、結構簡単にできますね。
+
+BlueskyのAPIは、他にもリプライやメンション等、豊富な機能があるようです。ドキュメントの理解が進んだら、また別の記事に書くかもしれません。
+
+しかし、公式もBot制作などのテンプレート等も準備してくれていたり、サードパーティ製アプリの作成もOKだったり、昔のTwitterのようですね。実際のアプリの使い勝手もTwitterそっくりです。
+
+現在のTwitter（X）は、近年の混乱からか、少なくとも私のタイムラインからは人がかなり減ってしまいました。皆どこに行ってしまったのでしょう。。。寂しいです。
+
+昨年、Meta社から[Threads](https://www.threads.net/login)もリリースされましたし、SNS界隈も群雄割拠の時代になるのでしょうか。
+
+私はまだTwitterに残りますが、今後どこに人が集まっていくのかは注目していきたいです。
+
+<h2 id="ref">参考</h2>
+
+- Bluesky Developer APIs: https://www.docs.bsky.app/
+- Get Started: https://www.docs.bsky.app/docs/get-started
+- Creating a post: https://www.docs.bsky.app/docs/tutorials/creating-a-post
+- The AT Protocol SDK for Python: https://atproto.blue/en/latest/
