@@ -51,5 +51,6 @@
 @media (prefers-color-scheme:dark) {
   .container {
     background-color: #3A3A3A;
+    border-left: 1px solid #555;
   }
 }

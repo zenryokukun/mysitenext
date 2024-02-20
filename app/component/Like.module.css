@@ -67,3 +67,10 @@
     font-size: 0.9rem;
   }
 }
+
+@media (prefers-color-scheme:dark) {
+  .likeWrapper {
+    border-top: 1px solid #555;
+
+  }
+}
