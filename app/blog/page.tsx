@@ -1,22 +1,31 @@
-import Image from "next/image";
-import Link from "next/link";
+import Content from "./Content";
 import { findBlogDocs } from "../../lib/db/func";
 import { dateToString } from "../../lib/util";
-import blogRoute from "../../lib/blog-route";
 import sortByDate from "../../lib/db/sort-bloginfo";
+import keywordsSet from "./keywordsSet";
 import styles from "../../styles/Blog.module.css";
+import { ObjectId } from "mongodb";
 
 /**Description ブログ記事の一覧Page
  * Date型項目を文字列化している内部用type。
  * `types.ts`の同項目とは異なる
  */
-interface BlogInfoOverrides {
+export interface BlogInfoOverrides {
   assetsDir: string;
   thumb: string;
   posted: string;
   title: string;
   summary: string;
   md: string;
+  genre: string;
+  keywords?: string[];
+}
+
+// MongoDBの_idがObject型のため、client componentに渡せない。
+// deleteで_idを削除したいが、?がついたプロパティでないと出来ない。
+// WithId<BLogInfo> -> BLogInfoOverridesに型変換の間にかませるための型。
+interface TmpBlogInfo extends BlogInfoOverrides {
+  _id?: ObjectId;
 }
 
 
@@ -28,65 +37,29 @@ async function getProps() {
     // posted,firstPostedDateの２つの日付項目を片方に寄せて、文字列にする。
     const _posted = blog.firstPostedDate || blog.posted;
     const posted = _posted === undefined ? "-" : dateToString(_posted);
-    docs.push({ ...blog, posted })
+    // postedをBlogInfoにマージ。TmpBlogInfo型にして、_idプロパティを削除する。
+    const tmpBlogInfo: TmpBlogInfo = { ...blog, posted };
+    delete tmpBlogInfo._id;
+    // BLogInfoOverrides型として登録
+    docs.push(tmpBlogInfo)
   })
 
   return docs;
 }
 
+async function getKeyWordsProp(docs: BlogInfoOverrides[]) {
+  return keywordsSet(docs);
+}
+
 export default async function Page() {
 
-  const blogDocs = await getProps()
-
+  const blogDocs = await getProps();
+  const keywords = await getKeyWordsProp(blogDocs);
   return (
     <>
       <main className={styles.container}>
-        <div className={styles.content}>
-          {blogDocs.map((blog, i) => <BlogLink key={i} blog={blog} i={i} />)}
-        </div>
+        <Content keywords={keywords} blogDocs={blogDocs} />
       </main>
     </>
-  )
-}
-
-
-interface BlogLinkProp {
-  blog: BlogInfoOverrides;
-  i: number;
-}
-function BlogLink({ blog, i }: BlogLinkProp) {
-  const { assetsDir, thumb, posted, title, summary, md } = blog;
-  const thumbClass = thumb.length > 0 ? styles.thumb : styles.logo
-
-  // EX:/public/posts/201102_1 
-  // サムネのパス。mdでもmdxでも、/public/postsにある。
-  const thumbPath = thumb.length > 0
-    ? "/posts/" + assetsDir + "/" + thumb
-    : "/zen_logo.png";
-  // ページのパス。md:/post/記事名、mdx:/new-post/記事名
-  const route = blogRoute({ assetsDir, md });
-
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.imgWrapper}>
-        <Image
-          src={thumbPath}
-          alt="thumbnail"
-          fill
-          sizes="(max-width:900px):95vw,(max-width:1100px) 25vw,16vw"
-          className={thumbClass}
-          priority={i < 10 ? true : false} />
-      </div>
-      <h3 className={styles.when}>{posted}</h3>
-      <div className={styles.description}>
-        <h2 className={styles.title}>{title}</h2>
-        <p className={styles.summary}>{summary}</p>
-      </div>
-      <Link href={route} className={styles.noDecoration}>
-        <button className={styles.read}>
-          Read
-        </button>
-      </Link>
-    </div>
   )
 }
