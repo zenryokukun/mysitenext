@@ -54,7 +54,7 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 }
 
 /* videoを真ん中に寄せて表示 */
-.articleContainer>p>video {
+.articleContainer video {
   display: block;
   margin: auto;
 }
