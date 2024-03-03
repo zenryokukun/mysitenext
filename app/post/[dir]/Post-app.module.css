@@ -206,7 +206,7 @@ flexだとmarginのcollapseが無く、p要素間のmarginが計32px（16px*2）
 }
 
 @media screen and (max-width:650px) {
-  .articleContainer>p>video {
+  .articleContainer video {
     width: 100%;
     height: auto;
   }
