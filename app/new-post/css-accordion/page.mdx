@@ -1,0 +1,386 @@
+import Image from "../ImageWrapper";
+import baseMenu from "./base-menu.jpg";
+import hiddenMenu from "./hidden-menu.jpg";
+
+export const mdxMeta = {
+    title:"【CSS】grid-template-rowsを使ってアコーディオンを実装する方法",
+    description:"CSSのtransitionとgrid-template-rowsを使って、アコーディオン・メニューをシンプルに実装する方法を紹介します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/3/3",
+};
+
+# CSSでアコーディオンを実装する方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#about">アコーディオンとは</a></li>
+<li>
+  <a href="#about-page">この記事の内容</a>
+  <ul>
+    <li><a href="#no-js">JavaScriptを使いたくない場合</a></li>
+  </ul>
+</li>
+<li><a href="#preq">前提知識</a></li>
+<li>
+  <a href="#implement">grid-template-rowsを使った実装例</a>
+  <ul>
+    <li><a href="#base">ベースとなるHTML</a></li>
+    <li><a href="#closed">メニューを非表示にする</a></li>
+    <li><a href="#animation">CSSでアニメーションを設定</a></li>
+    <li><a href="#js">JavaScriptでCSSを切り替える</a></li>
+    <li><a href="#check">動作確認</a></li>
+  </ul>
+</li>
+<li><a href="#merit">grid-template-rowsを使うメリット</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+このサイトはNext.jsで作っていることもあって、Next.js関連の記事をいくつか書いてきました。
+
+しかし、サイト作成にあたって一番私を苦しめるのは、Next.jsでもReact.jsでもJavaScriptでもなく、他でもならぬCSSです。
+
+今まで書いた記事を振り返ってみると、あろうことかCSS関連の記事が1つもありませんでした。
+
+私が苦戦した箇所は、他の方も同じく苦戦する可能性もあると思うので、今後はCSS関連の記事も少しずつ追加していこうと思います。
+
+ということで今回は、CSSを使ってアコーディオンを作成する方法を紹介していきます。
+
+<h2 id="about">アコーディオンとは</h2>
+
+Webページやモバイルアプリ等で、ボタンのクリックなどの操作と連動して、アイテムの表示や非表示を切り替える部品を「アコーディオン」と呼びます。「アコーディオン・メニュー」と呼ぶこともあるようですね。
+
+表示の際は縦に広がるアニメーションがつき、非表示の際は縮むアニメーションがつくのが一般的かと思います。
+
+言葉より動画でみたほうが分かりやすいかと思います。
+
+<div>
+<video src="/posts/css-accordion/accordion.mp4" controls preload="none" class="img-border" width="480" height="270" >Accordion example</video>
+</div>
+
+アニメーションの有無は別として、様々なWebサイトで実装されていますよね。
+
+Webページのモバイル対応をする際に、ナビゲーション・メニューの一部非表示にして、アイコンのタップと連動して表示する仕組みは、広く導入されているかと思います。このサイトのナビゲーション・メニューもそうですよ！
+
+<h2 id="about-page">この記事の内容</h2>
+
+今回紹介するのは、CSSの[Grid container](https://developer.mozilla.org/ja/docs/Glossary/Grid_Container)の[grid-template-rows](https://developer.mozilla.org/ja/docs/Web/CSS/grid-template-rows)を使ったアコーディオンの実装例となります。JavaScriptも少し使います。
+
+[The simple trick to transition from height 0 to auto with CSS](https://www.youtube.com/watch?v=B_n4YONte5A)の動画を参考にしています。投稿者のKevinさんは、CSSに特化した動画を投稿されています。大体の困りポイントは解説されているため、私も非常に参考にしています。英語ですが、自動翻訳で見ればそんなに気になりません。
+
+<h3 id="no-js">JavaScriptを使いたくない場合</h3>
+
+他の方式もあります。私自身試せていないので、参考として解説サイトのリンクを貼ります。レスポンシブ対応等で、同じHTMLタグでPCとモバイル表示を切り替えたい場合は工夫が必要かもしれませんが、同じ表示で良いのであればこっちのがシンプルかもしれませんね。
+
+#### inputタグのchecked属性を使って表示・非表示を切り替える方式
+
+- [CSSのみ（JavaScript無し）でアコーディオンメニューを実装する方法](https://kingsite.jp/blog/0121)
+
+#### detailsタグとsummaryタグを使う方式
+
+[details](https://developer.mozilla.org/ja/docs/Web/HTML/Element/details)タグという折り畳み専用のタグと、[summary](https://developer.mozilla.org/ja/docs/Web/HTML/Element/summary)タグを使った方式です。
+
+- [detailsタグとsummaryタグで実装しよう！アコーディオン（開閉アニメーションつきサンプルあり）](https://zenn.dev/kagan/articles/711ae425300ac5)
+
+<h2 id="preq">前提知識</h2>
+
+HTML、CSS、JavaScriptの基礎的な知識がある前提で解説しています。
+
+JavaScriptは[querySelector](https://developer.mozilla.org/ja/docs/Web/API/Document/querySelector)や[addEventListener](https://developer.mozilla.org/ja/docs/Web/API/EventTarget/addEventListener)の使い方が分かれば問題ありません。
+
+CSSは上述のとおり、gridコンテナを使います。とはいえ、特有のプロパティは[grid-template-rows](https://developer.mozilla.org/ja/docs/Web/CSS/grid-template-rows)のみ使うので、ここの基礎だけ押さえていればOKです。
+
+<h2 id="implement">grid-template-rowsを使った実装例</h2>
+
+開くときと閉じるときのアニメーションもつけて、順を追ってアコーディオンのサンプルを実装していきます。
+
+サンプルの完成版は[github](https://github.com/zenryokukun/css-accordion)に載せてあるので、参考にしてください。
+
+<h3 id="base">ベースとなるHTML</h3>
+
+まずは、下の画像のようなページを作ってみます。
+
+<Image src={baseMenu} alt="base-menu" width={325} height={275}/>
+
+最終的には、「FRUITS」のボタンを押すと、下にある「APPLE」～「ORANGE」の果物のメニューが開いたり、閉じたりするようにしていきます。今は、メニューが全て表示されている状態です。
+
+#### html
+
+headタグ内のlinkタグで、```main.css```を指定しています。
+
+後は、メニューの開け閉めのトリガーとなる「FRUITS」は、実際にクリックすることになるのでbuttonタグで実装しています。
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <title>アコーディオン</title>
+</head>
+
+<body>
+  <h1 class="center">アコーディオン</h1>
+  <device>
+    <button class="accordion-label">FRUITS</button>
+    <div>APPLE</div>
+    <div>BANANA</div>
+    <div>KIWI</div>
+    <div>ORANGE</div>
+  </div>
+</body>
+
+</html>
+```
+
+#### css
+
+上記のHTMLのlinkタグで指定したCSSです。
+
+<div class="fn">```main.css```</div>
+
+```css
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.center {
+    text-align: center;
+}
+
+.accordion-label {
+    background-color: #555;
+    color: #f1f1f1;
+    border: none;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 7px 15px 7px 15px;
+}
+```
+
+全要素を```border-box```にしていたり、「FRUITS」ボタンに装飾をしていたり、bodyタグを```flex```コンテナにしていたりします。現時点ではアコーディオンの実装には影響はありませんので、詳細は割愛します。
+
+<h3 id="closed">メニューを非表示にする</h3>
+
+次に、メニューとなる「APPLE」～「ORANGE」を下の画像のように非表示にします。
+
+<Image src={hiddenMenu} alt="hidden-menu" width={360} height={168}/>
+
+非表示にするアプローチは色々ありますが、今回はgrid-template-rowsを使を使います。
+
+#### html
+
+headタグは変更がないので省略しています。
+
+<div class="fn">```index.html```</div>
+
+```html
+<h1 class="center">アコーディオン</h1>
+<div>
+  <button class="accordion-label">FRUITS</button>
+  <div class="grid">
+    <div class="wrapper">
+      <div>APPLE</div>
+      <div>BANANA</div>
+      <div>KIWI</div>
+      <div>ORANGE</div>
+    </div>
+  </div>
+</div>
+```
+
+#### CSS
+
+追加したgridとwrapperクラスのみ載せています。
+
+<div class="fn">```main.css```</div>
+
+```css
+.grid {
+    display: grid;
+    grid-template-rows: 0fr;
+}
+
+.wrapper {
+    overflow: hidden;
+}
+```
+
+#### 解説
+
+まずHTMLですが、「APPLE」～「ORANGE」のメニューに、2つの親要素を追加しています。
+
+外側のdiv（クラス名:grid）は、gridコンテナとしての役割を持ちます。CSSで```grid-template-rows: 0fr```を設定しています。これにより、「gridのアイテムは１行のみで、高さは0fr」となります。
+
+内側のdiv（クラス名:wrapper）は、gridアイテムとなります。親要素（上述の外側のdiv）により、gridのアイテムの行数は1つにする必要があります。複数あるメニューを１つにまとめるために、このdivを追加しています。
+
+このwrapperクラスのdivをなくし、「APPLE」～「ORANGE」を直接gridアイテムにすると、```grid-template-rows: 0fr 0fr 0fr 0fr```のように、メニュー数分の設定が必要になってしまいます。メニューの数が不定や可変の場合に対応が難しくなるため、メニュー自体をgridアイテムにするのではなく、メニューを囲む親要素（wrapperクラスのdiv）がgridアイテムになるようにしています。
+
+wrapperクラスの親要素（gridクラスのdiv）は、CSSで高さ0frを設定していますが、子要素（厳密には孫）のメニューに高さがあります。特段CSSで制御しない限り、親要素の高さが0frであっても、メニューは親要素からはみ出て表示されてしまいます。CSSでいうところの、overflowですね。
+
+はみ出た子要素を非表示にするために、CSSでwrapperクラスに```overflow: hidden```を設定しています。
+
+<h3 id="animation">CSSでアニメーションを設定</h3>
+
+gridクラスのdiv要素に、アニメーション用のCSSを設定します。
+
+通常の状態だと、grid-template-rowsによって高さが0frになっているため、メニューは見えません。高さが1frになると、メニューは完全に見えるようになります。
+
+CSSの[transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)プロパティを使って、grid-template-rowsの0fr～1frの変化を設定していきます。
+
+CSSに変更を加えます。変更部分のみ載せています。
+
+<div class="fn">```main.css```</div>
+
+```css
+.grid {
+    display: grid;
+    grid-template-rows: 0fr;
+    /* 
+    　追加：transitionにgrid-template-rowsの設定。
+      0.3秒かけて、変化を描写。
+     */
+    transition: grid-template-rows 0.3s;
+}
+
+.open {
+  /* 
+  　追加： 高さを1fr。
+  　javascriptで動的に付与し、0fr⇔1frに切り替える
+  */
+  grid-template-rows: 1fr;
+}
+```
+
+gridクラスに追加した```transition: grid-template-rows 0.3s```により、grid-template-rowsの変化は0.3秒かけて描写されるようになります。
+
+openクラスは、grid-template-rowsの高さを1frにするクラスです。JavaScriptでこのクラスを抜き差しすることで、grid-template-rowsの高さを0fr、1frに切り替えていきます。
+
+しかし、transitionにgrid-template-rowsを追加することが出来るんですね～便利。
+
+<h3 id="js">JavaScriptでCSSを切り替える</h3>
+
+アコーディオンを開くには、上で追加したCSSのopenクラスをgridクラスのdiv要素につける必要があります。逆に閉じる場合は、openクラスを外す必要があります。
+
+ということで、「FRUITS」ボタンのクリックに連動して、openクラス抜き差しするJavaScriptを実装します。
+
+#### htmlにscriptタグを追加
+
+追加するJavaScriptのscriptタグを追加します。ファイル名は**main.js**にしました。
+
+<div class="fn">```index.html```</div>
+
+```html
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <script src="main.js"></script>
+  <title>アコーディオン</title>
+</head>
+```
+
+変更点はscriptタグの追加のみです。Body部分は省略しています。
+
+#### JavaScript
+
+<div class="fn">```main.js```</div>
+
+```js
+function init() {
+    // アコーディオンの開け閉めのトリガーになるボタン
+    const btn = document.querySelector(".accordion-label")
+    // gridコンテナ要素
+    const container = document.querySelector(".grid")
+    // アコーディオンの開け閉め状態。false->閉じてる。true->開いている。
+    let isOpen = false;
+
+    // トリガーのボタンをクリックした時の処理
+    btn.addEventListener("click", () => {
+        // 開け閉めを反転
+        isOpen = !isOpen;
+        // gridコンテナのデフォルトのクラス名
+        let css = "grid"
+        // 開いた状態ならば、アニメーション用のopenクラスを追加。
+        if (isOpen) {
+            css += " " + "open"
+        }
+        // gridコンテナのクラスを設定
+        container.className = css;
+    })
+}
+
+window.addEventListener("load", init)
+```
+
+```isOpen```変数でアコーディオンの開け閉めの状態を管理しています。
+
+「FRUITS」ボタンがクリックされたら、まず```isOpen```を反転させます（trueならfalse、falseならtrueを設定）。そして```isOpen```がtrueの場合、さきほど作成したCSSのopenクラスを設定されるように、逆にfalseの場合は設定されないように、動的にクラス名を制御しています。
+
+念のための補足ですが、gridコンテナ（gridクラスのdiv要素）のに適用されるCSSのクラスは、```isOpen```に応じて以下の値になります。
+
+- isOpenがtrue: gridクラスとopenクラス
+- isOpenがfalse: gridクラスのみ
+
+<h3 id="check">動作確認</h3>
+
+実際に動かしてみます。
+
+<div>
+<video src="/posts/css-accordion/accordion-with-js.mp4" controls preload="none" class="img-border" width="480" height="270" >Accordion example</video>
+</div>
+
+ちゃんと開け閉めのアニメーションがついてますね！今回は他に装飾はほとんどしていませんが、gridコンテナの背景色をつけたり文字色を変えたりすると、さらに見栄えもよくなるかと思います。後は、キャレット（こういう矢印みたいなやつ→「＞」）のアイコンをボタンの横につけて、開いた状態では「∨」に表示を切り替えたりすると、それっぽくなりそうですね！
+
+<h2 id="merit">grid-template-rowsを使うメリット</h2>
+
+「grid-template-rowsではなく、heightプロパティを使えば良いのでは？」と思われた方もいると思います。
+
+確かに、```height: 0px```と```height: auto```を切り替えることで、メニューの表示・非表示は対応が可能です。
+
+しかし、```height: 0px```から```height: auto```のtransitionを設定しても、残念ながら**アニメーションはつきません**。直感的には上手くいきそうなものですが、「auto」へのtransitionは効かないのが仕様のようです。
+
+一方、「0⇔100px」のような固定値へのtransitionであればアニメーションはつきます。ただ、事前に高さが計算できる場合にしか使えないので、汎用性は下がってしまいます。
+
+grid-template-rowsを使った場合、事前に高さが分からなくても、0fr⇔1frのtransitionでアニメーションがつくため、この問題を回避できます。
+
+<h2 id="last">最後に</h2>
+
+今回は、grid-template-rowsを使ったアコーディオンの実装例を紹介しました。
+
+CSSは様々なプロパティと、それぞれに設定できる様々な値があり、プログラミングとはまた違った難しさがありますね。
+
+最近はコンテナ・クエリのような新しい機能も導入されたり、tailwindCSSのようなCSSのフレームワークも台頭してきたりしているので、気を抜くと一気に置いて行かれてしまう気がします。
+
+私も今年はCSS力をもっと上げたいので、今後もちょくちょく記事を上げていこうと思っています。
+
+今回はWebページの部品の作り方になりましたが、boxモデルやmargin collapseのような、知らないとハマってしまうような仕様についても今後は触れていきたいです。
+
+<h2 id="ref">参考</h2>
+
+- [Grid container](https://developer.mozilla.org/ja/docs/Glossary/Grid_Container)の[grid-template-rows](https://developer.mozilla.org/ja/docs/Web/CSS/grid-template-rows)
+- [grid-template-rows](https://developer.mozilla.org/ja/docs/Web/CSS/grid-template-rows)
+- [transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)
+- [The simple trick to transition from height 0 to auto with CSS](https://www.youtube.com/watch?v=B_n4YONte5A)
+- [querySelector](https://developer.mozilla.org/ja/docs/Web/API/Document/querySelector)
+- [addEventListener](https://developer.mozilla.org/ja/docs/Web/API/EventTarget/addEventListener)
