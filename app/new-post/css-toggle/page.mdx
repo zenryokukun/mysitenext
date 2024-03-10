@@ -1,0 +1,437 @@
+import Image from "../ImageWrapper";
+import bar from "./bar.jpg";
+import barBall from "./bar-ball.jpg";
+import toggleOn from "./toggle-on.jpg";
+import Toggle from "./Toggle";
+import Link from "next/link";
+
+export const mdxMeta = {
+    title:"【CSS】transitionを使ってトグルを作ってみよう！",
+    description:"トグルは、Webページやモバイル・アプリでよく見かける、オン・オフを切り替えるスイッチのようなUIです。CSSのtransitionを使って、実装する方法を紹介します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/3/10",
+};
+
+# 【CSS】transitionを使ってトグルを作ってみよう！
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#prerequisite">前提知識</a></li>
+<li>
+  <a href="#no-animation">まずはアニメーションなしで実装！</a>
+  <ul>
+    <li><a href="#bar">バー（棒）の部分</a></li>
+    <li><a href="#ball">ボール（玉）の部分</a></li>
+    <li><a href="#off">「オン」の状態を作る</a></li>
+    <li><a href="#switch">JavaScriptでオン・オフを切り替えよう</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#with-animation">アニメーションをつけるぞ！</a>
+  <ul>
+    <li><a href="#transition">transitionプロパティ</a></li>
+    <li><a href="#add-animation">transitionを追加</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+スマホの設定項目のオン・オフを切り替えるスイッチのような部品には、「トグル（toggle）」という名前がついています。
+
+こういうやつです。
+
+<Toggle />
+
+名前は知らなくても、「あ～これね！」となるのではないでしょうか。名前は私も最近まで知りませんでした（ググるのに時間を要しました）。
+
+スマホだけでなく、Webページでもトグルを実装しているサイトはたくさんありますよね。ダーク・モードとライト・モードに切り替えるトグル等、よくみかけると思います。
+
+まさに、そのダーク・モードとライト・モードを切り替えるトグルをこのサイトに実装しようとしたのですが、、、残念ながら、Reactのコンポーネント単位で背景色や文字色を指定しまっているため、実装にはCSSの抜本的な見直しが必要なことが分かり、ペンディングしてしまいました。
+
+しかし、トグル自体は実装出来たので、今回はその方法を紹介します。
+
+前回、<Link href="/new-post/css-accordion">アコーディオン</Link>の作り方を紹介した際は、[transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)の使い方はサラッとしていましたので、今回はもう少し踏み込んで解説していきたいと思います。
+
+この記事で作成するサンプルは[github](https://github.com/zenryokukun/css-toggle)にも載せてあるので、参考にしてください。
+
+<h2 id="prerequisite">前提知識</h2>
+
+HTMLとCSSの入門的な知識はあることを前提に記載しています。といっても、HTMLはdiv要素しか使いませんし、CSSも[position](https://developer.mozilla.org/ja/docs/Web/CSS/position)の**absolute**と**relative**や、[top](https://developer.mozilla.org/ja/docs/Web/CSS/top)のような位置指定要素が分かれば問題ありません。
+
+アニメーションに使う[transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)に関しては、基本的な使い方は解説を入れます。
+
+JavaScriptは[querySelector](https://developer.mozilla.org/ja/docs/Web/API/Document/querySelector)や[addEventListener](https://developer.mozilla.org/ja/docs/Web/API/EventTarget/addEventListener)の使い方が分かればOKです。前回のアコーディオンの内容とほぼ同じです。
+
+<h2 id="no-animation">まずはアニメーションなしで実装！</h2>
+
+順を追って、まずはアニメーションなしでサンプルを作ってみます。
+
+<h3 id="bar">バー（棒）の部分</h3>
+
+トグルをバー（棒）とボール（玉）に分けて説明します。何を言ってるんだ？と思われるかもしれませんが、伝わるでしょう？
+
+何はともあれ、下の画像のような「バー」を作ります。左下のグレー部分です。
+
+<Image src={bar} alt="bar" width={271} height={161} />
+
+#### HTML
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <title>トグル</title>
+</head>
+
+<body>
+  <div class="bar"></div>
+</body>
+
+</html>
+```
+
+バー部分は、barクラスのdivタグです。CSSはlinkタグで同階層にある```main.css```を指定しています。
+
+#### CSS
+
+<div class="fn">```main.css```</div>
+
+```css
+.bar {
+    width: 50px;
+    height: 26px;
+    border-radius: 13px;
+    background-color: lightgray;
+    position: relative;
+}
+```
+
+バーの幅と高さをそれぞれ**width**と**height**で指定しています。小さい部品ですので、固定値で良いと思います。ここは好みなので、適宜調整してください。
+
+[border-radius](https://developer.mozilla.org/ja/docs/Web/CSS/border-radius)で、角を丸くしています。**height**の半分の値にすると、ちょうど丸を半分に切ったような形になります。ここも好みが出るところかと思うので、変えたい方はリンクのドキュメントを確認して他の値を設定してみてください。
+
+このあとに作るボール部分の位置は、「バーからの相対位置」で指定する必要があります。そのため、```position: relative```を設定しています。
+
+<h3 id="ball">ボール（玉）の部分</h3>
+
+今度は下の画像のような「ボール」部分を付け加えます。
+
+<Image src={barBall} alt="bar-with-ball" width={238} height={152} />
+
+#### html
+
+headタグ部分は変更がないため省略しています。
+
+<div class="fn">```index.html```</div>
+
+```html
+<body>
+  <div class="bar">
+    <div class="ball"></div>
+  </div>
+</body>
+```
+
+ボール部分となるdiv要素（ballクラス）を、バー部分のdivの中に入れてあります。
+
+#### CSS
+
+追加したballクラスのみ記載しています。
+
+<div class="fn">```main.css```</div>
+
+```css
+.ball {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 21px;
+    height: 21px;
+    border-radius: 10.5px;
+    background-color: white;
+}
+```
+
+```position: absolute```にしてあります。これにより、**top**と**left**は、「親要素（```position: relative```のバー）の左上からの位置」になります。
+
+完全な丸にするために、**width**と**height**を同じ値にし、**border-radius**にはその半分の値を指定しています。
+
+今回は上の画像のように、ボールがバーの枠内に収まるよう、ボールの大きさや位置を調整してみました。逆に、バーより少し大きくして、左側が少しはみ出でいるデザインもカッコいいと思います。
+
+今回は、このままバーより小さいスタイルで行きますが、後で好みに調整してみてください。
+
+<h3 id="off">「オン」の状態を作る</h3>
+
+今までの状態を「オフ」だとします。今度は、下の画像のような「オン」の状態を作ります。
+
+<Image src={toggleOn} alt="toggle-on" width={181} height={141} />
+
+なお、オンとオフは後でJavaScriptで切り替えを行いますので、その想定で作ります。
+
+#### CSS
+
+先にcssを見てみます。bar-onクラスとball-onクラスを追加しています。
+
+<div class="fn">```main.css```</div>
+
+```css
+.bar {
+    width: 50px;
+    height: 25px;
+    border-radius: 12.5px;
+    background-color: lightgray;
+    position: relative;
+}
+
+.ball {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 21px;
+    height: 21px;
+    border-radius: 10.5px;
+    background-color: white;
+}
+
+.bar-on {
+    background-color: #555;
+}
+
+.ball-on {
+    left: 27px;
+}
+```
+
+bar-onクラスは背景色のみ指定、ball-onクラスは、左側からの位置のみしています。最終的にはJavaScriptで、これら2つのCSSを付けたり外したりすることでオン・オフの表示を切り替えていきます。
+
+#### html
+
+<div class="fn">```index.html```</div>
+
+```html
+<body>
+  <div class="bar bar-on">
+    <div class="ball ball-on"></div>
+  </div>
+</body>
+```
+
+bar-onクラスをバーに追加し、ball-onクラスをボールに追加しています。
+
+これで、上の画像のような「オン」の状態になります。
+
+<h3 id="switch">JavaScriptでオン・オフを切り替えよう</h3>
+
+今度は、下の動画のようにクリックでオン・オフが変わるようにします。動画にはタップした箇所も記録されていますが、気にしないでください。
+
+<div>
+<video src="/posts/css-toggle/toggle.mp4" controls preload="none" class="img-border" width="480" height="270" >Toggle</video>
+</div>
+
+#### html
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <srcipt src="main.js"></srcipt>
+  <title>トグル</title>
+</head>
+
+<body>
+  <div class="bar">
+    <div class="ball"></div>
+  </div>
+</body>
+
+</html>
+```
+
+さきほどの例で「オン」の状態を作りましたが、デフォルトでは「オフ」の状態にしたいので、**ball-on**クラスと**bar-on**クラスを外しておきます。
+
+JavaScriptのファイル名は```main.js```にしました。headタグのscriptタグで指定しています。
+
+#### JavaScript
+
+上述のとおり、JavaScriptでCSSを切り替えることで、オン・オフの切り替えを実現しています。
+
+トグルのオン・オフに応じて適用されるクラスは以下のとおりです。
+
+- オフ：バーは**bar**のみ、ボールは**ball**のみ
+- オン：バーは**bar**と**bar-on**、ボールは**ball**と**ball-on**
+
+htmlのscriptタグで指定したJavaScriptは、上記を踏まえて以下のように作ります。
+
+<div class="fn">```main.js```</div>
+
+```js
+function main() {
+    // 「バー」（barクラスの要素）
+    const bar = document.querySelector(".bar")
+    // 「ボール」(ballクラスの要素)
+    const ball = document.querySelector(".ball")
+    // オン・オフの状態
+    let isOn = false
+    // バーをクリックした時の動作
+    bar.addEventListener("click", () => {
+        // オン⇔オフを切替
+        isOn = !isOn
+        // バーのスタイル
+        let barStyle = "bar"
+        // ボールのスタイル
+        let ballStyle = "ball"
+        // "オン"の場合、bar-onとball-onスタイルを追加
+        if (isOn) {
+            barStyle += " " + "bar-on"
+            ballStyle += " " + "ball-on"
+        }
+        // スタイルを適用
+        bar.className = barStyle
+        ball.className = ballStyle
+    })
+}
+
+window.addEventListener("load", main)
+```
+
+前回紹介したアコーディオンと非常に似ています。
+
+まず最下段の```window.addEventListener("load",main)```で、ブラウザがCSS等すべてのリソースが読込が終わった後にmain関数を実行するようにしています。
+見慣れない方は[Window: load イベント](https://developer.mozilla.org/ja/docs/Web/API/Window/load_event)をご確認ください。
+
+main関数では、```document.querySelector```でバー部分とボール部分のdiv要素をそれぞれ取得しています。そして、トグルのオン・オフは```isOn```変数で制御しています。trueならオン、falseならオフです。初期表示時はオフにしています。
+
+そして、```bar.addEventListener```でバーのクリック時の処理を登録しています。バーがクリックされると、まず```isOn```を反転させます。```isOn```がtrueの場合、バーとボールそれぞれに、**bar-on**と**ball-on**のクラスを追加しています。逆にfalseの場合、**bar-on**と**ball-on**は追加されないようになっています。
+
+これで、オン・オフに応じた表示に切り替えるJavaScriptは完成です！
+
+<h2 id="with-animation">アニメーションをつけるぞ！</h2>
+
+ここまでは、オンとオフの切り替え時に特段アニメーションを付けていませんでした。
+
+多くの場合、ボールの動き等にアニメーションが付いています。試しに、スマホの設定画面でトグルを触ってみてください。ボールは左右にスライドするようなアニメーションがついていると思います。
+
+今回はCSSの**transition**プロパティを使って、ボールのスライドと、背景色の変更にアニメーションをつけてみます。
+
+<h3 id="transition">transitionプロパティ</h3>
+
+[transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)は、リンクのMDNのドキュメントには、以下のように記載がされています。
+
+> 要素の 2 つの状態間の変化を定義するためのものです。それぞれの状態は :hover や :active のような擬似クラスで定義されたり、 JavaScript を使用して動的に設定されたりします。
+
+「何かのCSSのプロパティの値の変化」（何秒かけて変化させるか、何秒待ってから変化させるか、変化の加速度をどうするか）を定義することができるもの、と私は理解しています。
+
+なおtransitionプロパティは、transition-delay、transition-behavior、**transition-duration**、**transition-property**、transition-timing-functionの[一括指定プロパティ](https://developer.mozilla.org/ja/docs/Web/CSS/Shorthand_properties)となります。そのため、値の指定の仕方は、使うプロパティによって異なります。今回使うのは、[transition-property](https://developer.mozilla.org/ja/docs/Web/CSS/transition-property)と[transition-duration](https://developer.mozilla.org/ja/docs/Web/CSS/transition-duration)です。この２つを指定する場合、```transition: プロパティ名 秒数s```のように指定をします。
+
+なお、transitionに指摘ができないプロパティ（display、position、overflow等）もあります。
+
+ここで、ここまでで作ったcssを確認してみます。transitionに関係しないプロパティは一部省略しています。
+
+```css
+.bar {
+    /* 一部略  */
+    background-color: lightgray;
+}
+
+.ball {
+    /* 一部略 */
+    left: 2px;
+}
+
+.bar-on {
+    background-color: #555;
+}
+
+.ball-on {
+    left: 27px;
+}
+```
+
+バー部分は、オフ時は```background-color: lightgray```で、オン時は```background-color: #555```です。ボール部分はオフ時は```left: 2px```、オン時は```left: 27px```です。それぞれ、同じプロパティの値が変わっています。
+
+transitionにこれらのプロパティを指定することで、変化にかかる秒数(transition-duration)等を指定することができます。
+
+<h3 id="add-animation">transitionを追加</h3>
+
+状態が変化しているのは、バーのbackground-colorと、ボールのleftでした。それぞれ、transitionにこのプロパティを指定すればOKです。今回の例では、変化にかかる秒数は、「0.3s（秒）」にします。
+
+<div class="fn">```main.css```</div>
+
+```css
+.bar {
+    width: 50px;
+    height: 25px;
+    border-radius: 12.5px;
+    background-color: lightgray;
+    position: relative;
+    /* 追加：background-colorの変化は0.3秒かける */
+    transition: background-color 0.3s;
+}
+
+.ball {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 21px;
+    height: 21px;
+    border-radius: 10.5px;
+    background-color: white;
+    /* 追加: leftの変化は0.3秒かける */
+    transition: left 0.3s;
+}
+
+.bar-on {
+    background-color: #555;
+}
+
+.ball-on {
+    left: 27px;
+}
+```
+
+barクラスに```transition: background-color 0.3s```、ballクラスに```transition: left 0.3s```を追加しています。これにより、barクラスのbackground-colorの変化は0.3秒、ballクラスのleftの変化は0.3秒かかることになります。
+
+これで動かしてみましょう。
+
+<div>
+<video src="/posts/css-toggle/toggle-animation.mp4" controls preload="none" class="img-border" width="480" height="270" >Toggle With Animation</video>
+</div>
+
+ちゃんとボールがスライドしてますし、バーの背景色も徐々に変化してますね！
+
+背景色の変化の代わりに、borderの色や太さや、ボールの色を変化させても面白いかもしれません。
+
+<h2 id="last">最後に</h2>
+
+今回は、CSSのtransitionを使って、トグルを作成する方法を紹介しました。他にも様々なデザインがありますので、ボールの大きさや形を変えたり等、色々試してみると面白いと思います。[【コピペOK！】ON/OFFスイッチのデザイン７個｜iOS風スイッチもあるよ！](https://hajimete.org/on-off-switch-design-7)にたくさんサンプルがあるので、ご参考にリンクを共有します。
+
+後、今回は触れられていませんが、「どっちがオンでどっちがオフか？」分かるように、見出しをつけたりする工夫も大切かと思います。
+
+私も、いずれダーク・モード切り替えのトグルにリベンジしたいですね。
+
+<h2 id="ref">参考</h2>
+
+- [transition](https://developer.mozilla.org/ja/docs/Web/CSS/transition)
+- [transition-property](https://developer.mozilla.org/ja/docs/Web/CSS/transition-property)
+- [transition-duration](https://developer.mozilla.org/ja/docs/Web/CSS/transition-duration)
