@@ -1,16 +1,15 @@
 import Content from "./Content";
-import { findBlogDocs } from "../../lib/db/func";
-import { dateToString } from "../../lib/util";
+import { findBlogDocs } from "../../lib/db/sqlite-query-assets";
 import sortByDate from "../../lib/db/sort-bloginfo";
 import keywordsSet from "./keywordsSet";
 import styles from "../../styles/Blog.module.css";
-import { ObjectId } from "mongodb";
 
 /**Description ブログ記事の一覧Page
- * Date型項目を文字列化している内部用type。
- * `types.ts`の同項目とは異なる
+ * AssetsRec型から変換する。
+ * BlogCard,Contentで既に使われていたので、AssetsRec型に書き換えず、
+ * AssetsRec -> BlogProp型に変換する
  */
-export interface BlogInfoOverrides {
+export interface BlogProp {
   assetsDir: string;
   thumb: string;
   posted: string;
@@ -21,33 +20,46 @@ export interface BlogInfoOverrides {
   keywords?: string[];
 }
 
-// MongoDBの_idがObject型のため、client componentに渡せない。
-// deleteで_idを削除したいが、?がついたプロパティでないと出来ない。
-// WithId<BLogInfo> -> BLogInfoOverridesに型変換の間にかませるための型。
-interface TmpBlogInfo extends BlogInfoOverrides {
-  _id?: ObjectId;
-}
 
-
+/**
+ * blogの一覧を取得し、BlogProp型に変換して返す。
+ * @returns 
+ */
 async function getProps() {
   const unsortedData = await findBlogDocs(50);
   const data = sortByDate(unsortedData);
-  const docs: BlogInfoOverrides[] = [];
+  const docs: BlogProp[] = [];
   data.map(blog => {
     // posted,firstPostedDateの２つの日付項目を片方に寄せて、文字列にする。
-    const _posted = blog.firstPostedDate || blog.posted;
-    const posted = _posted === undefined ? "-" : dateToString(_posted);
-    // postedをBlogInfoにマージ。TmpBlogInfo型にして、_idプロパティを削除する。
-    const tmpBlogInfo: TmpBlogInfo = { ...blog, posted };
-    delete tmpBlogInfo._id;
-    // BLogInfoOverrides型として登録
-    docs.push(tmpBlogInfo)
+    const _posted = blog.FIRST_POSTED_DATE || blog.POSTED;
+    const posted = _posted === undefined ? "-" : _posted;
+    // KEYWORDSをstring -> string[]に変換
+    const keywords = blog.KEYWORDS.split(",");
+    // AssetsRec -> BlogPropに変換
+    const prop: BlogProp = {
+      assetsDir: blog.DIR,
+      thumb: blog.THUMB,
+      posted: posted,
+      title: blog.TITLE,
+      summary: blog.SUMMARY,
+      md: blog.MD,
+      genre: blog.GENRE,
+      keywords: keywords,
+    };
+
+    docs.push(prop);
+
   })
 
   return docs;
 }
 
-async function getKeyWordsProp(docs: BlogInfoOverrides[]) {
+/**
+ * keywordの一覧から重複を排除して返す
+ * @param docs 
+ * @returns 
+ */
+async function getKeyWordsProp(docs: BlogProp[]) {
   return keywordsSet(docs);
 }
 

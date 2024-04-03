@@ -67,7 +67,8 @@ blog一覧ページ用のサムネ、サイドバーやhome画面の一覧(Fancy
 
 #### blog一覧
 
-サムネはmongodbの`thumb`フィールドで指定。**最適化未実施。** next/imageのsrcsetで対応予定。せめてアスペクト比を揃えておく。
+サムネはmongodbの`thumb`フィールド（2024/4/2: SQLITE3に移行。ASSETSテーブルの
+THUMBカラム）で指定。**最適化未実施。** next/imageのsrcsetで対応予定。せめてアスペクト比を揃えておく。
 横1.6:縦1(**228px:140px**)に揃える。
 
 #### FancyBlogLinks
@@ -138,6 +139,9 @@ sudo service nginx restart
 ```
 
 ### mongosh
+
+**2024/4/2 SQLITE3に移行**。移行用スクリプト:[C:\Users\bathi\Documents\pgm\node\nextblog-db-migrate](C:\Users\bathi\Documents\pgm\node\nextblog-db-migrate)
+
 ```bash
 # dbの一覧を表示
 show dbs

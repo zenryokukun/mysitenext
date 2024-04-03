@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateLike } from "../../../../lib/db/func";
+import { updateLike } from "../../../../lib/db/sqlite-query-assets";
 
 // GETの時、cacheを無効化し、リクエストの都度処理が流れるようにしたい場合コメントアウト。
 // 滅多にリクエストが来ないので、当面無効え良い。POSTはcacheなし。常にdynamic。
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const result = await updateLike(body);
 
     // アップデート失敗
-    if (!result) {
+    if (!result || !result.acknowledged) {
         return NextResponse.json(null, { status: 400, statusText: "Update failed. Try later." })
     }
 

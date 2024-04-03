@@ -1,14 +1,13 @@
 import Link from "next/link";
 import Layout, { Main, Side } from "../../../component/layouts/sidebar/Layout";
 import Author from "../../../component/Author";
-import Twitter from "../../../component/Twitter";
 import Like from "../../component/Like";
 import { FancyBlogLinks } from "../../../component/BlogLinks";
-import { getMDBlogDirList } from "../../../lib/db/func"
+import { getMDBlogDirList } from "../../../lib/db/sqlite-query-assets";
 import { getBlogMd, formatMd } from "../../../lib/util";
 import parseMd from "../../../lib/parse-md";
 import { findByDir, newBlogs, relatedBlogs, popularBlogs } from "../../../lib/db/extract";
-import { blogInfoToLinkItem } from "../../../lib/typecast";
+import { assetsRecToLinkItem } from "../../../lib/typecast";
 import type { HeadProp, LinkItem } from "../../../types";
 import styles from "./Post-app.module.css";
 /* md内で直指定されているclass */
@@ -49,8 +48,8 @@ export async function generateMetadata({ params }: { params: { dir: string } }) 
 // getStaticPathsのapp router版
 export async function generateStaticParams() {
   const docs = await getMDBlogDirList();
-  const params = docs.map(doc => {
-    return { dir: doc["assetsDir"] }
+  const params = docs.map(dir => {
+    return { dir }
   })
   return params;
 }
@@ -70,9 +69,9 @@ async function getProps(dir: string) {
   const _rels = await relatedBlogs(targetBlog);
   const _news = await newBlogs(3, { discludeDir: dir });
   const _popular = await popularBlogs(3);
-  const related: LinkItem[] = _rels.map(blogInfoToLinkItem);
-  const latest = _news.map(blogInfoToLinkItem);
-  const popular = _popular.map(blogInfoToLinkItem);
+  const related: LinkItem[] = _rels.map(assetsRecToLinkItem);
+  const latest = _news.map(assetsRecToLinkItem);
+  const popular = _popular.map(assetsRecToLinkItem);
   return { content, data, related, latest, popular };
 }
 

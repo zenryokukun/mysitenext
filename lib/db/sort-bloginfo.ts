@@ -1,5 +1,5 @@
 /**
- * MONGO DBのassetsコレクションを日付順（降順）にソートする関数
+ * Assetsテーブルを日付順（降順）にソートする関数
  * postedフィールド:  投稿日。更新した場合は更新される。
  * firstPostedフィールド：初期投稿日。更新しても変わらない。
  * 
@@ -9,14 +9,15 @@
  * 
  * 関連記事などで、並び順が投稿日順にならない場合があるので、posted | firstPostedでソート。
  * 
+ * @TODO SQLのORDER BYでソートしたほうがシンプルかも。検討
  */
 
-import type { WithId } from "mongodb";
-import type { BlogInfo } from "../../types";
+import type { AssetsRec } from "./sqlite-types";
 
-interface Comparable extends WithId<BlogInfo> {
-    // firstPosted || posted
-    compare: Date | undefined;
+interface Comparable extends AssetsRec {
+    // '2023/4/1 23:00:11'のような日付の文字列の比較が想定通りにならないため、
+    // 日付型で比較する
+    compare: Date;
 }
 
 /**
@@ -29,6 +30,13 @@ interface Comparable extends WithId<BlogInfo> {
 function sort(a: Comparable, b: Comparable) {
 
     if (!a.compare || !b.compare) {
+        // 変更なし
+        return 0;
+    }
+
+    // sqlite3移行に伴い追加。基本compareはstringになるが、
+    // 万一Dateとstringが混ざっているケースは変更なしとする。
+    if (typeof a.compare !== typeof b.compare) {
         // 変更なし
         return 0;
     }
@@ -46,17 +54,17 @@ function sort(a: Comparable, b: Comparable) {
     return 0;
 }
 
-export default function sortByDate(blogs: WithId<BlogInfo>[]) {
+export default function sortByDate(blogs: AssetsRec[]) {
 
     const comparable: Comparable[] = blogs.map(blog => {
         // firstPostedDateが定義されていなければ、blog.postedを使う。
-        const compare = blog.firstPostedDate || blog.posted
+        const compareStr = blog.FIRST_POSTED_DATE || blog.POSTED
+        const compare = new Date(compareStr);
         return { ...blog, compare };
     });
-
     // comparableをmutateするので留意。
     comparable.sort(sort);
 
     // WitId<BlogInfo>[]型として返す。使う側で型違うと面倒だし、、
-    return comparable as WithId<BlogInfo>[];
+    return comparable as AssetsRec[];
 }

@@ -9,9 +9,7 @@ import { useState } from "react"
 import Modal from "../../component/Modal"
 import Loader from "../../component/Loader"
 import styles from "../../styles/Board.module.css"
-import type { WithId } from "mongodb"
-import type { CommentInfo } from "../../types"
-
+import { NewCommentsRec } from "../../lib/db/sqlite-types"
 
 const ENDPOINT_LIST = "/api/board/getlist"; //コメントの一覧を取得するAPI
 const ENDPOINT_INSERT = "api/board/comment" // コメント挿入するAPI
@@ -38,7 +36,7 @@ export interface PostBody {
   topic: string;
 }
 
-export default function Board({ comments }: { comments: WithId<CommentInfo>[] }) {
+export default function Board({ comments }: { comments: NewCommentsRec[] }) {
 
   const [isModal, setModal] = useState(false);
   const [isLoading, setLoader] = useState(false);
@@ -96,18 +94,18 @@ export default function Board({ comments }: { comments: WithId<CommentInfo>[] })
 
 
 interface MessageProp {
-  comments: CommentInfo[];
+  comments: NewCommentsRec[];
   showModal: (seq: number) => void;
 }
 
 function Message({ comments, showModal }: MessageProp) {
   // threadを抽出。threadはparentSeqがnull。
-  const threads = comments.filter(cmt => cmt.parentSeq === null);
+  const threads = comments.filter(cmt => cmt.PARENT_SEQ === null);
   return (
     <>
       {threads.map((thread, i) => {
         // スレッド傘下のコメントを抽出。
-        const conversation = comments.filter(cmt => cmt.parentSeq === thread.threadSeq);
+        const conversation = comments.filter(cmt => cmt.PARENT_SEQ === thread.THREAD_SEQ);
         return <Thread key={i} thread={thread} conversation={conversation} showModal={showModal} />
       })}
     </>
@@ -116,20 +114,20 @@ function Message({ comments, showModal }: MessageProp) {
 
 
 interface ThreadProp {
-  thread: CommentInfo;
-  conversation: CommentInfo[];
+  thread: NewCommentsRec;
+  conversation: NewCommentsRec[];
   showModal: (seq: number) => void;
 }
 function Thread({ thread, conversation, showModal }: ThreadProp) {
   const [showConversation, setShowConversation] = useState(false);
-  const { topic, name, msg, posted, threadSeq } = thread;
+  const { TOPIC, NAME, MSG, POSTED, THREAD_SEQ } = thread;
   return (
     <>
       <div className={styles.commentWrapper}>
-        {topic && topic.length !== 0 && <div className={styles.topic}>{topic}</div>}
-        <div className={styles.name}>[投稿者]: {name}</div>
-        <div className={styles.msg}>{msg}</div>
-        <div className={styles.when}>{posted}</div>
+        {TOPIC && TOPIC.length !== 0 && <div className={styles.topic}>{TOPIC}</div>}
+        <div className={styles.name}>[投稿者]: {NAME}</div>
+        <div className={styles.msg}>{MSG}</div>
+        <div className={styles.when}>{POSTED}</div>
         {showConversation &&
           <div>
             {conversation.map((cmt, i) => <Comment key={i} {...cmt} />)}
@@ -137,19 +135,19 @@ function Thread({ thread, conversation, showModal }: ThreadProp) {
         <button className={styles.showReply} onClick={() => setShowConversation(() => !showConversation)}>
           {showConversation ? "返信を非表示にする" : `返信を表示する ${conversation.length}件`}
         </button>
-        <button className={styles.reply} onClick={() => showModal(threadSeq as number)}>このスレッドに返信する</button>
+        <button className={styles.reply} onClick={() => showModal(THREAD_SEQ as number)}>このスレッドに返信する</button>
       </div>
     </>
   );
 }
 
-function Comment({ name, msg, posted, replySeq }: CommentInfo) {
+function Comment({ NAME, MSG, POSTED, REPLY_SEQ }: NewCommentsRec) {
   return (
     <>
       <div className={styles.replyWrapper}>
-        <div className={styles.name}>No.{replySeq} [投稿者]: {name}</div>
-        <div className={styles.msg}>{msg}</div>
-        <div className={styles.when}>{posted}</div>
+        <div className={styles.name}>No.{REPLY_SEQ} [投稿者]: {NAME}</div>
+        <div className={styles.msg}>{MSG}</div>
+        <div className={styles.when}>{POSTED}</div>
       </div>
     </>
   );

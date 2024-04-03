@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getNewComments } from "../../../../lib/db/func";
+import { getNewComments } from "../../../../lib/db/sqlite-query-comments";
 
 // cache無効化。リクエスト毎に実行。サーバのメモリが少ないのと、
 // そこまで実行頻度が高くないため。

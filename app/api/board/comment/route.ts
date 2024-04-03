@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { insertNewComment } from "../../../../lib/db/func";
+import { insertNewComment } from "../../../../lib/db/sqlite-query-comments";
 import notify from "../../../../lib/linenotify";
 import type { PostBody } from "../../../board/Board";
 

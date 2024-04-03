@@ -11,7 +11,7 @@ import Navigation from "../../component/Navigation";
 import Footer from "../../component/Footer";
 import { MODE } from "../../component/constants";
 import { findByDir, newBlogs, popularBlogs, relatedBlogs } from "../../lib/db/extract";
-import { blogInfoToLinkItem } from "../../lib/typecast";
+import { assetsRecToLinkItem } from "../../lib/typecast";
 
 import type { FrontMatter, LinkItem } from "../../types";
 
@@ -40,9 +40,9 @@ async function getProps(dir: string) {
   const _rels = await relatedBlogs(targetBlog);
   const _news = await newBlogs(3, { discludeDir: dir });
   const _popular = await popularBlogs(3);
-  const related: LinkItem[] = _rels.map(blogInfoToLinkItem);
-  const latest = _news.map(blogInfoToLinkItem);
-  const popular = _popular.map(blogInfoToLinkItem);
+  const related: LinkItem[] = _rels.map(assetsRecToLinkItem);
+  const latest = _news.map(assetsRecToLinkItem);
+  const popular = _popular.map(assetsRecToLinkItem);
   return { related, latest, popular };
 }
 

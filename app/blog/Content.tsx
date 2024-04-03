@@ -5,11 +5,11 @@ import Chips from "./Chips";
 import BlogCard from "./BlogCard";
 import { CaretRight } from "../../component/Icons";
 import styles from "./Content.module.css"
-import type { BlogInfoOverrides } from "./page";
+import type { BlogProp } from "./page";
 
 interface P {
   keywords: string[];
-  blogDocs: BlogInfoOverrides[];
+  blogDocs: BlogProp[];
 }
 
 export default function Content({ keywords, blogDocs }: P) {
@@ -47,7 +47,7 @@ export default function Content({ keywords, blogDocs }: P) {
 
 interface FilteredP {
   filter: string[];
-  blogDocs: BlogInfoOverrides[];
+  blogDocs: BlogProp[];
 }
 
 /**

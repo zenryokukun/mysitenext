@@ -83,3 +83,6 @@ mongo-manual.txt
 
 # cred
 /lib/cred/
+
+# sqlite3 db
+nextblog.db

@@ -12,7 +12,7 @@ import styles from "/styles/Home.module.css";
 // logics used in `getProps`
 import { newBlogs } from "../lib/db/extract";
 import productionList from "../lib/prod-list";
-import { blogInfoToLinkItem, productionToLinkItems } from "../lib/typecast";
+import { assetsRecToLinkItem, productionToLinkItems } from "../lib/typecast";
 import { LinkItem } from "../types";
 
 /**
@@ -32,7 +32,7 @@ async function getProps(): Promise<[LinkItem[], LinkItem[]]> {
     throw new Error("failed to fetch Props: `news` or `prods`");
   }
   // LinkItem型に変換
-  const newBlogLinks = news.map(blogInfoToLinkItem);
+  const newBlogLinks = news.map(assetsRecToLinkItem);
   const prodLinks = prods.map(productionToLinkItems);
   // prodLinksの数を直近記事数に揃える。
   return [newBlogLinks, prodLinks.slice(0, 3)];

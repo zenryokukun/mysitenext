@@ -16,9 +16,13 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdmin, deleteDuplicateDir, insertBlogInfo, findByField, updateMDXBlogInfo } from "../../../../lib/db/func";
+import { isAdmin } from "../../../../lib/db/admin";
+import {
+    deleteDuplicateDir, insertBlogInfo, findByField, updateMDXBlogInfo,
+    backupAssetsCollection, findBlogDocs
+} from "../../../../lib/db/sqlite-query-assets";
+import cast from "../assetsRecToBlogInfo";
 import { getBlogMd, formatMd } from "../../../../lib/util";
-import { backupAssetsCollection, findBlogDocs } from "../../../../lib/db/func";
 import type { BlogInfo } from "../../../../types";
 
 
@@ -158,7 +162,7 @@ export async function POST(req: NextRequest) {
     };
 
     // 現在時刻を設定
-    const now = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
+    const nowStr = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
     // mdファイルの中身を抽出し、`postedDate`を初期投稿日として設定。
     const mdData = await getBlogMd(dir);
     // gray-matterでmdDataをyaml部分とそれ以外に分離
@@ -166,11 +170,11 @@ export async function POST(req: NextRequest) {
     // 初期投稿日を取得
     const { postedDate } = fmtData.data;
     // 初期投稿日が設定されていない場合、現在時刻を設定
-    const iniDate = postedDate ? new Date(postedDate).toLocaleString("ja", { timeZone: "Asia/Tokyo" }) : now;
+    const firstPostedStr = postedDate ? new Date(postedDate).toLocaleString("ja", { timeZone: "Asia/Tokyo" }) : nowStr;
 
     // 日付型に変換してDB登録
-    info["posted"] = new Date(now);
-    info["firstPostedDate"] = new Date(iniDate);
+    info["posted"] = nowStr;
+    info["firstPostedDate"] = firstPostedStr;
     info["keywords"] = JSON.parse(keywords);
     // insert後に更新版のブログを返したいので、待つ
     const result = await insertBlogInfo(info);
@@ -184,8 +188,9 @@ export async function POST(req: NextRequest) {
     /*****************
      * BackUp
      * ****************/
-    const blogs = await findBlogDocs();
-    backupAssetsCollection(blogs); // バックアップ
+    backupAssetsCollection(); // バックアップ
+    const recs = await findBlogDocs();
+    const blogs = recs.map(rec => cast(rec));
     const resData = { blogs, msg: "upload succeeded!" };
     return NextResponse.json(resData);
 }
@@ -198,7 +203,7 @@ export async function POST(req: NextRequest) {
  * @param title string
  * @param summary string
  * @param thumb string
- * @param keywords string[]
+ * @param keywords string
  * @returns 
  */
 async function uploadMDX(
@@ -209,11 +214,11 @@ async function uploadMDX(
     thumb: string,
     keywords: string,
 ) {
-    // {assetsDir:dir}のドキュメントが登録済みかチェックする。
+    // AssetsテーブルのDIR = dirのドキュメントが登録済みかチェックする。
     // 未登録ならinsert、登録済ならupdateする。
-    const oldBlogs = await findByField("assetsDir", dir);
+    const oldBlogs = await findByField("DIR", dir);
     let exists: boolean;
-    if (!oldBlogs || oldBlogs.length === 0) {
+    if (!oldBlogs) {
         exists = false;
     } else {
         exists = true;
@@ -222,7 +227,7 @@ async function uploadMDX(
     // 現在時刻（日本時間）をDate型に。登録日として使う。
     // 結局最後のnew Date(nowString)でUTCになるので、間違っているんだけど、、、既存の処理あわせる。
     const nowString = new Date().toLocaleString("ja", { timeZone: "Asia/Tokyo" });
-    const now = new Date(nowString);
+    // const now = new Date(nowString);
 
     if (!exists) {
         // 初回登録。挿入。
@@ -235,8 +240,8 @@ async function uploadMDX(
             thumb: thumb,
             md: "page.mdx",
             likes: 0, dislikes: 0, views: 0,
-            posted: now,
-            firstPostedDate: now,
+            posted: nowString,
+            firstPostedDate: nowString,
             keywords: JSON.parse(keywords),
         }
 
@@ -257,8 +262,9 @@ async function uploadMDX(
             title: title,
             summary: summary,
             thumb: thumb,
-            keywords: JSON.parse(keywords),
-            posted: now,
+            // client側で未入力は[]にしている。
+            keywords: JSON.parse(keywords) as string[],
+            posted: nowString,
         }
 
         const result = await updateMDXBlogInfo({ assetsDir: dir }, blog);
@@ -272,10 +278,14 @@ async function uploadMDX(
     }
 
     /*****************
-    * BackUp
+    * BackUp 
     * ****************/
-    const blogs = await findBlogDocs();
-    backupAssetsCollection(blogs); // バックアップ
+    backupAssetsCollection(); // バックアップ
+    /**
+     * return fresh data
+     */
+    const recs = await findBlogDocs();
+    const blogs = recs.map(rec => cast(rec));
     const resData = { blogs, msg: "upload succeeded!" };
     return NextResponse.json(resData);
 

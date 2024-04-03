@@ -48,10 +48,10 @@ export interface BlogInfo {
     md: string,
     likes?: number,
     dislikes?: number,
-    // 投稿日。更新した場合は更新される。
-    posted?: Date
-    // 初期投稿日。更新しても変わらない。
-    firstPostedDate?: Date,
+    // 投稿日。更新した場合は更新される。sqlite3対応でstring追加
+    posted?: Date | string;
+    // 初期投稿日。更新しても変わらない。sqlite3対応でstring追加
+    firstPostedDate?: Date | string,
     views?: number,
     // keyword追加
     keywords?: string[],

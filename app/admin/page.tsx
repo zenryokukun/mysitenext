@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Admin from "./Admin";
-import { isAdmin } from "../../lib/db/func";
+import { isAdmin } from "../../lib/db/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

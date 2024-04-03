@@ -1,5 +1,5 @@
 import Board from "./Board";
-import { getNewComments } from "../../lib/db/func";
+import { getNewComments } from "../../lib/db/sqlite-query-comments";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

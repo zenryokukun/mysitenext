@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticate } from "../../../lib/db/func";
+import { authenticate } from "../../../lib/db/admin";
 
 interface Identifier {
     user: string;

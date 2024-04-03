@@ -5,7 +5,9 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAdmin, updateBlogInfo, findBlogDocs } from "../../../../lib/db/func";
+import { isAdmin } from "../../../../lib/db/admin";
+import { updateBlogInfo, findBlogDocs } from "../../../../lib/db/sqlite-query-assets";
+import cast from "../assetsRecToBlogInfo";
 import type { UpdateItemRequest } from "../../../../types";
 
 
@@ -34,8 +36,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 新しいブログのリストをクライアントに返す。
-    const blogs = await findBlogDocs();
+    // AssetsRec -> BlogInfoに変換。
+    const recs = await findBlogDocs();
+    const blogs = recs.map(rec => cast(rec));
     const resData = { blogs, msg: "upload succeeded!" };
     return NextResponse.json(resData);
-
 }

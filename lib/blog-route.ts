@@ -19,9 +19,7 @@
  */
 
 import { URL_DIR } from "../component/constants";
-import type { BlogInfo } from "../types";
 
-type DuckBlogInfo = Pick<BlogInfo, "assetsDir" | "md">
 
 /**
  * .md、.mdxに応じたページのRouteを返す。
@@ -29,9 +27,7 @@ type DuckBlogInfo = Pick<BlogInfo, "assetsDir" | "md">
  * @param blog DuckBlogInfo
  * @returns 
  */
-export default function blogRoute(blog: DuckBlogInfo) {
-
-    const { assetsDir: dir, md } = blog;
+export default function blogRoute(dir: string, md: string) {
 
     // mdxの場合
     if (md.endsWith(".mdx")) {

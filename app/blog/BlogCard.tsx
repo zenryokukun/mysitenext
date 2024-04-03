@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import blogRoute from "../../lib/blog-route";
 import styles from "./BlogCard.module.css"
-import { BlogInfoOverrides } from "./page";
+import { BlogProp } from "./page";
 
 interface BlogLinkProp {
-  blog: BlogInfoOverrides;
+  blog: BlogProp;
   i: number;
 }
 
@@ -20,7 +20,7 @@ export default function BlogCard({ blog, i }: BlogLinkProp) {
     ? "/posts/" + assetsDir + "/" + thumb
     : "/zen_logo.png";
   // ページのパス。md:/post/記事名、mdx:/new-post/記事名
-  const route = blogRoute({ assetsDir, md });
+  const route = blogRoute(assetsDir, md);
 
   return (
     <div className={styles.wrapper}>
