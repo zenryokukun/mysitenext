@@ -1,5 +1,5 @@
 
-import { BuildingShield, Key, CopyRight, TriangleExclamation, RectangleAd, InternetExplorer } from "../../../component/Icons"
+import { BuildingShield, Key, CopyRight, TriangleExclamation, InternetExplorer } from "../../../component/Icons"
 
 import styles from "../../../styles/Policy.module.css"
 import type { Metadata } from "next";
