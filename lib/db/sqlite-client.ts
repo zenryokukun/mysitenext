@@ -13,7 +13,7 @@ function dbConnectHandler(err: Error | null) {
 }
 
 // sqlite3 dbのフルパス
-const dbpath = path.join(path.resolve(), "nextblog.db");
+const dbpath = path.join(path.resolve(), "dbfile", "nextblog.db");
 
 let client: Database;
 

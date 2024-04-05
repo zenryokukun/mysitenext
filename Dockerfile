@@ -65,6 +65,9 @@ ENV NODE_ENV production
 # pip3が使うので入れる /usr/local/includeに入る
 RUN apk add --no-cache expat
 
+# sqlite3インストール
+RUN apk add --no-cache sqlite
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -83,7 +86,7 @@ COPY --from=python --chown=nextjs:nodejs /usr/local/lib /usr/local/lib
 # COPY --from=python --chown=nextjs:nodejs /usr/local/include /usr/local/include
 
 # standaloneだとコピーされない一部のファイルをコピー
-COPY --from=builder --chown=nextjs:nodejs /app/pages/api/admin/conf.json /app/pages/api/admin
+# COPY --from=builder --chown=nextjs:nodejs /app/pages/api/admin/conf.json /app/pages/api/admin
 # COPY --from=builder --chown=nextjs:nodejs /app/pages/api/cropper/src/myzip.py /app/pages/api/cropper/src
 # pythonのソースをコピー
 COPY --from=builder --chown=nextjs:nodejs /app/py /app/py
@@ -93,6 +96,8 @@ COPY --from=builder --chown=nextjs:nodejs /etc/localtime /etc/localtime
 
 # backupファイルをbuilderからコピー
 COPY --from=builder --chown=nextjs:nodejs /app/backup-assetsDir.json ./
+
+COPY  --chown=nextjs:nodejs ./dbfile/nextblog.db /app/dbfile/nextblog.db
 
 USER nextjs
 
