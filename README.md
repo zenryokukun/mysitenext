@@ -226,3 +226,12 @@ cd docker
 cd docker
 ./remote.sh
 ```
+
+### sqlite3
+
+dbファイルは**dbfile**フォルダに設置すること。
+
+dbファイルはプロジェクトフォルダ直下におくと、docker-containerで起動したときにREADONLYになってしまう。
+コンテナの/appフォルダに配置されると、appフォルダにはroot権限にしか書き込み権限がないため、nextjsユーザだと書き込みができない。
+app直下のdbfileフォルダにdbファイルを配置し、dbfileフォルダに書き込み権限を付与すると、書き込み可能になる。
+（LINUXでは、親フォルダのpermissionは効くが、さらに上のフォルダのpermissionは無視される模様）
