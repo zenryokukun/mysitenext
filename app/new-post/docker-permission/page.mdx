@@ -1,0 +1,464 @@
+import Image from "../ImageWrapper";
+
+export const mdxMeta = {
+    title:"Dockerコンテナ内のDBファイルに書き込めない！",
+    description:"Dockerコンテナ内のSqlite3のdbファイルに書き込もうとすると、READONLYエラーになってしまいました。自分なりに原因と解決方法を考えてみたので共有します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/4/10",
+};
+
+# Dockerコンテナ内のDBファイルに書き込めない！
+
+<nav class="table-of-contents">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#preq">前提</a></li>
+<li><a href="#want">やりたかったこと</a></li>
+<li><a href="#error-msg">発生したエラー</a></li>
+<li>
+  <a href="#reproduce">エラーの再現</a>
+  <ul>
+    <li><a href="#folder"> フォルダ構成</a></li>
+    <li><a href="#image"> Docker Image</a></li>
+    <li><a href="#cmd">起動コマンド</a></li>
+    <li><a href="#write-container">コンテナを起動し、dbファイルに書き込みを行う</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#cause">エラーの原因</a>
+  <ul>
+    <li><a href="#user">ユーザ</a></li>
+    <li><a href="#db-permission">test.dbファイルの所有者とパーミッション</a></li>
+    <li><a href="#app-permission">appディレクトリの所有者とパーミッション</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#solution">対策</a>
+  <ul>
+    <li><a href="#first-solution">対策1:dbファイルをappディレクトリ直下に置かない</a></li>
+    <li><a href="#second-solution">対策2:appディレクトリの所有権を変更する</a></li>
+    <li><a href="#other-solution">その他の解決方法</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+先日、このサイトのデータベースをクラウドのMongoDBからSqlite3に移行しました。移行の手間はかかったものの、特に大きなトラブルもなく順調に進んだのですが、、、。最後の最後、Dockerのコンテナで稼働をさせると、データベースの書き込み時に「READ ONLYエラー」となり、ハマってしまいました。
+
+自分なりに原因を突き止め、解決方法を見つけたので共有します。
+
+<h2 id="preq">前提</h2>
+
+Dockerfileの基本的なコマンドは使えることを前提に記載しています。
+
+Dockerにはじめて触れる方は、[【超初心者向け】Docker入門](/post/docker)で記事にしているので、良かったら参考にしてください。
+
+また、ホスト・マシーンは**Windows11**で、**PowerShell**を使っています。コンテナ起動時のホスト側のパス指定は、これを前提としたものとなります。
+
+<h2 id="want">やりたかったこと</h2>
+
+やろうとしていたことは非常にシンプルです。Next.jsのDockerコンテナ内にSqlite3のdbファイルを配置し、アプリのデータベースとして使用しようとしました。そして、データの更新内容を維持できるように、コンテナのdbファイルをホストにbindします。これだけです。
+
+<h2 id="error-msg">発生したエラー</h2>
+
+コンテナからデータベースに書き込みを行う際に、以下のエラーが表示されました。
+
+```powershell
+[Error: SQLITE_READONLY: attempt to write a readonly database
+Emitted 'error' event on Statement instance at:
+] {
+  errno: 8,
+  code: 'SQLITE_READONLY'
+}
+```
+
+「readonlyのデータベースに書き込みしようとしているよ」とSqlite3に怒られています。
+
+なお、Sqlite3のコンフィグは変更していません。そして、コンテナを使わずに開発環境で起動すると、書き込みも問題なく実行される状況でした。
+
+<h2 id="reproduce">エラーの再現</h2>
+
+結論、Next.jsやSqlite3の部分は関係はなかったので、もっとシンプルな形でエラーを再現させます。
+
+<h3 id="folder"> フォルダ構成</h3>
+
+```powershell
+C:.
+    Dockerfile
+    test.db
+```
+
+DockerfileとSqlite3のdbファイル（test.db）の2ファイルのみです。
+
+<h3 id="image"> Docker Image</h3>
+
+軽量Linuxの[alpine](https://hub.docker.com/_/alpine)のDocker Imageをベースに、このtest.dbをImageにコピーします。後は、コンテナ起動時にコンテナ内のtest.dbファイルをホストのtest.dbファイルに[bind](https://docs.docker.jp/storage/bind-mounts.html)し、同期されるようにします。
+
+Dockerfileは以下のとおりです。
+
+<div class="fn">```Dockerfile```</div>
+
+```docker
+FROM alpine:latest
+
+WORKDIR /app
+
+# sqlite3をインストール
+RUN apk add --no-cache sqlite
+
+# groupとuserを追加
+RUN addgroup --system --gid 1001 rdb
+RUN adduser --system --uid 1001 sql
+
+# test.dbを上記のuser/groupに所有者を変更してコピー
+COPY --chown=sql:rdb ./test.db .
+
+# userを指定
+USER sql
+
+CMD ["sh"]
+```
+
+最新のalpineのImageをベースに、Sqlite3をインストールしています。後は、**rdb**グループと**sql**ユーザを追加し、test.dbのコピーの際に、ファイルの所有権を追加したrdbグループとsqlユーザに変更しています。そして、非root権限で起動されるように、USERをsqlユーザにしています。
+
+エントリ・ポイントは```CMD ["sh"]```を登録しています。これで、コンテナ起動時にalpineのターミナルが起動されます。
+
+<h3 id="cmd">起動コマンド</h3>
+
+```powershell
+docker run -it -v "$(PWD)\test.db:/app/test.db" --name sql sql-blog
+```
+
+``` -v "$(PWD)\test.db:/app/test.db"```の部分で、ホストのtest.dbファイルとコンテナのtest.dbのbindをしています。加えて、コンテナのshのターミナルを使うために、```-it```オプションをつけています。
+
+コンテナの名前は、**sql**にしてます。最後の**sql-blog**は上記のDocker Imageにつけた名前です。
+
+#### 余談： -vの引数全体をダブル・クオテーションで括っている理由
+
+**-v**オプションの引数（```"$(PWD)\test.db:/app/test.db"```）の全体をダブル・クオテーションで括っているのは、```$(PWD)```で出力されるパス（**C:\\～**）のコロンが、引数の区切り文字として認識されるのを防ぐためです。全体を括らないと *docker: invalid reference format.* とエラーになります。
+
+気になる方は、以下のように **--mount** パラメタを使っても同じように動きます。
+
+```powershell
+docker run -it `
+    --mount type=bind,src="$(pwd)\test.db",target=/app/test.db `
+    --name sql `
+    sql-blog
+```
+
+PowerShellを使っているので、複数行に跨るコマンドを書く場合、「\」（バック・スラッシュ）ではなく、「`」（バック・ティック）を付ける必要があります。
+
+<h3 id="write-container">コンテナを起動し、dbファイルに書き込みを行う</h3>
+
+コンテナ内のdbファイルに書き込めるかを確認します。dbファイルへの書き込みは、CREATE文で試してみます。
+
+#### コンテナを起動
+
+上記のコマンドで起動します。
+
+```powershell
+> docker run -it -v "$(PWD)\test.db:/app/test.db" --name sql sql-blog
+/app $
+```
+
+linuxのターミナルが起動しました。**ls**コマンドを実行すると、ちゃんとdbファイルが格納されています。
+
+```bash
+/app $ ls
+test.db
+```
+
+#### test.dbファイルを更新
+
+```sqlite3 test.db```でコンテナ内のdbファイルを開きます。
+
+```bash
+/app $ sqlite3 test.db
+SQLite version 3.44.2 2023-11-24 11:41:44
+Enter ".help" for usage hints.
+sqlite> 
+```
+
+適当にCREATE文でテーブルの追加をしてみます。
+
+```bash
+sqlite>  CREATE TABLE TEST (ID INTEGER, NAME TEXT);
+Runtime error: attempt to write a readonly database (8)
+```
+
+*error: attempt to write a readonly database*とREAD ONLYのエラーになり、再現出来ました。
+
+なお、INSERTやDELETE等も同様のエラーとなります。読み取りは出来るので、SELECTは問題なくできる状況です。
+
+<h2 id="cause">エラーの原因</h2>
+
+Sqlite3の設定等が影響しているのか、アプリ内でのSqlite3の扱い方に問題があるのか、と疑いましたが、原因はもっとシンプルなものでした。**Linuxの所有者とパーミッション**（権限）です。
+
+まず、コンテナ内のユーザやファイルの権限等を確認してみます。
+
+<h3 id="user">ユーザ</h3>
+
+```whoami```でユーザを確認してみます。
+
+```bash
+/app $ whoami
+sql
+```
+
+Dockerfile内のでUSERで指定した、**sql**ユーザになっていることが分かります。
+
+<h3 id="db-permission">test.dbファイルの所有者とパーミッション</h3>
+
+dbファイルの所有者・パーミッションを確認します。
+
+```bash
+/app $ ls -l
+-rwxrwxrwx    1 root     root          8192 Apr  6 02:01 test.db
+```
+
+DockerfileのCOPYコマンドで所有者とグループを変更しましたが、どちらもrootになっています。そして、全ユーザにrwxの権限が付与されています。これは、ホストとbindした際に、ホスト側の所有権やパーミッションで同期されためと思われます（間違っていたらご指摘ください）。
+
+これはこれで気になりますが、、、全てのユーザにwrite権限が与えられているので、READ ONLYエラーになることは不思議です。
+
+#### 参考：ホストとbindしない場合のパーミッション
+
+以下のように、ホストとtest.dbファイルをbindせずにコンテナ起動すると、ちゃんとユーザとグループ名がDockerfileで指定したとおりになります。この場合、書き込み権限は所有者にしか与えられていません。
+
+```bash
+docker run -it --name sql sql-blog   
+/app $ ls -l
+-rwxr-xr-x    1 sql      rdb           8192 Apr  6 02:01 test.db
+```
+
+これも更新出来そうに見えますが、同じくREAD ONLYエラーになります。
+
+<h3 id="app-permission">appディレクトリの所有者とパーミッション</h3>
+
+今度は、test.dbが格納されているappディレクトリの所有者・パーミッションを確認してみます。ルート・ディレクトリで```ls -l```をしています。結果が多いので一部略しています。
+
+```bash
+/app $ ls -l ..
+drwxr-xr-x    1 root     root          4096 Apr  6 02:10 app
+drwxr-xr-x    2 root     root          4096 Jan 26 17:53 bin
+drwxr-xr-x    5 root     root           360 Apr  7 04:28 dev
+drwxr-xr-x    1 root     root          4096 Apr  7 04:28 etc
+drwxr-xr-x    1 root     root          4096 Apr  6 02:10 home
+# ～略~
+```
+
+appディレクトリの**所有者はrootで、所有者にしか書き込み権限がありません**。
+
+このため、USERで追加した**sql**ユーザは、app直下のファイルに対しては、そのファイルのパーミッションを問わず、**書き込みを行うことができません**。
+
+なので、Sqlite3のdbファイルに限ったことではなく、他のファイルの作成や更新も行うことができません。
+
+試しに、appディレクトリでtouchコマンドを打ってファイルを作成しようとしても、*Permission denied*とエラーになります。
+
+```bash
+/app $ touch test.txt
+touch: test.txt: Permission denied
+```
+
+<h2 id="solution">対策</h2>
+
+READ ONLYエラーとなる原因は、「appディレクトリにはroot権限にしか書き込み権限がない」でした。
+
+解決策として以下の2パターン試し、いずれもエラーの回避ができることが確認できました。実際に私が採用したのは、１つ目のパターンです。
+
+1. dbファイルをappディレクトリ直下に置かない
+2. appディレクトリの所有権を変更する
+
+<h3 id="first-solution">対策1:dbファイルをappディレクトリ直下に置かない</h3>
+
+appディレクトリの直下に、dbファイルを格納するディレクトリを別に作り、そのディレクトリの所有者をUSERと同じになるように設定します。そうすれば、非rootユーザでもコンテナのdbファイルに書き込みができます。
+
+#### フォルダ構成
+
+ホスト側のフォルダ構成を以下のように変更します。**db**フォルダを新たに作成し、その中にtest.dbを配置しています。
+
+```bash
+C:.
+│  Dockerfile
+│  
+└─db
+        test.db
+```
+
+#### Dockerfile
+
+Dockerfileを以下のように修正します。
+
+<div class="fn">```Dockerfile```</div>
+
+```docker
+FROM alpine:latest
+
+WORKDIR /app
+
+RUN apk add --no-cache sqlite
+
+RUN addgroup --system --gid 1001 rdb
+RUN adduser --system --uid 1001 sql
+
+# test.dbを上記のgroup/userに所有者を変更してコピー
+COPY --chown=sql:rdb ./db/test.db /app/db/test.db
+
+USER sql
+
+CMD ["sh"]
+```
+
+フォルダ構成にあわせて、COPYコマンドが変わっています。コンテナ側は、app直下のdbディレクトリにtest.dbが配置されるようにコピーしています。所有権は、前回と同じようにユーザはsql、グループはrdbにchownしています。
+
+#### 動作確認
+
+以下のコマンドで起動します。
+
+```bash
+docker run -it -v "$(PWD)\db\test.db:/app/db/test.db" --name sql sql-blog
+```
+
+dbファイルのパスが変わっているので、**-v**のオプションを修正しています。
+
+コンテナ内の「db」ディレクトリのパーミッション等を見てみると、追加したユーザやグループ名に書き込み権限があることが分かります。
+
+```bash
+/app $ ls -l
+drwxr-xr-x    2 sql      rdb           4096 Apr  7 12:01 db
+```
+
+dbディレクトリ直下のtest.dbのパーミッション等は以下のとおりです。これまでと同じく、ホスト側とbindしているためか、所有権はrootになっていますが、書き込み権限は全ユーザに付与されています。
+
+```bash
+/app $ ls -l db
+-rwxrwxrwx    1 root     root          8192 Apr  6 02:01 test.db
+```
+
+このdbファイルにCREATE文等を実行し、エラーにならないことを確認します。
+
+```bash
+/app $ sqlite3 db/test.db
+SQLite version 3.44.2 2023-11-24 11:41:44
+Enter ".help" for usage hints.
+sqlite> CREATE TABLE TEST (ID INTEGER);
+sqlite> INSERT INTO TEST (ID) VALUES (1);
+sqlite> SELECT * FROM TEST;
+1
+sqlite>
+```
+
+エラーにならず、ちゃんとCREATEもINSERTもできました！
+
+ちゃんと、ホスト側のtest.dbファイルを確認しても、コンテナ側で追加したデータが反映されていることも確認できました。
+
+```powershell
+> sqlite3 .\db\test.db
+SQLite version 3.42.0 2023-05-16 12:36:15
+Enter ".help" for usage hints.
+sqlite> SELECT * FROM TEST;
+1
+sqlite>
+```
+
+#### まとめ
+
+dbファイルのパスが変わるので、アプリの修正が必要な場合があります。とはいえ、dbと接続する箇所くらいかと思うので、そこまで大きな修正にはならない場合がほとんどかと思います。アプリ側の影響が少ないようであれば、個人的にはこのやり方が一番簡単な気がします。
+
+<h3 id="second-solution">対策2:appディレクトリの所有権を変更する</h3>
+
+今度は、dbファイルの場所は変えずに、appディレクトリの所有権を変える方法です。
+
+#### フォルダ構成
+
+dbファイルは前と同じく直下に置きます。
+
+```powershell
+C:.
+    Dockerfile
+    test.db
+```
+
+#### Dockerfile
+
+<div class="fn">```Dockerfile```</div>
+
+```docker
+FROM alpine:latest
+
+WORKDIR /app
+
+RUN apk add --no-cache sqlite
+
+RUN addgroup --system --gid 1001 rdb
+RUN adduser --system --uid 1001 sql
+
+# /appの所有権をユーザ:sql、グループ:rdbに変更
+RUN chown sql:rdb /app
+
+# test.dbを上記のgroup/userに所有者を変更してコピー
+COPY --chown=sql:rdb ./test.db /app/test.db
+
+USER sql
+
+CMD ["sh"]
+```
+
+```RUN chown sql:rdb /app```の部分を追加しています。これで、appディレクトリの所有権を変更しています。
+
+#### 動作確認
+
+test.dbファイルの所有者は、くどいようですがホスト側とbindしているためrootになっています。パーミッションは書き込み権限がすべてのユーザに付与されています。
+
+```bash
+/app $ ls -l
+-rwxrwxrwx    1 root     root         12288 Apr  7 13:03 test.db
+```
+
+appディレクトリの所有者とパーミッションは以下のようになっています。
+
+```bash
+/app $ ls -l ..
+drwxr-xr-x    1 sql      rdb           4096 Apr  7 13:31 app
+drwxr-xr-x    2 root     root          4096 Jan 26 17:53 bin
+drwxr-xr-x    5 root     root           360 Apr  7 13:33 dev
+drwxr-xr-x    1 root     root          4096 Apr  7 13:33 etc
+drwxr-xr-x    1 root     root          4096 Apr  6 02:10 home
+# ～略
+```
+
+ちゃんとユーザとグループ名がDockerfileで指定した値になっています。書き込み権限も所有者のみに付与されています。
+
+細かいエビデンスは割愛しますが、これでエラーなくdbファイルの更新が可能になります。
+
+#### まとめ
+
+dbファイルの場所を変えなくてよいので、アプリへの影響は少ないかもしれません。しかし、WORKDIRに指定しているappディレクトリの所有者を変えてしまうのはどうなんでしょう？せっかく非rootユーザで実行させているのに、ディレクトリの所有者をまるっと合わせてしまうのは少し気になります。まぁ、appディレクトリ以外はrootが所有者なので、意味が全くないとは思いませんが。でも、appディレクトリだけ所有者が異なるのも変な気持ちです。
+
+この対応方法が良いのか悪いのか、調べてもよく分からなかったので、もし御存知の方いたら教えてください。
+
+<h3 id="other-solution">その他の解決方法</h3>
+
+DockerfileでUSERを指定せずに、コンテナをroot権限で実行することでも回避できます。
+
+しかし、[公式ドキュメント](https://dockerlabs.collabnix.com/security/Running-Containers-as-ROOT.html#:~:text=One%20of%20the%20best%20practices,root%20user%20access%20on%20host.)にも、root権限で実行するのはセキュリティ面であまり良くないと記載されています。文面的には「non-rootユーザで実行するのがグッド・プラクティス」と記載されており、「バッド・プラクティス」とまでは書かれていません。コンテナから利用できるデータ次第といったところでしょうか。
+
+一般的にはあまり良くないとされているかと思うので、採用される場合はどのようなリスクがあるかを確認したうえで利用する必要がありそうですね。
+
+<h2 id="last">最後に</h2>
+
+Dockerのコンテナ内のdbファイルの書き込み時に、READ ONLYエラーが出てしまうときの対応方法を紹介しました。
+
+しかしこの問題、dbファイルをプロジェクトの直下に配置しない限り発生しないですよね。もしかすると出くわす機会は少ないかもしれないですが、私のようにLinuxにそこまで慣れていない方だと、原因を突き止めるのに時間がかかるかもしれません。参考になれば幸いです。
+
+Docker難しいですが、便利なことには変わりないので、もう少し触れる機会を増やしていきたいですね！
+
+最後に余談になりますが、ホスト（Windows）側とbindする際に、所有権や権限も引き継いでしまうのはどう調整するのでしょうかね。ホスト側もLinuxならchmodするだけだと思いますが、Windowsの場合の所有者や権限の変更はいまいちピンと来ないです。
+
+今回の内容とは直接関係ないのであまり調べていませんが、時間があるときにちょっと確認してみようと思います。
