@@ -18,7 +18,7 @@ import Content from "./page.mdx";
 
 import type { Metadata } from "next";
 
-const DIR = "fitbit-sense2";
+const DIR = "docker-permission";
 
 export const metadata: Metadata = generateMeta(mdxMeta, DIR)
 
