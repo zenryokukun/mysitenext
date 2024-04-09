@@ -97,9 +97,8 @@ COPY --from=builder --chown=nextjs:nodejs /etc/localtime /etc/localtime
 # backupファイルをbuilderからコピー
 COPY --from=builder --chown=nextjs:nodejs /app/backup-assetsDir.json ./
 
-# /app直下にDBファイルを置くと、READONLYでエラーになる。appフォルダがroot権限にのみ書き込み権限があり、
-# nextjsユーザにはないため。そのため、/app直下にdbfileを作成し、そこに書き込み権限を付与。
-COPY  --chown=nextjs:nodejs ./dbfile/nextblog.db /app/dbfile/nextblog.db
+# bind用にフォルダコピー
+COPY  --chown=nextjs:nodejs ./dbfile /app/dbfile
 
 USER nextjs
 
