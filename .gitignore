@@ -85,4 +85,7 @@ mongo-manual.txt
 /lib/cred/
 
 # sqlite3 db
-nextblog.db
+*nextblog.db
+
+# dbをサーバから取得するスクリプト
+fetch-db.ps1
