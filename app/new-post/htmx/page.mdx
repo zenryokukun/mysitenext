@@ -1,0 +1,608 @@
+import Image from "../ImageWrapper";
+import Tweet from "./tweet.jpg";
+import TweetReply from "./tweet-reply.jpg";
+import usageCheck from "./usage-check.jpg";
+import innerHTML from "./innerHTML-browser.jpg";
+import outerHTML from "./outerHTML-browser.jpg";
+import loaderBefore from "./loader-before.jpg";
+import loaderDuring from "./loader-during.jpg";
+import loaderAfter from "./loader-after.jpg";
+import form from "./form.jpg";
+
+export const mdxMeta = {
+    title:"噂のHTMXを試してみたぞ！",
+    description:"HTMXは2023年頃から話題になっているJavaScriptのライブラリです。可能な限りHTMLだけで、サーバーとの通信等を完結させるのが特徴です。React等のSPAのフレームワークが流行する中、何故HTMXが話題になったのか？気になって試してみたので、簡単な使い方を共有します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/4/27",
+};
+
+# 噂のHTMXを試してみたぞ！
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#req">前提</a></li>
+<li><a href="#htmx">HTMXとは</a></li>
+<li>
+  <a href="#concept">HTMXのコンセプト</a>
+  <ul>
+    <li><a href="#concept-hypermedia">HyperMedia</a></li>
+    <li><a href="#concept-communication">サーバとのデータ通信について</a></li>
+    <li><a href="#concept-js">JavaScriptについて</a></li>
+  </ul>
+</li>
+<li><a href="#install">インストール</a></li>
+<li>
+  <a href="#usage">使い方</a>
+  <ul>
+    <li><a href="#usage-server">サーバ</a></li>
+    <li>
+      <a href="#usage-html">HTML</a>
+      <ul>
+        <li><a href="#hx-method">hx-メソッドについて</a></li>
+        <li><a href="#hx-trigger">hx-triggerについて</a></li>
+        <li><a href="#hx-swap">hx-swapについて</a></li>
+        <li><a href="#custom-data-attr">カスタムデータ属性として使う場合</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage-check">動作確認</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#loader">使い方2: loaderを表示</a>
+  <ul>
+    <li><a href="#loader-server">サーバ</a></li>
+    <li><a href="#loader-client">HTML</a></li>
+    <li><a href="#loader-check">動作確認</a></li>
+    <li><a href="#loader-custom">自分のCSSを適用する場合</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#form">使い方3: formで送信</a>
+  <ul>
+    <li><a href="#form-server">サーバ</a></li>
+    <li><a href="#form-client">HTML</a></li>
+    <li><a href="#form-check">動作確認</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#my-thoughts">私の感想</a>
+  <ul>
+    <li><a href="#merit">良い点</a></li>
+    <li><a href="#demerit">「？」と思う点</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+[HTMX](https://htmx.org/)は、HTMLを拡張し、HTMLだけでサーバとの通信等を可能にするJavaScriptのパッケージです。1年ほど前から、インターネット記事等でその名前を良く聞くようになりました。[2023 JavaScript Rising Stars](https://risingstars.js.org/2023/en#section-framework)というランキングでは、Front-end Frameworksの部門で2位だったようです（1位はReact.jsなのですが）。
+
+ReactやSvelte、VueといったSPAのフレームワークが猛威を振るう中、なるべくJavaScriptを書かないコンセプトのライブラリが流行るなんて意外だな～と思いながら、ちまちまとHTMX試してたのです。そして、HTMXを使う際、「可能な限りJavaScriptを使わない方法を模索すべきなのか、使う場合はどの程度なら盛り込んでよいのか」、グッド・プラクティス的なものが気になったため、ふと以下のようなツイートをしたのです。
+
+<Image src={Tweet} alt="tweet-htmx-good-practice" width={600} height={190} />
+
+すると、[@htmx_org](https://twitter.com/htmx_org)というアカウントから、以下のような返信が来ました。1つのリンクが添えられて、、、。
+
+<Image src={TweetReply} alt="tweet-reply-from-htmx" width={600} height={289} />
+
+貼られているリンクは[Client-Side Scripting](https://hypermedia.systems/client-side-scripting/)という、HTMXでJavaScriptを使う場合のコンセプトが書かれているページでした。これは、[HYPERMEDIA SYSTEMS](https://hypermedia.systems/)という、HTMXの製作者陣が作った本の一部で、公式サイトからも全文読むこと出来るものです。そして、@htmx_orgはどうやらHTMXの公式アカウントのようです。
+
+図らずも、公式から「これを読んで勉強しておけ」というメッセージを受け取ってしまいました。何気なくしたツイートでしたが、よいでしょう。そんなにJavaScriptが嫌いか！！！私は好きだぞ！受けて立ちましょう。
+
+と、変な前置きが長くなりましたが、今回は話題のHTMXの基本的な使い方を中心に解説します。まだ理解が追い付かない部分もありますが、公式からせっかくリンクを教えてもらったので、HTMXのコンセプトについても（私なりの解釈ですが）紹介します。
+
+HTMXは話題になってから日も浅く、日本語の情報も少ないので参考になれば幸いです。
+
+長くなってしまったので、適宜目次から必要な部分に飛んでください。
+
+<h2 id="req">前提</h2>
+
+### 知識
+
+**HTMLの基本的な構文を知っている**方を想定しています。JavaScriptは今回は触れないので、JavaScriptの知識はなくても大丈夫かと思います。とはいえ、HTMXはJavaScriptのライブラリですので、HTMXを試す前にJavaScriptを学んだほうが、良いと思います。
+
+### 今回触れる範囲
+
+**HTMXに触れたことがない**方向けに、サーバとの通信や、レスポンスの処理方法等、基本的な使い方を紹介します。既に利用されたことがある方は想定していないので、ご了承ください。
+
+加えて、HYPERMEDIA SYSTEMから、HTMXのコンセプトと思われる部分を抜粋して紹介します。
+
+<h2 id="htmx">HTMXとは</h2>
+
+HTMXはHTMLに独自の属性を追加し、HTTP通信等の機能を出来るようにしたJavaScriptのパッケージです。公式サイトには以下のように紹介されています。
+
+> htmx gives you access to AJAX, CSS Transitions, WebSockets and Server Sent Events directly in HTML, using attributes, so you can build modern user interfaces with the simplicity and power of hypertext
+
+「HTMXは、HTMLの属性を通じて、AJAX、CSS Transitions、WebSocketとServer Sent Eventsへのアクセスを提供します。あなたがhypertextのシンプルさとパワーでモダンなUIを作るために。」といった内容が書かれています。
+
+**HTMLの属性を通じて**とあるように、HTMXでは**hx-get**、**hx-target**のような独自の属性を通じてサーバーとやりとりをします。ここが使い方の肝になります。
+
+文中の**hypertext**は、HTMLのことだと解釈して問題ないと思います。
+
+[Server Sent Events](https://v1.htmx.org/docs/#sse)は、サーバー側からクライアントに送られたイベントを、クライアント側で検知する機能です。今回は紹介しない機能なため、念のため補足します。
+
+また、後述しますが、HTMXではHTMLの組み立てを原則サーバ側で行うことになります。そのため、所謂HTMLのテンプレート・エンジンと相性が非常に良く、[Go](https://go.dev/)やPythonの[django](https://docs.djangoproject.com/ja/5.0/)等と組み合わせて使われることが多いようです。
+
+<h2 id="concept">HTMXのコンセプト</h2>
+
+公式のTwitterアカウントから紹介された[HYPERMEDIA SYSTEMS](https://hypermedia.systems/)（以下、単純に『本』と略します）から、HTMXのコンセプトの部分を私なりに考えてみました。内容は高度でしかも英語なので、あくまで現時点での私の解釈ということでご了承ください。
+
+コンセプトを知る上で、公式サイトのトップページのMotivation欄がヒントになると思うので載せておきます。
+
+<blockquote>
+<ul>
+<li>Why should only `<a>` & `<form>` be able to make HTTP requests?（aタグとformタグ以外も、HTTPリクエストを実行できてもいいじゃないか）</li>
+<li>Why should only click & submit events trigger them?（clickとsubmit以外のイベントが、HTTPリクエストのトリガーになってもいじゃないか）</li>
+<li>Why should only GET & POST methods be available?(GETとPOST以外のメソッドが使えてもいいじゃないか)</li>
+<li>Why should you only be able to replace the entire screen?（ページ全体を差し替えなくてもいいじゃないか）</li>
+
+</ul>
+</blockquote>
+
+<h3 id="concept-hypermedia">HyperMedia</h3>
+
+「Web1.0の時代から存在する、HyperMediaの機能でモダンなWebアプリケーションの構築は可能」というのが、根柢の思想のようです。
+
+HTMXにおけるHyperMediaとは、HTMLのことを指していると考えて問題ないと思います。『本』では、HTMLのanchorタグやformタグが、HTMLのHyperMediaとしての特性だと紹介されています。anchorタグは、ハイパーリンクでHTTP通信を通じて外部のリソース（メディア）を参照することができますし、formタグはHTTP通信を通じてサーバーのリソースの状態を更新することが可能です。HTMLは外部のリソースを参照したり更新したりすることができるメディアなので、HyperMediaである、ということですね。
+
+初期のWebは、anchorタグとformタグだけで指数関数的に成長したことを例にあげ、現在においてもHyperMediaだけでも十分な効果を得られる場合が多いと主張しています。
+
+また、現在のWeb開発は、React.jsに代表されるSPA（シングル・ページ・アプリケーション）のフレームワークが主流であり、（フロント・エンドだけでなく、バックエンドやブラウザ等のツールも含めて）**過度にJavaScriptだけに依存**している、という問題意識をもっていることが読み取れます。もっとHTMLやブラウザの標準機能を活用すべし、という思想なのでしょう。
+
+<h3 id="concept-communication">サーバとのデータ通信について</h3>
+
+HTMXでは、サーバとの通信は以下のように行うのが原則となります。
+
+1. リクエストはHTMLの機能を使うべし
+2. レスポンスはHTMLを返すべし
+
+ポイントは、リクエストでもレスポンスでも、原則として**JSONを使わない**ことです。
+
+特にSPAフレームワークでは、サーバとの通信は[fetch関数](https://developer.mozilla.org/ja/docs/Web/API/fetch)でJSON形式のデータを連携することが主流です。そして、クライアント側でJSONをパースし、ページの表示内容の切り替えロジックを担うのが一般的なアプローチかと思います。（もっとも、昨年度Next.jsで導入された[Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)で事情は少しずつ変わりつつあります。）
+
+しかしHTMXでは、リクエストは可能な限りanchorタグやformタグのように、HTMLのタグに搭載されている通信機能を使うのが流儀です。レスポンスも、**HTMLを返す**のが前提となります。クライアント側が担っていた表示内容の切り替えのロジックは、サーバに任せてしまおうという思想です。
+
+なお、HTMXではanchor・formタグ以外でもサーバと通信ができるように拡張がなされています。
+
+<h3 id="concept-js">JavaScriptについて</h3>
+
+「HTMXではJavaScriptを使わない」のがルールだと勘違いしていましたが、公式も別にJavaScriptを使うことを否定はしていません。
+
+『本』の[Client-Side-Scripting](https://hypermedia.systems/client-side-scripting/)では、『HTMXのゴールはJavaScriptを減らすことではなく、コードの量を減らし、hypermedia-friendlyなコードを増やすこと』と記載されています。そして、素のJavaScriptを使う際の思想や、[Alpine.js](https://alpinejs.dev/)、[hyperscript](https://hyperscript.org/)等が紹介されています。
+
+後者2つは試したことがないため、素のJavaScriptを使う際の思想を紹介します。思想というより、グッド・プラクティスのようなものですが。
+
+1. DOM外のstateは最小限に抑える
+2. JSONでの通信は避ける
+3. HTMLのdata-属性を活用する（[document.querySelector](https://developer.mozilla.org/ja/docs/Web/API/Document/querySelector)で使う）
+4. 1ファイル1コンポーネントを心がける
+
+１点目は、HTMXではページの表示に必要なものは原則サーバ側で組み立てるため、DOM外に表示に影響するデータは保持しない、ということだと思います。とはいえ、わざわざサーバと通信する必要がないケース（ボタンのクリック回数とか）もあるため、「最小限に抑える」となっているのでしょう。
+
+２点目は、上述の<a href="#concept-communication">サーバとのデータ通信について</a>のとおりですね。
+
+３点目と４点目は完全に設計の話のように思えます。
+
+なお、分量が多くうまく理解できていない部分もあるかもしれません。もし間違っていたり、他にもある場合はご指摘ください。
+
+コンセプトの話はここまでにして、以降は実際の使い方を見ていきます。
+
+<h2 id="install">インストール</h2>
+
+HTMXはただのJavaScriptなので、scriptタグにCDNのパスを指定するだけです。
+
+```html
+<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+```
+
+だいたい47KBくらいでした。結構軽いですね。CDNを使いたくない場合はローカルにコピペして使うことも可能です。
+
+Reactだとビルドするのは当たり前なので、なんだか新鮮な気分です。EsbuildやBabel、Webpackといった依存モジュールが何も入らないのも良いですね。
+
+もしくは、意味があるのか分かりませんが、npmで以下のようにインストールすることも可能です。
+
+```bash
+npm install htmx.org
+```
+
+Node.jsで使う場合、Webpack等のツールを使ってクライアント用のモジュールにバンドルしないといけないので、手間は増えると思います。フレームワークを自作する時とかに使うのですかね。いずれにしても、用途は限定的だと思いますので、この記事ではCDNを使います。
+
+なお、バージョンはアップデートされていくと思うので、適宜公式サイトを確認してください。
+
+<h2 id="usage">使い方</h2>
+
+サンプルを通じて、簡単な使い方を紹介します。
+
+まずは、画面のボタンを押すと、サーバから取得したデータで画面の表示の一部を変えるサンプルを作ってみます。
+
+<h3 id="usage-server">サーバ</h3>
+
+先にサーバ側の処理を見ていきます。Goで書いています。エンドポイントの部分だけ載せます。
+
+```go
+http.HandleFunc("GET /food", func(w http.ResponseWriter, r *http.Request) {
+	st := `
+	  <li>クッキー</li>
+	  <li>ポテチ</li>
+	  <li>しめ鯖</li>
+	`
+	fmt.Fprint(w, st)
+})
+```
+
+```/food```に対してGETメソッドを送ると、HTMLのレスポンスを返します。上述のとおり、JSONではなくHTMLを返しているのがポイントです。
+
+今回のサンプルではHTMLは全て固定の文字列ですが、もちろん変数を埋め込んだり、テンプレート・エンジンを使うことも可能です。
+
+<h3 id="usage-html">HTML</h3>
+
+HTMLはこんな感じです。scriptタグでHTMXを読み込んでいます。
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HTMXのテスト">
+  <script src="https://unpkg.com/htmx.org@1.9.12"
+    integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
+    crossorigin="anonymous"></script>
+  <title>HTMXテスト</title>
+</head>
+
+<body>
+  <h1>HTMXテスト</h1>
+  <h2>ボタンを押すと食べ物が変わるよ</h2>
+  <ul id="food">
+    <li>オレンジ</li>
+    <li>いちご</li>
+    <li>リンゴ</li>
+  </ul>
+  <button 
+    hx-get="/food" 
+    hx-trigger="click" 
+    hx-target="#food" 
+    hx-swap="innerHTML"
+ >PUSH
+ </button>
+</body>
+
+</html>
+```
+
+ポイントは、**button**タグです。**hx-get**、**hx-trigger**、**hx-target**、**hx-swap**は通常のHTMLの属性ではありません。いずれも、HTMXによって拡張された属性です。基本「hx-」が頭に付くので、識別はしやすいと思います。
+
+これで、「**クリック**された時、エンドポイント**food**に**GET**メソッドを実行。レスポンスを#foodの子要素と入れ替える」という意味になります。
+
+今回のサンプルではbuttonタグにつけていますが、もちろん他の要素でも同じように指定できます。
+
+<h4 id="hx-method">・hx-メソッドについて</h4>
+
+**hx-get**、**hx-post**、**hx-delete**のように、「hx-メソッド」でHTTPのメソッドの指定をします。```hx-get="/food"```のように、後は通信先のエンドポイントを指定するだけです。これは直感的ですね。他にもputやpatchはあるようですが、headはないようです。
+
+参考:[AJAX](https://htmx.org/docs/#ajax)
+
+<h4 id="hx-trigger">・hx-triggerについて</h4>
+
+**hx-trigger**で、HTTPのリクエストを実行するイベントを指定します。click、mouseover、keydown、といった通常のイベントに加えて、load(要素が読み込まれたら)、revealed(要素がviewport内に入ったら)等、独自のイベントもあります。イベントはカンマ区切りで複数指定することもできます。
+
+また、```hx-trigger="click[someExpression]"```のように、someExpression（JavaScriptの式）が真の場合のみにイベントを発火させたりすることもできます。これで条件付きでリクエストを実行することができますね。
+
+さらに、modifierを付けて動作をより細かく指定することもできます。例えば、```hx-trigger="click once"```とすれば、クリックしても1回しか実行されません、```hx-trigger="load delay:5s"```とすれば、要素の読み込みが完了してから、**5秒後**に発火します。
+
+特殊な指定として、```hx-trigger="every 2s"```があります。これで「2秒間隔でリクエストを実行」となります。秒数は任意の値を指定できます。一定間隔でデータ取得が必要な場合は便利ですね。
+
+なお、hx-triggerを省略すると、デフォルトのイベントで発火します。formならsubmitイベント、input、select、textareaならchangeイベント、以外ならclickイベントがデフォルトです。
+
+詳細は↓のhx-triggerのリンクを参考にしてください。ほんとうにたくさんの機能があります！
+
+【参考】: [hx-trigger](https://htmx.org/attributes/hx-trigger/)
+
+<h4 id="hx-target">・hx-targetについて</h4>
+
+**hx-target**で、サーバからのレスポンス（HTML）を差し込む要素を指定します。指定する値は、[CSSセレクタ](https://developer.mozilla.org/ja/docs/Web/CSS/CSS_selectors)です。
+
+他にも、```closest <CSS-Selector>```(条件を満たす、自分より上（親）要素の中でもっとも近い要素)、```next <CSS-Selector>```（条件を満たすDOM内の次の要素）のような独自の指定方法も可能です。詳細は[Extended CSS Selectors](https://htmx.org/docs/#extended-css-selectors)を確認してください。
+
+省略した場合、「自分自身」がターゲットになります。
+
+<h4 id="hx-swap">・hx-swapについて</h4>
+
+サーバからのレスポンス（html）をどこに差し込むかは**hx-target**で指定しました。**hx-swap**で、「どのように差し込むか」を指定します。
+
+指定できる内容は、一部ですが以下のとおりです。全量は[Swapping](https://htmx.org/docs/#swapping)をご確認ください。
+
+- innerHTML: **ターゲット要素の下**（子要素）を差し替える
+- outerHTML: **ターゲット要素ごと**差し替える
+- afterbegin: ターゲット要素の**最初の子要素の前**に差し込む
+- beforeend: ターゲット要素の**最後の子要素の後**に差し込む
+- none: 差し替えは行わない
+
+innerHTML、outerHTMLはレスポンスと「交換」しますが、afterbegin、beforeendは「追加」されます。
+
+noneは、レスポンスで差し替えをしない時に指定します。ページの表示に影響しないリクエストも当然あると思うので、案外使う頻度は高そうですね。
+
+hx-swapを指定しない場合、innerHTMLがデフォルトになります。
+
+<h4 id="custom-data-attr">・カスタムデータ属性として使う場合</h4>
+
+HTMXの拡張属性は、HTMLの[カスタムデータ属性](https://developer.mozilla.org/ja/docs/Web/HTML/Global_attributes/data-*)の```data-*```をつけても動きます。```data-hx-get```のように書いてもOKということです。私がHTMLを覚えた頃は、勝手に属性を追加するのはバッド・プラクティス（data-*をつけなさい）と言われていた気がします。気になる方は付ければ良いと思います。
+
+<h3 id="usage-check">動作確認</h3>
+
+それでは、ボタンを押して動作を確認してみます。
+
+<Image src={usageCheck} width={1051} height={307} alt="swaps-inner-html" />
+
+ボタンを押すと、食べ物が変わったのが分かります。
+
+HTMLを確認すると、hx-targetで指定した要素（ul要素）の下が、サーバからのレスポンスと差し変わっていることが確認できます。
+
+<Image src={innerHTML} width={640} height={545} alt="html-after-innerHTML-swap" />
+
+参考ですが、hx-swapが**outerHTML**だった場合は、以下のようにターゲット要素（ulタグ）も差し替えられます。
+
+<Image src={outerHTML} width={638} height={528} alt="html-after-innerHTML-swap" />
+
+<h2 id="loader">使い方2: loaderを表示</h2>
+
+今度は、サーバからのレスポンスを待っている間、「待ち」を示すためのloaderを表示するサンプルです。ベースは前回のサンプルを使います。
+
+HTMXでは、レスポンスが帰ってくるまで一時的に設定されるCSSのクラスがあります。これを活用すれば、JavaScriptでクラスの差し替えをせずに、loaderの表示・非表示を切り替えることができます。
+
+今回は、「通信中...」と文字列で表示させますが、スピナーのGIFとかを使うと、よりそれっぽくなると思います。
+
+<h3 id="loader-server">サーバ</h3>
+
+クライアント側でloaderを表示するため、3秒の「待ち」を入れました。以外は前回と同じです。
+
+```go
+http.HandleFunc("GET /food", func(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(time.Second * 3)
+	st := `
+	  <li>クッキー</li>
+	  <li>ポテチ</li>
+	  <li>しめ鯖</li>
+	`
+	fmt.Fprint(w, st)
+})
+```
+
+<h3 id="loader-client">HTML</h3>
+
+headタグ部分は直接関係ないので割愛します。divタグがloader部分です。
+
+```html
+<body>
+  <h1>HTMXテスト</h1>
+  <h2>ボタンを押すと食べ物が変わるよ</h2>
+  <ul id="food">
+    <li>オレンジ</li>
+    <li>いちご</li>
+    <li>リンゴ</li>
+  </ul>
+  <div id="loader" class="htmx-indicator" style="color:red;">通信中...</div>
+  <button 
+    hx-get="/food"
+    hx-trigger="click"
+    hx-target="#food"
+    hx-swap="innerHTML"
+    hx-indicator="#loader"
+    >PUSH
+  </button>
+</body>
+```
+
+ポイントは2つあります。
+
+#### htmx-indicatorクラス
+
+divタグについている**htmx-indicator**クラスは、```opacity:0```のスタイルが自動で付与されます。そのため、通常は見えません。ただし、opacityがゼロになっているだけで、```display:none```が設定されている訳ではありません。
+
+HTMXでは、リクエスト中、リクエストを発生させた要素（今回の例だとbuttonタグ）に**htmx-requestクラス**が一時的に付与されます。このクラスは、**子要素のhtmx-indicator**のopacityを1に設定します。
+
+レスポンスが返ってくると、**htmx-request**クラスは消え、**htmx-indicator**のopacityもゼロに戻ります。そのため、リクエスト中のみopacityが1になり、目に見える状態になります。
+
+#### hx-indicator属性
+
+**hx-indicator**は、**htmx-request**を付与する要素を、CSSセレクタで指定します。今回はloaderであるdivタグを指定しています。
+
+上記のとおり、hx-indicatorがない場合、**htmx-request**はリクエストを発生させた要素（buttonタグ）に付きます。そして、htmx-requestは「子要素のhtml-indicatorのopacityを1にする」のが仕様です。しかし、今回のサンプルだと、ローダーのdivとbuttonタグは親子関係ないため、適用されません。そのため、hx-indicatorで指定をする必要があります。
+
+<h3 id="loader-check">動作確認</h3>
+
+実際に見てみましょう。
+
+#### ・ボタンを押す前
+
+<Image src={loaderBefore} alt="before-request" width={1000} height={306} />
+
+ローダーである「通信中...」は目に見えていません。ただ、opacityがゼロになっているだけで、高さはその分とっていることは画像からも分かると思います。
+
+#### ・レスポンス待ち
+
+ボタンを押して、レスポンスが返ってくるまでの状態です。
+
+<Image src={loaderDuring} alt="during-request" width={1000} height={319} />
+
+「通信中...」が表示されています。見にくくて恐縮ですが、divのクラスに**htmx-request**が付与されていることも確認できます。
+
+#### ・レスポンス後
+
+<Image src={loaderAfter} alt="after-request" width={1000} height={318} />
+
+「通信中...」が消え、**htmx-request**クラスが消えていることが確認できます。
+
+<h3 id="loader-custom">自分のCSSを適用する場合</h3>
+
+opacityの切り替えだけなら、**html-request**クラスと**html-indicator**がやってくれます。しかし、これだけでは物足りないケースも多いかと思います。opacityだと高さや幅を取るので、displayで指定したい場合も多いと思います。
+
+CSSをカスタムしたい場合は、これら2つのクラスに自作のCSSを当てるだけでOKです。
+
+点滅するアニメーションをつけてみます。
+
+<div class="fn">```main.css```</div>
+
+```css
+.htmx-indicator {
+    display: none;
+}
+
+/* 
+ * 2つのクラスを持つ要素に適用
+ * -> レスポンス待ち状態の時だけに適用される
+ */
+.htmx-indicator.htmx-request {
+    display: block;
+    animation-name: blink;
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+```
+
+今回はhtmx-indicatorとhtmx-requestが同じ要素につくので、```.htmx-indacator.htmx-request```のように[複合セレクタ](https://developer.mozilla.org/ja/docs/Web/CSS/CSS_selectors/Selectors_and_combinators#%E8%A4%87%E5%90%88%E3%82%BB%E3%83%AC%E3%82%AF%E3%82%BF%E3%83%BC)として指定しています。
+
+HTMLファイルでCSSファイルを指定すると、以下のように動作します。
+
+<div>
+<video src="/posts/htmx/loader-custom-css.mp4" controls preload="none" class="img-border" width="600" height="345">Toggle With Animation</video>
+</div>
+
+ボタンが下にずれてしまうのはイケてないですが、ちゃんとCSSでカスタムできることは確認できるかと思います。
+
+<h2 id="form">使い方3: formで送信</h2>
+
+今度は、formでデータを送信し、処理結果を表示するサンプルです。とはいっても、通常のformとそこまで変わりません。
+
+<h3 id="form-server">サーバ</h3>
+
+```go
+http.HandleFunc("POST /form", func(w http.ResponseWriter, r *http.Request) {
+    name := r.FormValue("nickname")
+	  age := r.FormValue("age")
+	  if len(name) == 0 || len(age) == 0 {
+		  fmt.Fprintf(w, "失敗...名前と年齢を入力してください。")
+		  return
+	  }
+	  fmt.Fprintf(w, "成功! received name:%s and age:%s", name, age)
+})
+```
+
+formデータを受け取り、いずれも入力されていたら成功のメッセージを返し、そうでなければ失敗のメッセージを返すシンプルなものです。
+
+<h3 id="form-client">HTML</h3>
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/htmx.org@1.9.12"
+    integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
+    crossorigin="anonymous"></script>
+  <title>fromのテスト</title>
+</head>
+
+<body>
+  <h1>Formのサンプル</h1>
+  <form hx-post="/form" hx-target="#message">
+    <input type="text" name="nickname" placeholder="nickname">
+    <input type="text" name="age" placeholder="age">
+    <input type="submit">
+  </form>
+  <div id="message">formのpost結果</div>
+</body>
+
+</html>
+```
+
+通常であれば、formタグのaction属性でリクエスト先を指定しますが、**hx-post**で指定しているところがポイントです。後は、hx-targetでレスポンスを差し込む要素をしています。
+
+後は、通常のformと同じです。
+
+<h3 id="form-check">動作確認</h3>
+
+formに入力し、「送信」ボタンを押すとサーバのターゲット要素にレスポンスが表示されます。
+
+<Image src={form} alt="form" width={520} height={367}/>
+
+通常のformだと、レスポンスに応じてリダイレクトするのがデフォルトの挙動です。これを防ぐには自分でJavaScriptを使ってレスポンスを制御する必要がありますが、hx-postを使うとformでも部分的な要素の差し替えが可能です。これは結構便利だと思います。
+
+<h2 id="my-thoughts">私の感想</h2>
+
+実際に触ってみた私の感想です。まだ基本的なことしか試せていないので、今後変わるかもしれません。
+
+<h3 id="merit">良い点</h3>
+
+#### 気軽に使える
+
+scriptタグにパスを設定するだけで使えるのは、今のご時世新鮮だと感じました。ビルドをしなくても使えるのは楽ですし、依存モジュールが他にないのも管理しやすいです。
+
+例えばReactを使う場合、自作のJavaScriptでDOMを直接操作することはあまり良くないとされ、何をするにも「React流」が求められます。HTMXの場合、いつもどおりscriptタグに自作のJavaScriptを入れられるので、そういう気軽さも良いところだなと感じます。
+
+#### サーバ側の自由度が高い
+
+後、結局React等のSPAを使う場合、Next.jsとかNuxt.jsのように、バックエンドも統合されたフレームワークを使うことが多いと思います。そのため、サーバ側の処理もJavaScriptを使うことが必須になります。HTMXは完全にフロントエンドのみなので、サーバ側の処理は好みの言語を選ぶことができます。個人的には、Next.jsのようなフルスタックなフレームワークも、カスタム性は高くないかもしれませんが、大抵のことはシンプルに実装にできるので、良い点もあると思っています。しかし、サーバ側の処理をゴリゴリと書ける方にとっては、フレームワークに縛られないほうがメリットは大きいのではないでしょうか。
+
+<h3 id="demerit">「？」と思う点</h3>
+
+#### サーバへの負荷は？
+
+基本的にはサーバからHTMLを取得して表示するのがHTMX流です。Reactではサーバからデータを取得する必要がない限り、基本的にはフロント側で表示を切り替えていくので、アプローチはかなり異なります。当然、HTMXのアプローチのほうがサーバへの通信は増えると思います。そのため、本番で稼働させた際のサーバへの負荷が気になります。実際には、ブラウザ等のキャッシュ機能でそこまで負荷がかからないのかもしれません。HTMXが追加するHX-*のHTTPヘッダに秘密があるかもしれませんので、今後調べてみたいと思っています。
+
+#### HTMLの拡張属性
+
+後、HTMLの属性を勝手に追加しているのも、少し気になります。昔はあまりよくない行為とされていたと思うので、、、。SEOに悪影響がないか？とか余計な心配をしてしまいます。まぁdata-*属性をつけても動くので、そこまで気にする必要はないのかもしれません。
+
+#### イベントハンドラ属性の利用
+
+今回は紹介していませんが、```hx-onclick="alert('なんとか')"```のように、インラインでJavaScriptを記述する機能もあります。onclick属性等は昔からありますが、イベントハンドラ属性は「あまり使うな」と教わった人も多いのではないのでしょうか。実際、[MDN](https://developer.mozilla.org/ja/docs/Web/HTML/Attributes#%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%83%8F%E3%83%B3%E3%83%89%E3%83%A9%E3%83%BC%E5%B1%9E%E6%80%A7)にも「推奨されない」と記載がされています。まぁ、scriptタグは自由に追加できるので、使わなければ良いだけなのですが。MDNに必ず従う必要は当然ないと思いますが、多くの人が参考にしていると思いますし、Webの標準とはまでは言えなくても、皆が意識している慣例のようなものを、あまり意識していないのかな？という印象はもってしまいます。
+
+<h2 id="last">最後に</h2>
+
+HTMXのコンセプトと、入門的な使い方を紹介しました。
+
+他にも、拡張属性の継承、複数のリクエストの同期（優先順位付け）、レスポンスの一部だけをセレクト、hx-targetではない要素へのswap、等々、たくさんの機能があります。また、HTMX固有のHTTPヘッダがあったり、JavaScript API(htmxオブジェクト)が使えたり、今回触れらていないものもあります。
+
+これからは、実際にアプリを作っていく中で、必要なものを身に着けていく感じになりそうです。
+
+しかし、React等が流行っている中、HTMXのような一世代前風なライブラリが注目されるのは面白いですね。
+
+Reactも初期表示速度の改善（バンドルされたjsファイルのサイズ削減）が課題で、昨年度はサーバでHTMLを生成するServer Componentsが導入されました。クライアントに寄せていた処理をサーバに戻したことで、「そもそもReactを使わずにサーバでHTMLを組み立てれば十分なのでは？」と考える方が増えたのかもしれませんね。
+
+私自身、Reactは結構好きですが、次Webサイトを作るのであれば、テンプレート・エンジンを使ってみたいと思っています。その時は、HTMXの利用も同時に検討することになりそうなので、ちょくちょく触っていこうと思っています。
+
+<h2 id="ref">参考</h2>
+
+- [htmx](https://htmx.org/)
+- [HYPERMEDIA SYSTEMS](https://hypermedia.systems/)

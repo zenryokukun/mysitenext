@@ -1,0 +1,14 @@
+blockquote>ul {
+    background-color: #eaeaea;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-right: 1rem;
+    border-left: 5px solid slategray;
+}
+
+@media (prefers-color-scheme: dark) {
+    blockquote>ul {
+        background-color: #3f3f3f;
+        color: #bababa;
+    }
+}
