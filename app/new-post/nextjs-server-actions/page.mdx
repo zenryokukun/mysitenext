@@ -1,4 +1,5 @@
 import Image from "../ImageWrapper";
+import Caution from "../Caution";
 import RedirectForm from "./redirect-form.jpg";
 import RedirectedPage from "./redirected-page.jpg";
 import ResponseInit from "./response-init.jpg";
@@ -16,6 +17,11 @@ export const frontMatter = {
 }
 
 # Next.js 14のServer Actionsを試してみたぞ！
+
+<Caution>
+<div><b>2024-05-12追記</b></div>
+<p><i>useFormState</i>が非推奨となり、代わりに<i>useActionState</i>が導入されました。これに伴い、<a href="#example-response">Server Actionからレスポンスを返す</a>に注意書きを追記しました。</p>
+</Caution>
 
 <nav class="table-of-contents ">
 <div class="table__title">目次</div>
@@ -514,6 +520,12 @@ export default function ClientParts() {
 Server Actionの返り値をクライアント側で扱うには、[useFormState](https://react.dev/reference/react-dom/hooks/useFormState)というReactのHookを使う必要があります。ただし、現時点では[React Canary](https://react.dev/blog/2023/05/03/react-canaries)の機能で、安定版ではない点は留意したほうがよいかもしれません。
 
 この例ではHookを使うのでページ全体をClient Componentにします。そのため、Server Actionは単独ファイルで定義し、importして使う方式にします。
+
+<Caution icon={true}>
+<div><b>重要</b></div>
+<p>2024年5月現在、<i>useFormState</i>は非推奨となり、代わりに<a href="https://ja.react.dev/reference/react/useActionState"><i>useActionState</i></a>が導入されました。2024年5月12日時点で、<i>useActionState</i>はReactのバージョン19(Beta版)およびReact Canaryで利用可能です。利用を検討する際はご留意ください。</p>
+
+</Caution>
 
 <h4 id="example-response-cc">Client Component</h4>
 
