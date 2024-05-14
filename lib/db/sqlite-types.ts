@@ -43,3 +43,16 @@ export interface NewCommentsRec {
 export interface Result {
     acknowledged: boolean;
 }
+
+export interface TutorialRec {
+    SLUGS: string;
+    SYSTEM_PATH: string;
+    CATEGORY: string;
+    FILENAME: string;
+    TITLE: string;
+    DESCRIPTION: string;
+    AUTHOR: string;
+    PUBLISHED: string;
+    UPDATED: string;
+    PREV: string;
+}
