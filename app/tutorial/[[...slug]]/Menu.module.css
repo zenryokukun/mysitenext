@@ -1,0 +1,74 @@
+.container {
+    position: sticky;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    padding: 1rem;
+    border-right: 1px solid #f1f1f1;
+    /* menubar分の高さを引く */
+    top: 51.2px;
+    /* 高さもビューポートからmenubarと分の高さひく。
+       そうしないとmenubarの高さ分最後stickしない。。
+       scrollするので、Footer分は引かなくてよい。
+       */
+    height: calc(100vh - 51.2px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    /* 画面幅が小さくなった時、縮小するのを防ぐ */
+    flex-shrink: 0;
+}
+
+.mobileMenu {
+    display: none;
+}
+
+@media screen and (max-width:850px) {
+    .container {
+        position: static;
+        height: auto;
+        width: auto;
+    }
+
+    .mobileMenu {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        font-weight: bold;
+        font-size: large;
+        padding: 10px;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid lightgray;
+        background-color: inherit;
+    }
+
+    .caretIcon {
+        width: 12px;
+        transition: transform 0.3s;
+    }
+
+    .rotate {
+        transform: rotate(90deg);
+    }
+
+    .gridDepth1 {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.3s;
+        padding-left: 1.5rem;
+    }
+
+    .gridOpen {
+        grid-template-rows: 1fr;
+    }
+
+    .gridDepth1 div {
+        overflow: hidden;
+    }
+}
+
+@media(prefers-color-scheme:dark) {
+    .container {
+        border-right: 1px solid #555;
+    }
+}

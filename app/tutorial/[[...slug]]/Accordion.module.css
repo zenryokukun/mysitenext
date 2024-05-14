@@ -1,0 +1,87 @@
+.container {
+    cursor: default;
+    position: relative;
+}
+
+.title {
+    /* background-color: #555; */
+    /* color: white; */
+    border-bottom: 1px solid lightgray;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: large;
+    font-weight: bold;
+}
+
+.icon {
+    user-select: none;
+    transition: transform 0.3s;
+}
+
+.iconRotate {
+    transform: rotate(90deg);
+}
+
+.grid {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s;
+
+    /* position: absolute;
+    z-index: 1;
+    background-color: white; */
+    /* width: 100%; */
+    /* border-right: 1px solid lightgray */
+}
+
+.gridOpen {
+    grid-template-rows: 1fr;
+}
+
+.gridItems {
+    overflow: hidden;
+
+    /* ul */
+    list-style-type: decimal;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    padding-inline-start: 2rem;
+}
+
+.container a,
+.container li::marker {
+    /* color: inherit; */
+    color: #7f7f7f;
+}
+
+.gridItems li {
+    padding-top: 8px;
+    /* padding-left: 2rem; */
+}
+
+.gridItems li:last-child {
+    padding-bottom: 8px;
+}
+
+.caret {
+    width: 12px;
+    height: 24px;
+}
+
+@media(prefers-color-scheme:dark) {
+    .title {
+        border-bottom: 1px solid #555;
+    }
+
+    .container a,
+    .container li::marker {
+        color: #bfbfbf;
+    }
+}
+
+@media screen and (max-width:1200px) {
+    .grid li {
+        padding: 12px;
+    }
+}

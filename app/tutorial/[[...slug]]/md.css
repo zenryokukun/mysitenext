@@ -1,0 +1,142 @@
+/* 目次 */
+.tbl-contents {
+  background-color: #f9f5f5;
+  width: 80%;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16), 0 2px 10px 0 rgba(0, 0, 0, .12);
+  margin: 1rem auto 1rem auto;
+  padding: 1rem 0 1rem 0;
+}
+
+/* 目次のliの幅 */
+.tbl-contents li {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+/* 目次内タイトル */
+.tbl-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+/* 強調蛍光ペン<span class='hl'>テキスト～</span>のように使う */
+.hl {
+  background: linear-gradient(transparent 60%, #f0f066 60%);
+  font-weight: bold;
+}
+
+/* 注意書きとポイント */
+.regard,
+.point {
+  position: relative;
+  font-size: 15px;
+  line-height: 27px;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1rem 1rem 2rem;
+  border-left: 3px solid darkslategray;
+  background-color: #cee4ec;
+  color: #404040;
+}
+
+/* 注意書きとポイント内のpタグ */
+.regard p,
+.point p {
+  margin: 0;
+}
+
+
+/* 注意書きに載せる△！アイコン */
+.regard::before,
+.point::before {
+  background-color: darkslategray;
+  position: absolute;
+  display: block;
+  top: -10px;
+  left: 10px;
+  content: "";
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.regard::before {
+  mask-image: url("/svg/triangle-exclamation-solid.svg");
+}
+
+.point::before {
+  mask-image: url("/svg/square-check-solid.svg");
+}
+
+.point>ul {
+  padding-inline-start: 1rem;
+}
+
+/* codeにファイル名を付けるためのCSS。md内でコード前に<div class="fn">fname</div>のように使う。 */
+.fn {
+  display: inline-block;
+  margin: 1rem 0 0 0 !important;
+  width: auto !important;
+
+  padding: 0.2rem 1rem 0.2rem 1rem;
+
+  background-color: #4f5f5f;
+  color: white;
+  border-radius: 7px 7px 0px 0px;
+  /* box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px; */
+  font-size: 15px;
+  font-family: monospace, sans-serif;
+}
+
+.fn+pre {
+  margin-top: 0px !important;
+}
+
+/* dark:mode */
+@media (prefers-color-scheme:dark) {
+
+  .tbl-contents {
+    background-color: #3F3F3F;
+  }
+
+  .hl {
+    background: linear-gradient(transparent 60%, #707070 60%);
+  }
+
+  .regard,
+  .point {
+    background-color: #282b2d;
+    color: #b6b6b6;
+    border-left: 3px solid lightslategray;
+  }
+
+  .regard::before,
+  .point::before {
+    background-color: lightslategray;
+  }
+}
+
+@media screen and (max-width:600px) {
+  .tbl-contents {
+    width: 100%;
+  }
+
+  .tbl-contents,
+  .tbl-contents ul {
+    padding-inline-start: 20px;
+  }
+
+  .tbl-contents li {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .point>ul {
+    padding-inline-start: 5px;
+  }
+}
