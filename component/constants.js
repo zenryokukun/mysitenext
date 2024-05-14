@@ -1,6 +1,6 @@
 // Menu mode
 export const MODE = {
-    HOME: 0, ABOUT: 1, BLOG: 2, PRODUCTION: 3, BOARD: 4, UPDATES: 5,
+    HOME: 0, ABOUT: 1, BLOG: 2, PRODUCTION: 3, BOARD: 4, UPDATES: 5, TUTORIAL: 6,
 };
 
 export const LINK = {
@@ -61,4 +61,5 @@ export const ICON = {
 export const URL_DIR = {
     MD: "post",
     MDX: "new-post",
+    TUTORIAL: "tutorial",
 }

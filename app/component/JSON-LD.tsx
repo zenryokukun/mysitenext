@@ -57,6 +57,7 @@ export default function JSON_LD() {
   }
 
   // パスをディレクトリごとに分割
+  // "/".split("/") は["",""]、"/a/b".split("/")は["","a","b"]となる点に注意
   const dirList = path.split("/");
 
   // 想定はないけど、ルートすらなければリターン
@@ -68,29 +69,45 @@ export default function JSON_LD() {
   dirList.shift();
 
   // ディレクトリの配列を操作し、パンくずリストを生成していく。
-  // ルートはshiftで消しているので、予め設定しておく
+  // ルートは予め設定しておく。 
   const itemList: ItemList[] = [{ name: "home", item: root }];
-  for (let i = 0; i < dirList.length; i++) {
-    // ディレクトリ名取得
-    let name = dirList[i];
-    // 空文字（ルート）ならhomeを設定。
-    if (name === "") {
-      name = "home";
-    }
-    /**
-     * 変則ルートあれば記載
-     */
-    if (name === URL_DIR.MD || name === URL_DIR.MDX) {
-      itemList.push({ name: "blog", item: root + "blog" })
-      // 現状 /blog -> /post/article-folder-name　の遷移となる。
-      // もしくは/blog -> /new-post/article-folder-nameの遷移。
-      // そのため、/post 単体のリンクは存在せず、パンくずリスト不要となる。
-      // だからpostの時は、/blogのリンク追加後、continueする
-      continue;
+
+  if (hasTutorial(dirList)) {
+    // tutorialの場合、routeを問わず、/tutorialページからの遷移が中心となる。
+    // そのため、間のrouteは区切らない。例えば、/tutorial/common/command-lineなら、
+    // /tutorial,/tutorial/common,/tutorial/common/command-lineと区切るのではなく、
+    // /tutorial,/tutorial/common/command-lineと区切る
+    itemList.push({ name: "tutorial", item: root + "tutorial" })
+    if (dirList.length > 1) {
+      const name = dirList[dirList.length - 1]; // 最後の要素
+      const item = root + dirList.join("/");
+      itemList.push({ name, item })
     }
 
-    const item = root + dirList.slice(0, i + 1).join("/");
-    itemList.push({ name: name, item: item });
+  } else {
+    for (let i = 0; i < dirList.length; i++) {
+      // ディレクトリ名取得
+      let name = dirList[i];
+      // 空文字（ルート）は["",""]になっているので、shift()した後も""が１つ残っている。
+      // そのため、空文字ならcontinueする
+      if (name === "") {
+        continue;
+      }
+      /**
+       * 変則ルートあれば記載
+       */
+      if (name === URL_DIR.MD || name === URL_DIR.MDX) {
+        itemList.push({ name: "blog", item: root + "blog" })
+        // 現状 /blog -> /post/article-folder-name　の遷移となる。
+        // もしくは/blog -> /new-post/article-folder-nameの遷移。
+        // そのため、/post 単体のリンクは存在せず、パンくずリスト不要となる。
+        // だからpostの時は、/blogのリンク追加後、continueする
+        continue;
+      }
+
+      const item = root + dirList.slice(0, i + 1).join("/");
+      itemList.push({ name: name, item: item });
+    }
   }
 
   // json-ldを生成
@@ -105,4 +122,13 @@ export default function JSON_LD() {
     </section>
   );
 
+}
+
+function hasTutorial(dirs: string[]) {
+  for (const dir of dirs) {
+    if (dir === URL_DIR.TUTORIAL) {
+      return true;
+    }
+  }
+  return false;
 }

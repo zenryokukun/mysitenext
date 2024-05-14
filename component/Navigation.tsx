@@ -25,7 +25,7 @@ export default function Navigation({
   // [mobileのみ] アコーディオンメニュー：タップ時のアニメーション用のCSSを追加
   const menuCSS = isTapped === true ? `${styles.grid} ${styles.accordion}` : styles.grid;
 
-  const texts = ["home", "about", "blog", "production", "board", "updates"];
+  const texts = ["home", "about", "blog", "production", "board", "updates", "tutorial"];
   const currentPath = generatePath(iniMode, texts[iniMode]);
 
   return (
