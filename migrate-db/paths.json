@@ -1,0 +1,81 @@
+[
+  {
+    "id": "root",
+    "slugs": [],
+    "systemPath": "",
+    "category": "root",
+    "filename": "page.md",
+    "title": "チュートリアル",
+    "description": "このセクションは、はじめてプログラミングを学ぶ方向けのチュートリアルです。実際のプログラミングに加えて、併せて必要となる知識やツールについて解説をします。",
+    "author": "全力君",
+    "published": "",
+    "updated": "",
+    "prev": ""
+  },
+  {
+    "id": "command-line",
+    "slugs": [
+      "common",
+      "command-line"
+    ],
+    "systemPath": "common/command-line",
+    "category": "共通",
+    "filename": "page.md",
+    "title": "コマンド・ラインとは",
+    "description": "コマンド・ラインは文字でコンピュータを操作するツールで、プログラミングとは切っても切れない関係にあります。その重要性と、Windowsでの起動方法を解説します。",
+    "author": "全力君",
+    "published": "",
+    "updated": "",
+    "prev": ""
+  },
+  {
+    "id": "path",
+    "slugs": [
+      "common",
+      "command-line",
+      "path"
+    ],
+    "systemPath": "common/command-line/path",
+    "category": "共通",
+    "filename": "page.md",
+    "title": "ファイル・パスとは",
+    "description": "ファイル・パスは、ファイルやフォルダの保存場所を特定する文字列で、コマンド・ラインを使うにあたって必要となる知識です。Windowsのパスの表記方法や、絶対パスや相対パスについて解説します。",
+    "author": "全力君",
+    "published": "",
+    "updated": "",
+    "prev": "command-line"
+  },
+  {
+    "id": "usage",
+    "slugs": [
+      "common",
+      "command-line",
+      "usage"
+    ],
+    "systemPath": "common/command-line/usage",
+    "category": "共通",
+    "filename": "page.md",
+    "title": "コマンド・プロンプトの使い方",
+    "description": "コマンド・プロンプトの基本的な使い方や、cdやdirといった良く使うコマンドについて解説をします。",
+    "author": "全力君",
+    "published": "",
+    "updated": "",
+    "prev": "path"
+  },
+  {
+    "id": "editor",
+    "slugs": [
+      "common",
+      "editor"
+    ],
+    "systemPath": "common/editor",
+    "category": "共通",
+    "filename": "page.md",
+    "title": "エディターとは",
+    "description": "プログラムを書くためのツールとして必須になるものがエディタです。無料でも強力なエディタが多数あります。有名なエディタと、私のおすすめを紹介します。",
+    "author": "全力君",
+    "published": "",
+    "updated": "",
+    "prev": ""
+  }
+]

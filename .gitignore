@@ -89,6 +89,3 @@ mongo-manual.txt
 
 # dbをサーバから取得するスクリプト
 fetch-db.ps1
-
-# db作成用
-/migrate-db/
