@@ -1,0 +1,146 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 80vh;
+  overflow: auto;
+  border-radius: 5px;
+  background: linear-gradient(90deg,
+      rgba(63, 218, 216, 1) 16%,
+      rgba(47, 201, 226, 1) 32%,
+      rgba(28, 127, 238, 1) 48%,
+      rgba(95, 21, 242, 1) 64%,
+      rgba(186, 12, 248, 1) 80%,
+      rgba(251, 7, 217, 1) 100%);
+  color: black;
+}
+
+.heading {
+  text-align: center;
+  color: white;
+  background-color: #333;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.headline {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.mode {
+  /* background-color: #f1f1f1; */
+  width: 100%;
+  text-align: center;
+}
+
+.modeText {
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.textLarge {
+  font-size: 1.3rem;
+}
+
+
+/*************************/
+/* insert,update MODE    */
+/*************************/
+
+.formWrapper {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.form {
+  margin-bottom: 1rem;
+}
+
+.singleInput {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  width: 75%;
+}
+
+
+.inputChange {
+  background-color: rgb(246, 10, 88) !important;
+  color: #f3f3f3 !important;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+
+.formInput {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  row-gap: 1rem;
+  background-color: #eaeaea;
+  padding: 1rem;
+  margin-top: 1rem;
+  /* margin-bottom: 1rem; */
+}
+
+.formInput label {
+  display: block;
+}
+
+.formInput input {
+  background-color: lightblue;
+}
+
+.formInput textarea {
+  background-color: lightblue;
+  resize: none;
+}
+
+.largeInput {
+  width: 430px;
+  height: 85px;
+}
+
+.count {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.wide {
+  width: 150px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemLabel {
+  align-self: stretch;
+  padding: 1rem 8px 1rem 8px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  background-color: #333;
+  color: #f1f1f1;
+}
+
+.fill {
+  background-color: #eaeaea;
+  height: 100%;
+  width: 100%;
+  padding: 0.5rem 1rem 1rem 1rem;
+}
+
+.mt {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}

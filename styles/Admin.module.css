@@ -191,6 +191,12 @@
   font-size: 1.3rem;
 }
 
+.link {
+  color: #f3f3f3;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
 @media screen and (max-width:900px) {
 
   .container {

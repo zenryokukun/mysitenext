@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useReducer, FormEvent, useEffect } from "react";
+import Link from "next/link";
 import Footer from "../../component/Footer";
 import styles from "../../styles/Admin.module.css";
 import { useBlogs } from "../../lib/admin/use-blogs";
@@ -241,6 +242,7 @@ function SideMenu() {
         className={styles.compile}
         onClick={build}
       >コンパイル</button>
+      <Link className={styles.link} href="/admin/tutorial">チュートリアル管理</Link>
     </div>
   );
 }
