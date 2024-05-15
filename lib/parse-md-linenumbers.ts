@@ -31,6 +31,7 @@ export default async function parseMd(md: string) {
         .use(remarkRehype, { allowDangerousHtml: true })
         // @ts-ignore これが出る、、、→Property 'use' does not exist on ty＠ts-ignore
         .use(rehypePrism)
+        // @ts-ignore Dockerビルド時にこれが出る、、、：Type error: Property 'use' does not exist on type 'never'.
         .use(rehypeStringify, { allowDangerousHtml: true })
         .process(md);
     return vfile.toString();
