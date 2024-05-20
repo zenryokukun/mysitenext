@@ -1,0 +1,759 @@
+import Image from "../ImageWrapper";
+import ex1 from "./ex1.jpg";
+import p1 from "./p1.jpg";
+import p2 from "./p2.jpg";
+import withImport from "./import.jpg";
+import matter from "./matter.jpg";
+import syntax from "./syntax.jpg";
+
+export const mdxMeta = {
+    title:"Next.jsのDynamic RoutesでMDXを使う方法",
+    description:"Next.jsのApp Routerで、Dynamic Routes（動的ルーティング）でMDXを使う場合、少し工夫が必要です。next-mdx-remoteというパッケージを使ってようやく実現できたので、その方法を共有します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/5/21",
+};
+
+# Next.jsのDynamic RoutesでMDXを使う方法
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li>
+  <a href="#preq">前提</a>
+  <ul>
+    <li><a href="#knowledge">前提知識</a></li>
+    <li><a href="#env">環境</a></li>
+  </ul>
+</li>
+<li><a href="#about">next-mdx-remoteとは</a></li>
+<li>
+  <a href="#problem">問題のおさらい</a>
+  <ul>
+    <li><a href="#problem-mdx">MDXファイル</a></li>
+    <li><a href="#problem-page">page.tsx</a></li>
+    <li><a href="#problem-check">ブラウザで表示</a></li>
+    <li><a href="#problem-problems">問題点</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#with-dynamic-routes">Dynamic RoutesでMDXを使う</a>
+  <ul>
+    <li><a href="#mdx">MDXファイルについて</a></li>
+    <li><a href="#static-params">routeの生成</a></li>
+    <li><a href="#load-mdx">MDXを読み取る関数</a></li>
+    <li><a href="#add-page">ページを追加</a></li>
+    <li><a href="#check">ブラウザで確認</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#limitation">next-mdx-remoteの制約</a>
+  <ul>
+    <li><a href="#no-import-export">MDX内でimportとexportができない</a></li>
+    <li><a href="#no-next-config">next.configで指定したプラグインが効かない</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#solution">制約事項の解決方法</a>
+  <ul>
+    <li><a href="#solution-import">import問題を解決</a></li>
+    <li><a href="#solution-export">export問題を解決</a></li>
+    <li><a href="#solution-config">next.config問題を解決</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+以前、『[Next.jsでMDXを扱う方法](/new-post/nextjs-mdx)』で、Next.js（App Router）でMDXを使う方法について解説しました。その中で、「Next.jsのDynamic RoutesでMDXを使うことができない」と困った点について記載していました。
+
+だいぶ時間が経ってしまいましたが、[next-mdx-remote](https://github.com/hashicorp/next-mdx-remote)というパッケージを使うことで解決ができたので、今回はその方法について共有します。制約事項もあるので、その対応方法も併せて共有します。
+
+<h2 id="preq">前提</h2>
+
+<h3 id="knowledge">前提知識</h3>
+
+以下の機能について、基本的な使い方は知っている前提で記載していきます。とはいえ、高度な使い方はしないため、基本の部分だけ把握していればOKです。
+
+#### App Router
+
+Next.jsの[App Router](https://nextjs.org/docs/app)を使うことが前提です。従来のPages Routerでは使い方は異なるのでご注意ください。
+
+『[Next.js13のApp Routerを試してみたぞ！](/post/nextjs-app-router)』に簡単な使い方はまとめてありますので、良かったら参考にしてください。
+
+#### Dynamic Routes
+
+[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes)（動的ルーティング）は、ページのroute（URLのディレクトリ部分）を可変にする、Next.jsの機能です。routeに対応するフォルダ名を、```[slug]```のように角カッコ（```[]```）で囲うやつです。
+
+#### MDX
+
+[MDX](https://mdxjs.com/)はMDファイルを拡張し、ReactコンポーネントやJavaScriptのコードを埋め込めるようにしたファイル形式です。
+
+<h3 id="env">環境</h3>
+
+#### バージョン
+
+今回の環境では、Next.jsのバージョンは**14.2.3**です。Node.jsのバージョンは**18.18.2**です。
+
+#### package.json
+
+以下の内容です。
+
+```json
+"dependencies": {
+  "@mdx-js/loader": "^3.0.1",
+  "@mdx-js/react": "^3.0.1",
+  "@next/mdx": "^14.2.3",
+  "@types/mdx": "^2.0.13",
+  "next": "14.2.3",
+  "next-mdx-remote": "^4.4.1",
+  "react": "^18",
+  "react-dom": "^18"
+}
+```
+
+@mdx-js/loader、@mdx-js/react、@next/md、@types/mdxは、Next.jsでMDXを利用するために必要なパッケージです。[Next.js公式ドキュメント](https://nextjs.org/docs/app/building-your-application/configuring/mdx)に記載されているものです。
+
+まだ入っていない場合は、以下のコマンドでインストールの上、上記ドキュメントに沿ってセットアップしてください。もしくは、[Next.jsでMDXを扱う方法](/new-post/nextjs-mdx)を参考にしてください。
+
+```bash
+npm install @next/mdx @mdx-js/loader @mdx-js/react @types/mdx
+```
+
+next-mdx-remoteについては後述しますが、使うことになるためインストールしておいてください。
+
+```bash
+npm install next-mdx-remote
+```
+
+#### next.config.mjs
+
+next.jsのコンフィグは以下のとおりです。
+
+```js
+import createMDX from "@next/mdx";
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    // pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+};
+
+const withMDX = createMDX({
+    // md plug-in
+})
+
+export default withMDX(nextConfig);
+```
+
+コメント・アウトしている*pageExtensions*にmdxを指定すると、mdxファイルをそのままページとして機能させることが可能（App Routerのpage.tsx|page.jsxと同じように動作させることが可能）ですが、今回は使いません。
+
+また、MD用のプラグインもここでは使いません。
+
+<h2 id="about">next-mdx-remoteとは</h2>
+
+[next-mdx-remote](https://github.com/hashicorp/next-mdx-remote)は、「リモートにあるMDXファイルをNext.jsで利用できるようにする」パッケージです。CMSなどにMDXを格納している場合などに使われるようです。サード・パーティ製パッケージですが、Next.js公式ドキュメントにも記載がされています。
+
+Next.jsでは、MDXを「コンポーネントとしてimport」して使うのが前提ですが、このパッケージ使うと、「MDXを文字列として取得」して使うことになります。これにより、若干コード量は増えますが、動的にMDXの内容を取得することができます。そのため、Dynamic RoutesでMDXファイルを利用することが可能になります。
+
+なお、MDXファイルがローカルにある場合でも、next-mdx-remoteは使えます。今回の例でも、ローカルにあるファイルで試します。
+
+<h2 id="problem">問題のおさらい</h2>
+
+もともとあった問題は、「Dynamic Routes下では、MDXを使うことができない」でした。
+
+ここで、Next.jsでのMDXの簡単な使い方とともに、問題の原因をおさらいします。
+
+ここはnext-mdx-remoteを**使わない場合**の例となりますので、ご留意ください。
+
+<h3 id="problem-mdx">MDXファイル</h3>
+
+以下のMDXファイルをコンポーネントとしてページに表示してみます。
+
+```md
+export const meta = {
+  title: "MDXテスト",
+  author: "全力君",
+};
+
+# 好きな動物
+
+- リス
+- 子豚
+- マングース
+```
+
+<h3 id="problem-page">page.tsx</h3>
+
+```tsx
+// ContentはMD部分をコンポーネントとしてパースされたオブジェクト
+// { meta }はMDX内でexportしているオブジェクト
+import Content, { meta } from "./page.mdx";
+
+export default function page() {
+  return (
+    <>
+      <header>
+        <h1>{meta.title}</h1>
+        <div>{meta.author}</div>
+      </header>
+      <article>
+        {/* MDXをコンポーネントとして使うのがポイント */}
+        <Content />
+      </article>
+    </>
+  );
+}
+```
+
+上記のMDXファイルをimportし、コンポーネントとして利用しているのがポイントです。加えて、MDX内でexportしたデータ（*meta*変数）も、同じようにimportして利用することが可能です。
+
+<h3 id="problem-check">ブラウザで表示</h3>
+
+こんな感じでちゃんと表示されます。
+
+<Image src={ex1} alt="simple-mdx-example" width={275} height={332} />
+
+<h3 id="problem-problems">問題点</h3>
+
+上記のとおり、「MDXをimportするとReactのコンポーネントとして扱える」、というのがNext.jsでのMDXの使い方となります。
+
+Dynamic Routesで利用しようとなると、routeに応じて異なるMDXファイルのパスを指定し、importする必要があります。しかし、MDXファイルを動的にimportしようとしても、「モジュールが見つからない（```unhandledRejection: Error: Cannot find module パス名```）」とエラーになってしまいます。コード等の詳細は[Next.jsでMDXを扱う方法#少しこまったこと](/new-post/nextjs-mdx#trouble)に記載してあるので参考にしてください。
+
+なお、import関数の代わりにrequireを使っても、Next.jsのdynamic関数を使っても同じ結果になります。
+
+MDXをコンポーネントとしてimportできるのは、next.configの設定や、@next/mdx等のインストールしたパッケージののおかげですが、動的なimportまではサポートしていないようです。
+
+申し訳ないのですが、原因は現時点でもはっきりは分かってはいません。単純にパッケージ側が動的importをサポートしていないだけなのか、TypeScriptやバンドラのコンフィグの問題なのか、それともServer Components/Client Componentsの使い方なのか、切り分けが出来ていません。
+
+とにかく、「動的にMDXをimportすることができず、Dynamic Routes下では利用ができない」ということです。
+
+<h2 id="with-dynamic-routes">Dynamic RoutesでMDXを使う</h2>
+
+それでは、next-mdx-remoteを使ってDynamic Routesのページを生成してみます。
+
+Dynamic RoutesはNext.jsのいつも通りの使い方です。今回は、```/app/test/[dir]```というrouteにします。
+
+<h3 id="mdx">MDXファイルについて</h3>
+
+MDXファイルは```/mdx```フォルダに配置します。このフォルダには```/app/test/[dir]```の「dir」と同じ名前のフォルダを作成しておき、ここにMDXファイルを「page.mdx」の名前で保存しておきます。
+
+例えば、「dir」が「p1」の場合、対応するMDXファイルは「```/mdx/p1/page.mdx```」に保存されています。
+
+なお、内容は以下のとおり2ファイル作成済みです。
+
+<div class="fn">```/mdx/p1/page.mdx```</div>
+
+```md
+# ページ１のテスト
+
+## 好きなくだもの
+
+- バナナ
+- オレンジ
+- リンゴ
+```
+
+<div class="fn">```/mdx/p2/page.mdx```</div>
+
+```md
+# ページ２のテスト
+
+## 好きな動物
+
+- いたち
+- テン
+- ハクビシン
+```
+
+<h3 id="static-params">routeの生成</h3>
+
+ここから、```/app/test/[dir]```直下のpage.tsxを編集します。
+
+まずはgenerateStaticParamsでrouteを生成する関数を作成します。「p1」、「p2」を生成しています。
+
+<div class="fn">```app/test/[dir]/page.tsx```</div>
+
+```tsx
+export async function generateStaticParams(){
+  const posts = ["p1", "p2"];
+    return posts.map((dir) => {
+        return { dir };
+  })
+}
+```
+
+<h3 id="load-mdx">MDXを読み取る関数</h3>
+
+MDXを読み取る関数を追加します。ページ（Server Component）から呼び出すので、非同期関数にする必要があります。名前はなんでも良いです。今回は、loadMDXにしています。
+
+<div class="fn">```app/test/[dir]/page.tsx```</div>
+
+```tsx
+import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { compileMDX } from "next-mdx-remote/rsc";
+
+export async function generateStaticParams(){
+//  上と同じのため省略
+}
+
+/**
+ * @param dir urlのroute（p1,p2,p3）
+ */
+async function loadMDX(dir: string) {
+  // projectのルート・パス
+  const root = path.resolve();
+  // mdxファイルのパス
+  const mdxpath = path.join(root, "mdx", dir, "page.mdx");
+  // mdxファイルを読み取る
+  const data = await readFile(mdxpath, { encoding: "utf-8" });
+  // mdxをパースする。
+  // remark,rehypeのプラグインを指定する場合、
+  // front-matterもパースする場合、ここで指定する
+  return compileMDX({
+    source: data,
+  })
+}
+```
+
+**path**と**readFile**はMDXファイルを開くためにimportしています。
+
+**compileMDX**がnext-mdx-remoteの関数で、MDXをパースしてくれます。*source*パラメタに、**MDXを文字列として受け取ります**。他にも、ここでオプションの指定をすることで、rehypeやremarkのプラグイン指定したり、いわゆるfront-matterをパースすることができます。
+
+この例では、Dynamic Routes下でMDXを使えるかの検証がメインなので、*source*のみ使います。他のオプションは後述します。
+
+ポイントは、「MDXをファイルとして開き、compileMDXでパース」している部分です。next-mdx-remoteを使わない場合は、MDXをモジュールとしてimportしていたので、ここは大きな違いです。これにより、動的にMDXを選択することが可能になります。
+
+なお、compileMDXの戻り値は、```content```と```frontmatter```の２つのプロパティをもったオブジェクトとなります。前者は、MDXのパース結果、後者は、front-matter部分のパース結果となります。
+
+<h3 id="add-page">ページを追加</h3>
+
+ページ部分を追加します。
+
+<div class="fn">```app/test/[dir]/page.tsx```</div>
+
+```tsx
+// import　部分は同じのため省略
+
+export async function generateStaticParams(){/*上記のとおり*/}
+
+async function loadMDX(dir: string) {/*上記のとおり*/}
+
+export default async function Page(
+  { params }: { params: { dir: string } }
+) {
+  /**
+   * {
+   * 　content: MDXのパース結果, 
+   * 　frontmatter: front-matterのパース結果 
+   * }
+   */
+  const mdx = await loadMDX(params.dir)
+  return (
+    <>
+      {mdx.content}
+    </>
+  )
+}
+```
+
+dynamic routeに応じて、さきほど作成したloadMDX関数を呼び出し、MDXファイルのパース結果を受け取っています。上述のとおり、```content```がMDX部分のパース結果になるので、それを直接レンダリングしています。
+
+<h3 id="check">ブラウザで確認</h3>
+
+```npm run dev```で起動させ、```/test/p1```と```/test/p2```が表示されるか確認します。
+
+- p1ページ
+
+<Image src={p1} alt="p1-page-width-dynamic-routes" width={398} height={381} />
+
+- p2ページ
+
+<Image src={p2} alt="p2-page-width-dynamic-routes" width={384} height={374} />
+
+ちゃんとdynami routesでもMDXの利用ができました！やったぜ！
+
+<h2 id="limitation">next-mdx-remoteの制約</h2>
+
+無事Dynamic RoutesでMDXを使えましたが、これで万事OKではありません。next-mdx-remoteにはいくつか制約事項がありますので、それを紹介します。解決方法は次の章で触れます。
+
+<h3 id="no-import-export">MDX内でimportとexportができない</h3>
+
+next-mdx-remoteでは、MDXファイル内にimport文とexport文を使うことができません。使えない理由は、GitHubに以下のように記載されていました。
+
+> ～前略～, imports must be relative to a file path, and this library allows content to be loaded from anywhere, rather than only loading local content from a set file path. As for exports, the MDX content is treated as data, not a module, so there is no way for us to access any value which may be exported from the MDX passed to next-mdx-remote.
+
+「importはファイル・パスに対して相対的である必要がありますが、このライブラリは、コンテンツを固定されたファイル・パスからだけでなく、どこからでもロードできるようにします。exportについては、MDXをモジュールでなくデータとして扱うため、next-mdx-remoteに渡されたMDXからexportされる値に、アクセスする術はありません。」とのことです。
+
+#### import文
+
+MDXにReactのコンポーネントを直接importできるのは、MDXの大きな利点の１つです。Next.jsの[Imageコンポーネント](https://nextjs.org/docs/app/api-reference/components/image)のような強力なコンポーネントをそのまま使えるので、とても便利だと思っています。正直、使えないと困ります。
+
+#### export文
+
+従来のMDファイルではfront-matterを使って定義していたデータを、MDXではexport文を使って定義することができました。
+
+- MDでfront-matterを使う場合
+
+```md
+---
+title: ページ1
+author: 全力君
+description: フロント・マッターの例
+---
+
+# ページ１
+
+あいうえお～～
+```
+
+- MDXでexportを使う場合
+
+```md
+export const meta = {
+  title: "MDXテスト",
+  author: "全力君",
+  description: "exportの例",
+};
+
+# ページ１
+
+あいうえお～～
+```
+
+export文は[Next.jsのドキュメント](https://nextjs.org/docs/app/building-your-application/configuring/mdx#frontmatter)にも記載されている使い方なので、使っている方も多いと思います。
+
+残念ながら、next-mdx-remoteではこのような使い方はできません。
+
+<h3 id="no-next-config">next.configで指定したプラグインが効かない</h3>
+
+MDでもMDXでも、HTMLへの変換には[remark](https://www.npmjs.com/package/remark)や[rehype](https://www.npmjs.com/package/rehype)が使われています。
+
+remarkやrehypeのプラグインを使う場合、本来であれば以下のようにnext.configファイルに指定をします。例として、GitHub版のマークダウン表記に対応させるremarkGfmと、プログラムの構文ハイライトを補助してくれるrehypePrismの指定をしています。
+
+<div class="fn">```next.config.mjs```</div>
+
+```js
+import remarkGfm from 'remark-gfm';
+import rehypePrism from 'rehype-prism';
+import createMDX from "@next/mdx";
+
+const nextConfig = {
+  // 略
+};
+
+const withMDX = createMDX({
+  options: {
+    extension: /\.mdx?$/,
+    // remark系のpluginを指定
+    remarkPlugins: [remarkGfm],
+    // rehype系のpluginを指定
+    rehypePlugins: [rehypePrism],
+  },
+})
+
+export default withMDX(nextConfig);
+```
+
+しかし、next-mdx-remoteを使う場合、**next.configで指定したプラグインは効きません**。これは、MDXをモジュールとして扱わず（MDXを直接importしない）、ファイルとして開いて手動でパースするからです。そのため、next.configの設定が効きません。
+
+<h2 id="solution">制約事項の解決方法</h2>
+
+上記で説明した、next-mdx-remoteを使う場合の制約事項について、それぞれ解決方法を紹介します。
+
+<h3 id="solution-import">import問題を解決</h3>
+
+MDX内でコンポーネントを直接importをすることはできませんが、MDX内で使うコンポーネントを、```compileMDX```のオプションで指定することで解決できます。
+
+例として、Next.jsの[Imageコンポーネント](https://nextjs.org/docs/app/api-reference/components/image)と、自作のHighlightコンポーネント（背景色を黄色にするだけのコンポーネント）をMDXで使ってみます。
+
+#### MDX
+
+MDX内ではコンポーネントのimportができないので、**importせずにそのままJSXを記述する**のがポイントです。
+
+```md
+# Reactのコンポーネントを使う
+
+MDXにはimport文は書きません。
+
+<Highlight>
+やっほ～
+</Highlight>
+
+これはNext.jsのImageコンポーネントです。
+
+<Image src="/mdx/p2/test.png" alt="test" width={317} height={277} />
+```
+
+importがないとちょっと気持ちが悪いかもしれませんが、しょうがありません。
+
+ちなみに、importとexportがある場合は無視してパースされます。そのため書いても問題ありませんが、後から見直した時に混乱しそうなので、私は書かないことにします。
+
+#### page.tsx
+
+上記のMDXを表示するページを以下のように作成します。
+
+<div class="fn">```page.tsx```</div>
+
+```tsx
+import path from "node:path";
+import { readFile } from "node:fs/promises";
+import Image from "next/image";
+import HighLight from "./HighLight";
+import { compileMDX } from "next-mdx-remote/rsc";
+
+async function loadMDX() {
+  // mdxファイルのパスを取得
+  const root = path.resolve();
+  const mdxfile = path.join(root, "app/test2", "page.mdx")
+  // mdxファイルを読み取る
+  const data = await readFile(mdxfile, { encoding: "utf-8" });
+
+  // パースする。MDXで使用するコンポーネントは"components"に指定する。
+  return compileMDX({
+    source: data,
+    components: {
+      Image: (props: any) => <Image {...props} />,
+      HighLight: (props: any) => <HighLight {...props} />,
+    },
+  });
+}
+
+export default async function Page() {
+  const mdx = await loadMDX();
+  return (
+    <>
+      {mdx.content}
+    </>
+  );
+}
+```
+
+ポイントは、```compileMDX```で指定している、**components**プロパティです。ここに、MDX内で利用するReactコンポーネントを指定します。厳密には、「利用するコンポーネントを返す関数」の形で指定しています。
+
+ここで、１つ注意点があります。
+
+本来であれば、MDXで利用するコンポーネントは、以下のように直接指定することが可能です。
+
+```jsx
+import Image from "next/image";
+import HighLight from "./HighLight";
+
+async function loadMDX() {
+  /**略*/
+  return compileMDX({
+    source: data,
+    components: {
+      Image, HighLight
+    },
+  });
+}
+```
+
+しかし、Next.jsのImageコンポーネントだと、以下のエラーが出てしまいます。
+
+> Internal error: Error: Cannot access Image.propTypes on the server. You cannot dot into a client module from a server component. You can only pass the imported name through.
+
+「Server Componentsからclientモジュールを使うことができない」といったエラーが表示されています。この件は、[Github Issue](https://github.com/hashicorp/next-mdx-remote/issues/405)でも議論されています。
+
+エラーメッセージは正確ではなく、他のコンポーネントでも発生する場合もあるようです。バージョンによる動作の違いもありそうですね。
+
+関数でラップする回避策は、ここに記載があったものです。
+
+基本的には関数でラップする必要はありませんが、もし上記のようなエラーが発生した場合は、試してみてください。上記のIssueに他の回避策も記載されているので、それでも解決しない場合は参考になると思います。
+
+#### ブラウザでチェック
+
+<Image src={withImport} alt="mdx-with-components" width={567} height={641} />
+
+ちゃんと、ImageコンポーネントとHighLightコンポーネントが効いてることが確認できます。
+
+<h3 id="solution-export">export問題を解決</h3>
+
+MDXでexportできない問題ですが、これはMDXにfront-matterをつけて対応します。next-mdx-remoteにfront-matterをパースする機能がついているため、追加のパッケージのインストールは不要です。
+
+MDXに、ページのタイトル（見出し）と作者情報をfront-matterで設定し、ページに適用してみます。
+
+#### MDX
+
+MDXのfront-matterを追加しています。上部の「---（ハイフン3つ）」で区切られている部分がそれです。
+
+```md
+---
+title: front-matter
+author: 全力君
+---
+
+# front-matterのテスト！
+
+あいうえお～～
+```
+
+#### page.tsx
+
+```tsx
+import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { compileMDX } from "next-mdx-remote/rsc";
+
+async function loadMDX() {
+  const root = path.resolve();
+  const mdxpath = path.join(root, "app/front-matter", "page.mdx");
+  const data = await readFile(mdxpath, { encoding: "utf-8" });
+  return compileMDX({
+    source: data,
+    // options:{parseFrontmatter:true}を設定することで、
+    // MDX内のfront-matterをパースしてくれる。
+    options: {
+      parseFrontmatter: true,
+    }
+  })
+}
+
+export default async function Page() {
+  const mdx = await loadMDX();
+
+  // content -> MDX部分
+  const content = mdx.content;
+  // frontmatter -> front-matter部分
+  const frontmatter = mdx.frontmatter as { title: string, author: string };
+
+  return (
+    <div>
+      <header style={{/*略*/}}>
+        <h1>{frontmatter.title}</h1>
+        <div>{frontmatter.author}</div>
+        <div>{new Date().toLocaleString()}</div>
+      </header>
+      <article>
+        {content}
+      </article>
+    </div>
+  )
+}
+```
+
+ポイントは、またもや```compileMDX```関数です。今回は、パラメタに```{options: parseFrontmatter:true}```を追加しています。このオプションを入れると、front-matter部分をパースしてくれます。
+
+compileMDXの戻り値の**frontmatter**プロパティに、パース結果が格納されています。後は普通に使うだけです。今回は、*title*と*author*をfront-matterに指定しているので、headerタグ内で使っています。
+
+#### ブラウザで確認
+
+<Image src={matter} alt="mdx-with-frontmatter" width={499} height={338} />
+
+ちゃんとMDXのfont-matter部分が見出しとして表示されています。赤枠部分です。
+
+<h3 id="solution-config">next.config問題を解決</h3>
+
+今度は、remarkやrehypeのプラグインを指定する方法です。next.configで指定しても効かないので、またしても```compileMDX```のオプションで指定します。
+
+今回は例として、rehypeのプラグインである[rehype-prism](https://www.npmjs.com/package/rehype-prism)を使います。プログラミング言語の構文に沿って、ハイライトしてくれるプラグインです。
+
+#### MDX
+
+pythonのコードを追加しています。
+
+````md
+# rehypeプラグインのテスト
+
+```python
+import os
+
+def test():
+    print(os.environ)
+```
+````
+
+#### page.tsx
+
+ページを以下のように作成します。
+
+なお、importしているjsファイルは、pythonの構文をパースするためのスクリプトで、cssファイルは、シンタックス・ハイライトをするためのものです。いずれも、rehype-prisimに付属するファイルです。
+
+```tsx
+import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { compileMDX } from "next-mdx-remote/rsc";
+import rehypePrism from "rehype-prism";
+// rehype-prismでpythonのシンタックス・ハイライトをするために必要
+import "prismjs/components/prism-python.js";
+// シンタックス・ハイライト用のCSS
+import "prismjs/themes/prism-tomorrow.css";
+
+async function loadMDX() {
+  const root = path.resolve();
+  const mdxpath = path.join(root, "app/conf", "page.mdx");
+  const data = await readFile(mdxpath, { encoding: "utf-8" });
+  return compileMDX({
+    source: data,
+    options: {
+      // mdxOptionsでremarkやrehypeのプラグインを指定する。
+      // 複数ある場合はカンマ区切り。
+      mdxOptions: {
+        // @ts-ignore
+        rehypePlugins: [rehypePrism],
+        remarkPlugins: [],
+      }
+    }
+  });
+}
+
+export default async function Page() {
+  const mdx = await loadMDX();
+  return (
+    <>{mdx.content}</>
+  )
+}
+```
+
+
+まず、使いたいプラグインをimportします。今回の例だと```import rehypePrism from "rehype-prism"```の部分です。
+
+後は、compileMDXのパラメタの```options.mdxoOptions```に指定します。以下の部分ですね。
+
+```ts
+return compileMDX({
+  source: data,
+  options: {
+    mdxOptions: {
+      // @ts-ignore
+      rehypePlugins: [rehypePrism],
+      remarkPlugins: [],
+    }
+  }
+});
+```
+
+*rehypePlugins*と*remarkPlugins*とあるとおり、remark系・rehype系のプラグインでそれぞれ指定するオプションが異なります。いずれも配列で指定し、複数ある場合はカンマ区切りで指定すればOKです。
+
+なお、@ts-ignoreでTypeScriptのエラーを無視しています。これを外すと、私の環境だと以下の型エラーが出ます。
+
+> Type 'Plugin&lt;[(RehypePrismOptions | undefined)?], Element&gt;' is not assignable to type 'Pluggable&lt;any[]&gt;'.Type 'Plugin&lt;[(RehypePrismOptions | undefined)?], Element&gt;' is not assignable to type 'Plugin&lt;any[], any, any&gt;'. The 'this' types of each signature are incompatible. Type 'Processor&lt;void, any, void, void&gt; | Processor&lt;void, any, any, any&gt; | Processor&lt;any, any, void, void&gt; | Processor&lt;void, void, void, void&gt;' is not assignable to type 'Processor&lt;undefined, undefined, undefined, undefined, undefined&gt;'. Type 'Processor&lt;void, any, void, void&gt;' is missing the following properties from type 'Processor&lt;undefined, undefined, undefined, undefined, undefined&gt;': compiler, freezeIndex, frozen, namespace, and 3 more.
+
+next-remote-mdxとrehype-prismそれぞれで定義されている型の違いのものなので、解決には労力を割かず無視しています。動作には影響ありません。
+
+#### ブラウザで確認
+
+<Image src={syntax} alt="" width={596} height={265} />
+
+ちゃんとpythonの構文部分がハイライトされていることが確認できますね。
+
+<h2 id="last">最後に</h2>
+
+今回は、next-mdx-remoteを使って、Next.jsのDynamic RoutesでMDXファイルを使う方法を共有しました。併せて、next-mdx-remoteの制約事項と、その対応方法についても解説をしました。
+
+このサイトでも、Dynamic Routesを使わずにMDXを使っているページがいくつかありますが（このページもそうです）、ようやく解決の糸口が見えました。しかし、今数えてみると15ページくらいあるので、import文やexport文を修正するだけでも結構労力がかかりそうです。しかし、Dynamic Routesを使えばISRで全体をビルドせずにページの追加が可能になるので、前向きに移行の検討をしたいと思います。
+
+なお、使っていて気になったのですが、Next.jsの公式サイトで紹介されていた@next/mdxとかのパッケージは、インストールする必要はないのかもしれません。時間がある時に、必要最低限のインストールとコンフィグ変更について、調べてみようと思います。何かあれば、このページに追記をしていきます。
+
+しかし、Next.jsでServer Componentsが導入され、この１年間で数々のアップデートが入ったように思います。それに合わせて、サード・パーティ製のパッケージも対応が必要になるので、エラーの解決だけでなく、再現もなかなか難しいですね。ついていくのが大変です！
+
+<h2 id="ref">参考</h2>
+
+- next-mdx-remote: https://github.com/hashicorp/next-mdx-remote
