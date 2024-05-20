@@ -3,6 +3,7 @@ import basicExample from "./basic-example.jpg";
 import pluginExample from "./plugin-example.jpg";
 import exportExample from "./export-example.jpg";
 import customExample from "./custom-example.jpg";
+import Caution from "../Caution";
 
 export const mdxMeta = {
     title:"Next.jsでMDXを扱う方法",
@@ -15,6 +16,11 @@ export const frontMatter = {
 };
 
 # Next.jsでMDXを扱う方法
+
+<Caution>
+<div><b>2024-05-20追記</b></div>
+<p><a href="#trouble">少し困ったこと</a>の解決策を、同章に追記しました。</p>
+</Caution>
 
 <nav class="table-of-contents ">
 <div class="table__title">目次</div>
@@ -614,6 +620,11 @@ export default function ({params}){
 おそらく動的にrequireしているのが良くないのだと思いますが、、、ちなみに```import(dir)```にしても同じです。
 
 もし解決方法を御存知の方がいたら教えてください。
+
+<Caution>
+<div><b>2024-05-20追記</b></div>
+<p><a href="https://github.com/hashicorp/next-mdx-remote">next-mdx-remote</a>を使うことで、Dynamic RoutesでMDXを使うことができました。詳細は<a href="/new-post/nextjs-mdx-remote">Next.jsのDynamic RoutesでMDXを使う方法</a>で記事にしていますので、参考にしてください。</p>
+</Caution>
 
 <h2 id="last">最後に</h2>
 
