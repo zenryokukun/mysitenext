@@ -1,4 +1,5 @@
 import Image from "../ImageWrapper";
+import Caution from "../Caution";
 import ex1 from "./ex1.jpg";
 import p1 from "./p1.jpg";
 import p2 from "./p2.jpg";
@@ -17,6 +18,11 @@ export const frontMatter = {
 };
 
 # Next.jsのDynamic RoutesでMDXを使う方法
+
+<Caution>
+<div><b>2024-05-26追記</b></div>
+<p>単純にnext-mdx-remoteだけを使う場合、不要となる設定やパッケージを明記しました。<a href="#env">環境</a>の該当箇所に、適宜注意書きを追加しています。詳細は<a href="#minimal">2024-05-27追記：最小限のパッケージとコンフィグ</a>にまとめたので、ご確認ください。</p>
+</Caution>
 
 <nav class="table-of-contents ">
 <div class="table__title">目次</div>
@@ -65,6 +71,7 @@ export const frontMatter = {
   </ul>
 </li>
 <li><a href="#last">最後に</a></li>
+<li><a href="#minimal">2024-05-27追記：最小限のパッケージとコンフィグ</a></li>
 <li><a href="#ref">参考</a></li>
 </ul>
 </nav>
@@ -132,6 +139,11 @@ next-mdx-remoteについては後述しますが、使うことになるため�
 npm install next-mdx-remote
 ```
 
+<Caution>
+<div><b>2024-05-26追記</b></div>
+<p>単純にnext-mdx-remoteだけを使う場合、上記公式の手順は不要です。インストールするパッケージもnext-mdx-remoteだけでOKです。</p>
+</Caution>
+
 #### next.config.mjs
 
 next.jsのコンフィグは以下のとおりです。
@@ -154,6 +166,11 @@ export default withMDX(nextConfig);
 コメント・アウトしている*pageExtensions*にmdxを指定すると、mdxファイルをそのままページとして機能させることが可能（App Routerのpage.tsx|page.jsxと同じように動作させることが可能）ですが、今回は使いません。
 
 また、MD用のプラグインもここでは使いません。
+
+<Caution>
+<div><b>2024-05-26追記</b></div>
+<p>単純にnext-mdx-remoteだけを使う場合、next.configに手を加える必要はありません。</p>
+</Caution>
 
 <h2 id="about">next-mdx-remoteとは</h2>
 
@@ -753,6 +770,22 @@ next-remote-mdxとrehype-prismそれぞれで定義されている型の違い�
 なお、使っていて気になったのですが、Next.jsの公式サイトで紹介されていた@next/mdxとかのパッケージは、インストールする必要はないのかもしれません。時間がある時に、必要最低限のインストールとコンフィグ変更について、調べてみようと思います。何かあれば、このページに追記をしていきます。
 
 しかし、Next.jsでServer Componentsが導入され、この１年間で数々のアップデートが入ったように思います。それに合わせて、サード・パーティ製のパッケージも対応が必要になるので、エラーの解決だけでなく、再現もなかなか難しいですね。ついていくのが大変です！
+
+<h2 id="minimal">2024-05-27追記：最小限のパッケージとコンフィグ</h2>
+
+next-mdx-remoteを使うために、必要最低限となるパッケージとコンフィグについて調べたので、追記をします。
+
+結論、[Next.js公式ドキュメント](https://nextjs.org/docs/app/building-your-application/configuring/mdx)の手順は不要です。
+
+追加するパッケージはnext-mdx-remoteだけでOKですし、next.configも手を加える必要はありません。mdx-components.tsxも不要です。その代わり、MDXファイルをモジュールとしてimportすることはできなくなります。この使い方もしたい場合は、手順に沿って設定する必要があります。
+
+ただし、私が試した範囲だと、remarkやrehypeのプラグインを指定した時に、以下のエラーが発生する場合がありました。
+
+>  ⨯ [Error: [next-mdx-remote] error compiling MDX: Cannot `parse` without `Parser`
+
+ちなみに、追加したプラグインはrehype-prismです。原因の詳細は分かっていませんが、@mdx-js/mdxのバージョンが影響をしているようです。```npm i @mdx-js/mdx@latest```でインストールしなおしたら解決しました。
+
+もしプラグインを指定した時にエラーが出る場合は、試してみてください。
 
 <h2 id="ref">参考</h2>
 
