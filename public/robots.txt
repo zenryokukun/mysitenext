@@ -3,6 +3,7 @@ Disallow: /_home
 Disallow: /board
 Disallow: /login
 Disallow: /admin
+Disallow: /admin/tutorial
 Disallow: /usr/local/lib/node_modules
 Disallow: /test/crop
 Disallow: /api/submit
