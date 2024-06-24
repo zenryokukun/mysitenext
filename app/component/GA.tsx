@@ -18,7 +18,7 @@ export default function GA() {
   const path = usePathname();
 
   // 管理者画面の場合は設定しない
-  if (path === "/login" || path === "/admin") {
+  if (path === "/login" || path === "/admin" || path === "/admin/tutorial") {
     return null;
   }
 
