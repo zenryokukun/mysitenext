@@ -1,0 +1,397 @@
+import Image from "../ImageWrapper";
+import normal800 from "./normal-800px.jpg";
+import normal450 from "./normal-450px.jpg";
+import responsive600 from "./responsive-600px.jpg";
+import responsive450 from "./responsive-450px.jpg";
+import normalClick800 from "./normal-click-800px.jpg";
+import normalClick450 from "./normal-click-450px.jpg";
+import responsiveClick600 from "./responsive-click-600px.jpg";
+import responsiveClick400 from "./responsive-click-400px.jpg";
+
+export const mdxMeta = {
+    title:"canvas要素をレスポンシブにする方法",
+    description:"canvas要素を、画面サイズの異なるデバイスでも見やすくなるように、レスポンシブ対応する方法を解説します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/6/28",
+};
+
+# canvas要素をレスポンシブにする方法
+
+<nav class="table-of-contents">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#preq">前提</a></li>
+<li>
+  <a href="#not-resonsive">レスポンシブではない例</a>
+  <ul>
+    <li><a href="#not-responsive-html">HTML</a></li>
+    <li><a href="#not-responsive-js">JavaScript</a></li>
+    <li><a href="#not-responsive-check">ブラウザで確認</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#responsive">レスポンシブ対応</a>
+  <ul>
+    <li><a href="#responsive-css">CSSを追加</a></li>
+    <li><a href="#responsive-check">ブラウザで確認</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#problem">うまくいかないケース</a>
+  <ul>
+    <li><a href="#problem-example">実際の例</a></li>
+    <li><a href="#problem-solution">解決策</a></li>
+  </ul>
+</li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+canvas要素上に線を引いたり、図形を描いたりするときに、位置やサイズをピクセル数で指定すると思います。そのため、「HTMLのcanvas要素をレスポンシブ対応させるのは難しい」という先入観を持っていました。
+
+なので何となく避けていたのですが、実は簡単にレスポンシブ対応できることを最近知ったので、共有させていただきます。
+
+結論だけ先に書いてしまうと、canvas上に描く図形の位置やサイズは、「50」とか「100」のように絶対値で指定した場合でも、canvasの大きさに応じて自動でリサイズしてくれます。そのため、CSSだけで基本は対応できます。ただし、ボードゲームを作る場合のように、canvas上のクリック位置に応じて処理を分けたい場合等は、少し工夫が必要となりますので、そこも含めて共有します。
+
+<h2 id="preq">前提</h2>
+
+HTMLの[canvas要素](https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas)の基本的な使い方は知っている前提で記載しています。とはいえ、例示では線を引くくらいしかしないので、そこまで深い知識は必要ありません。
+
+なお、本記事での「レスポンシブ」は[レスポンシブデザイン](https://developer.mozilla.org/ja/docs/Learn/CSS/CSS_layout/Responsive_Design)のことを指します。異なる画面サイズに応じて、Webサイトの表示を調整させるデザイン手法のことです。
+
+今回紹介するのは、CSSを使ったcanvas要素自体のレスポンシブ対応です。canvasに描かれるコンテンツは、JavaScriptを使って描写する都合上、CSSではレスポンシブ対応させることはできません。なので、描かれるコンテンツは**画面サイズを問わず同じ**ことを前提にしています。
+
+<h2 id="not-resonsive">レスポンシブではない例</h2>
+
+まず、特に何も手を加えない場合のcanvas要素の挙動を確認します。
+
+<h3 id="not-responsive-html">HTML</h3>
+
+canvas要素の幅と高さはそれぞれ500に設定しています。後は、cssファイルやjsファイルを読み込んでいます（後述）。他は特筆事項はありません。
+
+<div class="fn">```index.html```</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <script src="main.js"></script>
+  <title>レスポンシブcanvas</title>
+</head>
+
+<body>
+  <canvas width="500" height="500"></canvas>
+</body>
+
+</html>
+```
+
+<h3 id="not-responsive-css">CSS</h3>
+
+枠線を付けて、画面中央に寄せているだけです。特段、mediaクエリを使ったレスポンシブ対応は入れていません。
+
+<div class="fn">```main.css```</div>
+
+```css
+canvas {
+    display: block;
+    border: 3px solid black;
+    margin: auto;
+}
+```
+
+<h3 id="not-responsive-js">JavaScript</h3>
+
+画面サイズを変えたときの動作が分かりやすいように、50ピクセル間隔で縦線と横線を引いています。canvasの幅と高さはともに500ピクセルなので、縦横10マスのグリッドのような見た目になります。
+
+間隔や長さを50、500のようにベタ打ちをしている点が、今後の挙動を確認する上でポイントとなります。
+
+<div class="fn">```main.js```</div>
+
+```js
+function main() {
+    const cvs = document.querySelector("canvas");
+    const ctx = cvs.getContext("2d");
+    ctx.strokeStyle = "black";
+    for (let i = 1; i < 10; i++) {
+        // 横線、縦線ともに500pxの幅で線を引く。
+        ctx.beginPath();
+        // 横線
+        ctx.moveTo(i * 50, 0);
+        ctx.lineTo(i * 50, 500);
+        // 縦線
+        ctx.moveTo(0, i * 50);
+        ctx.lineTo(500, i * 50);
+        ctx.stroke();
+    }
+}
+
+window.addEventListener("load", main);
+```
+
+<h3 id="not-responsive-check">ブラウザで確認</h3>
+
+実際に見た目を確認してみます。ブラウザの幅を変えてみて、画面サイズに応じた見た目をチェックします。なお、ブラウザはChromeで確認しています。
+
+#### 表示幅800pxの場合
+
+canvasの幅は500pxなので、これは普通に表示されます。
+
+<Image src={normal800} alt="browser-800px-without-media-query" width={600} height={479}/>
+
+#### 表示幅450pxの場合
+
+今度は、canvasの幅のほうがブラウザの表示領域より大きい状態です。画面からはみ出し、横スクロールバーが出現していることが確認できます。
+
+<Image src={normal450} alt="browser-450px-without-media-query" width={348} height={600}/>
+
+<h2 id="responsive">レスポンシブ対応</h2>
+
+今度は、表示領域が小さくなった時に画面からはみ出さないよう、canvasの大きさが調整されるようにします。
+
+上述のとおり、canvasのコンテンツはJavaScriptで描くので、コンテンツの中身の変更は今回は行いません。あくまでcanvasの大きさの調整だけです。
+
+<h3 id="responsive-css">CSSを追加</h3>
+
+上記の```main.css```に、mediaクエリを追加します。
+
+```css
+canvas {
+    display: block;
+    border: 3px solid black;
+    margin: auto;
+}
+
+/*追加*/
+@media screen and (max-width:600px) {
+    canvas {
+        width: 100%;
+    }
+}
+```
+
+画面幅が600px以下の場合、canvasのwidthが100%になるようにmediaクエリを追加しました。他のHTML要素で行うレスポンシブ対応と、やり方は同じです。今回canvasは500pxなので、画面幅が501px～600pxの場合は拡大、500px以下なら縮小されることになります。
+
+600pxの部分は、適宜任意の値に変えてもらって大丈夫ですし、「1200px以下の場合」、「1024px以下の場合」のように、さらに細かくmediaクエリを追加しても大丈夫です。
+
+これだけでOKです。ただ、ここで少し気になることがありませんか？私はこれがずっと気になっていて、試しもせず「canvasでレスポンシブ対応は難しい」と先入観を持ってしまっていました。
+
+canvasで描写した線ですが、以下のように幅や長さを「50」や「500」のようにピクセル数がベタ打ちされていたと思います。
+
+```js
+function main() {
+    const cvs = document.querySelector("canvas");
+    const ctx = cvs.getContext("2d");
+    ctx.strokeStyle = "black";
+    for (let i = 1; i < 10; i++) {
+        // 横線、縦線ともに500pxの幅で線を引く。
+        ctx.beginPath();
+        // 横線
+        ctx.moveTo(i * 50, 0);
+        ctx.lineTo(i * 50, 500);
+        // 縦線
+        ctx.moveTo(0, i * 50);
+        ctx.lineTo(500, i * 50);
+        ctx.stroke();
+    }
+}
+```
+
+「canvasの大きさが変わっても、コンテンツの描写で指定したサイズがそのままだと、結局コンテンツがcanvasからはみ出るのでは？」と思われるかと思います。これは実は大丈夫なのです。**canvasのリサイズに合わせて、コンテンツの描写の縮尺も勝手に調整してくれます**（便利）。
+
+<h3 id="responsive-check">ブラウザで確認</h3>
+
+ブラウザの表示幅が800pxの場合は同じなので割愛します。
+
+#### 表示幅600pxの場合
+
+<Image src={responsive600} alt="browser-600px-with-media-query" width={1000} height={572}/>
+
+mediaクエリで指定したブレイクポイントです。本来canvasの幅・高さは500pxですが、584pxになっていることが確認できます。これは、ブラウザの表示幅が600px以下の場合は```width:100%```が適用されるためですね。幅だけでなく、canvasの高さも584pxになっており、**もともとの縦横比を維持**して拡大していることが分かります。
+
+また、canvasに描いている線は、JavaScriptで「間隔50ピクセル、長さ500ピクセル」と固定値を打ち込んでいますが、canvasが拡大されても、特に余白は出ていません。canvasの大きさに合わせて拡大していることが分かると思います。
+
+#### 表示幅450pxの場合
+
+<Image src={responsive450} alt="browser-450px-with-media-query" width={1000} height={618}/>
+
+今度は、canvasの幅・高さともに437.6pxに縮小していることが分かります。描いている線も、特にはみ出てはおらず、canvasのサイズに合わせて縮小していることが分かります。
+
+<h2 id="problem">うまくいかないケース</h2>
+
+上の例のとおり、mediaクエリを指定すれば、canvas自体の大きさはアスペクト比を維持して拡大・縮小され、描いているコンテンツもcanvasのサイズに応じて拡大・縮小されることが分かりました。そのため、見た目に関してはmediaクエリを指定するだけでOKです。
+
+しかし、例えばクリックと連動して何か処理を行う場合、ちょっと問題が出ます。
+
+<h3 id="problem-example">実際の例</h3>
+
+クリックしたマスが、縦・横何個目のマスなのかをコンソールで出力する例を考えてみます。便宜上、位置は0から数えるものとします。例えば、一番左上のマスなら「横：0、縦：0」と出力します。
+
+#### JavaScript
+
+canvasにclickイベントを追加します。
+
+```js
+function getIndices(evt) {
+    const x = evt.offsetX;
+    const y = evt.offsetY;
+    const col = Math.floor(x / 50);
+    const row = Math.floor(y / 50);
+    console.log(`横${col}:縦:${row}`);
+}
+
+function main() {
+    const cvs = document.querySelector("canvas");
+    const ctx = cvs.getContext("2d");
+    ctx.strokeStyle = "black";
+    for (let i = 1; i < 10; i++) {
+        // 横線、縦線ともに500pxの幅で線を引く。
+        ctx.beginPath();
+        // 横線
+        ctx.moveTo(i * 50, 0);
+        ctx.lineTo(i * 50, 500);
+        // 縦線
+        ctx.moveTo(0, i * 50);
+        ctx.lineTo(500, i * 50);
+        ctx.stroke();
+    }
+
+    cvs.addEventListener("click", getIndices)
+}
+
+window.addEventListener("load", main);
+```
+
+canvasをクリックすると、```getIndices```関数が呼ばれます。eventオブジェクトの**offsetX**と**offsetY**で、canvasの左上を起点に、クリックされたx軸とy軸の位置をピクセル数で取得できます。1マスの幅と高さはそれぞれ50ピクセルなので、これで割った「商」が「横何個目」、「縦何個目」に該当します。
+
+#### 表示幅800pxで確認
+
+実際にクリックして確認してみます。
+
+<Image src={normalClick800} alt="browser-click-800px-not-repsonsive" width={1000} height={531}/>
+
+今回は、「3列（横）・2行（縦）目のマス」をクリックしています。コンソールには「横2:縦:1」と出力されていることが確認できます。0からはじまるので値としては1小さいですが、これで問題ありません。
+
+#### 表示幅450pxで確認
+
+さて、問題はcanvasの大きさが変わった時に起こります。表示幅を450pxにし、同じマスをクリックしてみます。
+
+<Image src={normalClick450} alt="browser-click-450px-not-repsonsive" width={945} height={575}/>
+
+同じマスをクリックしていますが、今度は「横1:縦:1」と表示されています。しかも、同じマス内でもクリックする位置によっては違う値になっているかもしれません。
+
+原因は簡単です。canvasおよび描写されているコンテンツは、ブラウザの表示幅に合わせて拡大・縮小していますが、マスの位置の計算（本来のマスの大きさ50pxで割る）は、この拡大・縮小が適用されていないからです。
+
+canvasの拡大・縮小によって1マスの大きさも変動するため、以下の「50で割る」部分は、この変動に合わせて変更する必要があります。
+
+```js
+function getIndices(evt) {
+    const x = evt.offsetX;
+    const y = evt.offsetY;
+    // 50の部分は、拡大率・縮小率に合わせて変える必要があります。
+    const col = Math.floor(x / 50);
+    const row = Math.floor(y / 50);
+    console.log(`横${col}:縦:${row}`);
+}
+```
+
+<h3 id="problem-solution">解決策</h3>
+
+1マスの大きさは、canvasの拡大・縮小に合わせて変わります。なので、拡大率・縮小率を計算し、マスの当初の大きさ（50px）に掛ければ、どの大きさにも対応できます。
+
+#### 拡大率・縮小率を計算する
+
+ここがネックになると思っていましたが、案外簡単にできます。
+
+canvas要素の[width](https://developer.mozilla.org/ja/docs/Web/API/HTMLCanvasElement/width)と[height](https://developer.mozilla.org/ja/docs/Web/API/HTMLCanvasElement/height)プロパティには、拡大・縮小してもHTMLで指定したwidthとheightが設定されています。今回の場合はどちらも「500」となります。一方で、実際に描写されているcanvasの大きさは、[clientWidth](https://developer.mozilla.org/ja/docs/Web/API/Element/clientWidth)と[clientHeight](https://developer.mozilla.org/ja/docs/Web/API/Element/clientHeight)プロパティで取得できます。
+
+これらの値を使って、「実際の幅÷当初の幅」のように計算すれば、拡大率（・縮小率）の計算ができます。
+
+#### JavaScriptを修正する
+
+```js
+function getIndices(evt, cvs) {
+    // 拡大率（縮小率）を計算する
+    const scaleX = cvs.clientWidth / cvs.width;
+    const scaleY = cvs.clientHeight / cvs.height;
+    // 上記を踏まえて1マスの幅・高さを計算する
+    const blockWidth = scaleX * 50;
+    const blockHeight = scaleY * 50;
+    // クリックした位置
+    const x = evt.offsetX;
+    const y = evt.offsetY;
+    // 何個目のマスか計算する
+    const col = Math.floor(x / blockWidth);
+    const row = Math.floor(y / blockHeight);
+
+    console.log(`横${col}:縦:${row}`);
+}
+
+function main() {
+    const cvs = document.querySelector("canvas");
+    const ctx = cvs.getContext("2d");
+    ctx.strokeStyle = "black";
+    for (let i = 1; i < 10; i++) {
+        // 横線、縦線ともに500pxの幅で線を引く。
+        ctx.beginPath();
+        // 横線
+        ctx.moveTo(i * 50, 0);
+        ctx.lineTo(i * 50, 500);
+        // 縦線
+        ctx.moveTo(0, i * 50);
+        ctx.lineTo(500, i * 50);
+        ctx.stroke();
+    }
+
+    cvs.addEventListener("click", (e) => getIndices(e, cvs))
+}
+
+window.addEventListener("load", main);
+```
+
+click時に実行される```getIndices```関数の第二引数に、canvas要素を渡すように変更しています。
+
+```const scaleX = cvs.clientWidth / cvs.width;```で、幅の拡大率を計算しています。後は、これに当初のマスの幅を掛け算すれば、実際のマスの幅が取得できます。```const blockWidth = scaleX * 50;```の部分がそうですね。高さも同じ原理で計算しています。
+
+最後に、クリックされた位置をこの値で割ればOKです。
+
+クリック時点のcanvasの大きさに応じてマスの大きさを計算しているので、どの大きさでも同じように動いてくれます。
+
+#### 表示幅600pxで確認
+
+mediaクエリによって、当初のサイズより拡大している状態です。ちゃんとクリックしたマスの位置が正しく出力されています。
+
+<Image src={responsiveClick600} alt="browser-click-600px-repsonsive" width={1000} height={665}/>
+
+#### 表示幅400pxで確認
+
+今度は、当初のサイズより縮小している状態ですが、こちらも正しくマスの位置が取得できていますね！
+
+<Image src={responsiveClick400} alt="browser-click-400px-repsonsive" width={891} height={501}/>
+
+<h2 id="last">最後に</h2>
+
+今回は、canvas要素のレスポンシブ対応の方法を中心に、クリック時の処理等、ハマりポイントになりやすそうな部分を共有しました。
+
+個人的には、canvas上に描いたコンテンツも、canvasのサイズに応じて自動で拡大・縮小してくれるのは知りませんでした。試しもせず「canvasの大きさに合わせて計算する
+の面倒だなぁ、、、」と思っていましたが、これは便利ですね。
+
+ただし、「canvas上のクリック位置によって処理を分ける」場合のように、canvas要素と直接関係ないところで計算を行う場合は、自分で拡大率を計算する必要があります。canvasの描写は勝手にスケールしてくれるので、ちょっと気が付きにくいかもしれません。
+
+今回、描写しているコンテンツの縮尺は気にせず、mediaクエリでcanvas要素のレスポンブ対応できることが分かりました。canvas要素も、今後はもう少し積極的に使ってみようと思います。
+
+<h2 id="ref">参考</h2>
+
+- [canvas: グラフィックキャンバス要素](https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas)
+- [レスポンシブデザイン](https://developer.mozilla.org/ja/docs/Learn/CSS/CSS_layout/Responsive_Design)
