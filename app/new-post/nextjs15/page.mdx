@@ -1,0 +1,543 @@
+import Image from "../ImageWrapper";
+import Caution from "../Caution";
+import requestApiExample from "./request-api-example.jpg";
+import paramExample from "./param-example.jpg";
+import fetchExample1 from "./fetch-example1.jpg";
+import handlersExample from "./handlers-example.jpg";
+import indicator from "./indicator.jpg";
+
+export const mdxMeta = {
+  title: "Next.js バージョン15の主な変更点について",
+  description: "Next.js15の安定版が2024.10.21（米国時間）にリリースされました。主に、後方互換性のない変更点の解説をします。",
+}
+
+export const frontMatter = {
+  author: "全力君",
+  postedDate: "2024/11/6",
+};
+
+# Next.js バージョン15の主な変更点について
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#prereq">前提知識</a></li>
+<li><a href="#env">環境</a></li>
+<li>
+  <a href="#async">リクエスト依存APIの非同期化</a>
+  <ul>
+    <li><a href="#async-eample">headers、cookiesの例</a></li>
+    <li><a href="#async-eample2">params,searchParamsの例</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#cache">キャッシュ戦略の変更</a>
+  <ul>
+    <li><a href="#cache-fetch">fetch関数の場合</a></li>
+    <li><a href="#cache-without-fetch">fetch関数を使わない場合</a></li>
+    <li><a href="#cache-client-router">Client Router Cache</a></li>
+    <li><a href="#cache-route-handler">Route Handlers(GET)</a></li>
+  </ul>
+</li>
+<li><a href="#other-updates">その他の変更点</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+Next.js 15の安定版が2024.10.21（米国時間）にリリースされました。
+
+今回のアップデートでは、キャッシュのデフォルト動作の変更や、リクエスト依存のAPIの非同期化等、前バージョンとは互換性のない変更がいくつか導入されています。そのため、今後Next.jsを使う場合は一層バージョン情報を注意する必要があります。
+
+このサイトでも、主にNext.js13以降に導入されたServer Components、Route Handlers、Server Actions等の解説をしてきましたので、今回は主に後方互換性のない破壊的変更点を中心に説明します。
+
+なお、当サイトでもNext.js13、14となるべくタイムリーにアップデートしてきましたが、現時点ではNext.js15への**更新は見送る**予定です。フレームワークの変更点に正直についていくと、それだけで体力を使いますからね。決してNext.jsが嫌いになったという訳ではありません。そのため、バージョンアップの方法を解説するものではありませんので、ご了承ください。
+
+<Caution>
+<ul>
+<li>
+旧バージョンからアップデートをするためのバッチ（codemod）を公式が配付しています。検討されている方は<a href="https://nextjs.org/docs/app/building-your-application/upgrading/codemods">codemods</a>を参考にしてください
+</li>
+<li>
+Next.js15の詳細は、公式の[Next.js 15](https://nextjs.org/blog/next-15)をご確認ください
+</li>
+</ul>
+</Caution>
+
+<h2 id="prereq">前提知識</h2>
+
+Next.js13で導入されたApp Routerに関する基本的な知識はここでは触れません。Server/Client Components、Route Handlersといったバージョン13からの機能は特段解説を入れませんのでご了承ください。
+
+以前記事にしているので、よかったらご参考にしてください。
+
+- [Next.js13のApp Routerを試してみたぞ！](/post/nextjs-app-router)
+- [Next.js 13のRoute Handlersに移行したぞ！](/post/nextjs-route-handler)
+
+<h2 id="env">環境</h2>
+
+```npx create-next-app@latest```でセットアップしたところ、*package.json*は以下のようになりました。
+
+```json
+{
+  "name": "next15",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "react": "19.0.0-rc-02c0e824-20241028",
+    "react-dom": "19.0.0-rc-02c0e824-20241028",
+    "next": "15.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.2"
+  }
+}
+```
+
+```"next": "15.0.2"```となっているので、ちゃんとバージョン15がインストールされてます。
+
+<h2 id="async">リクエスト依存APIの非同期化</h2>
+
+リクエスト関係のAPIが非同期化（Promise化）されました。具体的には、```"next/head"```の```headers```や```cookies```関数が、**Promiseを返す**ように仕様変更されています。
+
+後、```searchParams```や、dynamic routesでURLのディレクトリの一部を可変にした際に、page.jsxでパラメタとして受け取ることができる```params```も非同期化されています。直感的にはリクエスト関係ないように思えますが、URLに直接関係していますからね。
+
+変更理由は、公式によると「従来のSSR（Server Side Rendering）では、リクエストを待ってからレンダリングを開始していたものの、全てのコンテンツがリクエストに依存している訳ではなく、リクエストに関係がないコンテンツを事前にレンダリングしておくため」とのことです。
+
+可能な限りオン・デマンドでレンダリングする量を減らし、パフォーマンスを向上させよう、ということかと思います。
+
+詳細は公式の[Async Request APIs (Breaking Change)](https://nextjs.org/blog/next-15#async-request-apis-breaking-change)をご確認ください。
+
+<h3 id="async-eample">headers、cookiesの例</h3>
+
+```"next/headers"```の```headers```と```cookies```関数の例を見ています。適当に設定したcookieの値と、headerのUser-Agentの値を表示するだけのシンプルな例です。
+
+<div class="fn">```/app/showdata/page.tsx```</div>
+
+```tsx
+import { cookies, headers } from "next/headers"
+
+export default async function Page() {
+  // awaitが必要になった
+  const header = await headers();
+  const agent = header.get("User-Agent");
+  // これもawaitが必要になった
+  const cookie = await cookies();
+  const msg = cookie.get("msg");
+
+  return (
+    <>
+      <div>
+        cookieのメッセージ:{msg?.value}
+      </div>
+      <div>
+        ヘッダのUser-Agent:{agent}
+      </div>
+    </>
+  )
+}
+```
+
+実際のページはこんな感じで表示されます。
+
+<Image src={requestApiExample} alt="request-api-example" width={1118} height={57}/>
+
+```headers()```、```cookies()```の呼び出し前に```await```がついています。また、awaitを使うために、Pageコンポーネントが非同期関数(async function)とする必要があるのもポイントです。
+
+ちなみに、両関数の戻り値の型は、それぞれ```Promise<ReadonlyRequestCookies>```と```Promise<ReadonlyHeaders>```です。Promise化されていることが分かりますね。TypeScriptを使う場合はなんとなく把握しておくと良いかもしれません。
+
+余談ですが非同期関数はServer Componentsでしか現時点ではサポートされていません。headersやcookiesもServer Componentsで利用する必要があります。
+
+また、上記はReactのコンポーネント内で使う例ですが、Route Handlersでバックエンドで使う場合も同様にawaitする必要があります。
+
+<h3 id="async-eample2">params,searchParamsの例</h3>
+
+```params```は、URLの一部を可変にした際に、Pageコンポーネントのパラメタとして受け取るものです。Next.jsの[Dynamic Routes](https://nextjs.org/docs/pages/building-your-application/routing/dynamic-routes)の機能ですね。
+
+[searchParams](https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional)もPageコンポーネントのパラメタで、URLのクエリ・パラメタを取得する際に使います。
+
+いずれも、今回のアップデートでPromise化されました。
+
+```/app/test/[slug]```のページを作成してみます。**slug**が可変部分です。便宜上、この部分は"1","2","3"になるものとします。例は、slug部分と、クエリ・パラメタ部分を表示するだけのものです。
+
+<div class="fn">```/app/test/[slug]/page.tsx```</div>
+
+```tsx
+
+// slug部分を生成する関数
+export async function generateStaticParams() {
+  const params = ["1", "2", "3"].map(slug => {
+    return { slug };
+  });
+  return params;
+}
+
+interface Param {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function Page({ params, searchParams }: Param) {
+  // await化
+  const { slug } = await params;
+  // await化
+  const sp = await searchParams;
+  
+  return (
+    <>
+      <h1>dynamic routes</h1>
+      <div>{slug}</div>
+      <ul>
+        {
+          Object.entries(sp).map(([k, v]) => {
+            return (<li key={k}>{k} {v}</li>);
+          })
+        }
+      </ul>
+    </>
+  );
+}
+```
+
+```params```と```searchParams```に```await```がつくようになりました。TypeScript上の型は、それぞれ```Promise<{slug: string;}>```と、```Promise<{[key: string]: string | string[] | undefined;}>```です。
+
+```await```を使うために、コンポーネントが非同期関数になっていることもポイントです。
+
+```http://localhost:3000/test/2?id=123&msg=yoyoyo```のように、slug部分とクエリ・パラメタを指定して渡すと、以下のように表示されます。
+
+<Image src={paramExample} alt="param-example" width={291} height={107}/>
+
+<h2 id="cache">キャッシュ戦略の変更</h2>
+
+おそらく、これが一番大きな変更かと思います。
+
+Next.js13以降、Server Components内から取得したデータや、Route HandlersのGET関数は、その結果をキャッシュする機能が導入されました。これにより、ページ開いたり、APIが実行される都度データを取得する必要がなく、キャッシュの値を返すことでパフォーマンスの向上が可能になりました。もちろん、時間のようにリアルタイム性がもとめられる情報もあるので、データに応じてキャッシュの利用有無、またキャッシュを更新する間隔等は適宜調整できるようになっていました。
+
+15より前のバージョンでは、「デフォルトでキャッシュを利用する（利用しない場合は適宜指定する）」が根本思想でしたが、今回は逆になりました。バージョン15では、「**デフォルトでキャッシュを利用しない**（利用する場合は適宜指定する）」と変更になりました。
+
+変更の理由は、「分かりずらく不評だった」からのようです。開発者の想定に反してキャッシュが利用されてしまい、古い情報が表示されることが多発してしまったようですね。
+
+基本的にキャッシュはビルド時の値になりますが、開発環境ではビルド時の値なんてものはなく、リアルタイムの値が表示される仕様なので、勘違いが生まれてしまったのだと思います。確かに、ドキュメントを読み込まないと分かりにくかったかもしれません。
+
+ということで、私も新バージョンを少し触ってみましたが、これまた直感的には分かりにくい挙動になっています、、、。
+
+<h3 id="cache-fetch">fetch関数の場合</h3>
+
+[Next.js版fetch関数](https://nextjs.org/docs/app/api-reference/functions/fetch)で、Server Components内からデータを取得することができます。今まではデフォルトで取得したデータはキャッシュされていましたが、今後はされません。
+
+具体的には、fetch関数のオプションのデフォルトが```{cache:no-store}```に変更されています。キャッシュをしたい場合、fetch関数のオプションで```{ cache: 'force-cache' }```と指定すればOKです。キャッシュの更新間隔を指定することも可能ですが、今回は割愛させていただきます。
+
+早速試してみます。分かりやすいように、現在時刻を返してくれるWebサーバのバックエンドを別に作っておきます。そして、fetch関数をオプション無しで実行し、ページを開いた時間が表示されるかを確認します。キャッシュを利用しないなら、ページを開く都度にリクエストが実行されて現在時刻を取得してくれるでしょう。
+
+こんな感じでコードを書いてみます。fetchにオプションを渡していないので、キャッシュはされません。
+
+```tsx
+export default async function Page() {
+    // 現在時刻をYYYY-MM-DD HH:MM:SSで返してくれるAPI 
+    const res = await fetch("http://localhost:5000/api/time");
+    const time = await res.text();
+    return (
+        <>
+            <h1>fetchデフォルト動作</h1>
+            <div>時間：{time}</div>
+        </>
+    );
+}
+```
+
+開発環境では確認できないので、```npm run build```してから、```npm start```で起動して確認します。ビルドは21:36分頃に行いましたが、、、
+
+<Image src={fetchExample1} alt="fetch-example" width={368} height={95}/>
+
+何回ページを開いても、ビルド時の時間が表示され、開いた時の時間にはなりません。これでは、前バージョンとの挙動の違いも分かりません。
+
+ドキュメントを読む限りですが、次のように私は理解しました:
+
+Next.jsでは、パフォーマンス向上のため、ページを可能な限り「静的(static)」に生成しようとします。今回の例も、キャッシュ云々の前に、ビルド時に取得したデータで**静的なページ**として出力されているのが原因と考えます。そのため、常にビルド時の時間が表示されているものと思われます。
+
+ドキュメントの[Data Fetching and Caching](https://nextjs.org/docs/app/building-your-application/data-fetching/fetching)に、fetch関数利用時の挙動について以下の記載がありました。
+
+> If you are not using any Dynamic APIs anywhere else in this route, it will be prerendered during next build to a static page. 
+
+「Dynamic APIを使われていない限り、ビルド時に静的ページとして事前レンダリングされる」ということのようです。
+
+静的レンダリングされるか、動的レンダリングされるかは。[Dynamic API](https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering)に記載がされているので、詳細はこちらをご確認ください。
+
+確かに、ビルド時の情報を見てみると、Static Pageとして出力されていました。今回作ったページは```/fetch1```です。白丸（○）がついているものが、静的ページです（この表示もNext.js15で追加されたようです。便利ですね。）
+
+```bash
+Route (app)                              Size     First Load JS
+┌ ○ /                                    5.58 kB         105 kB
+├ ○ /_not-found                          899 B           101 kB
+├ ○ /fetch1                              154 B          99.8 kB
+├ ƒ /showdata                            154 B          99.8 kB
+└ ● /test/[slug]                         154 B          99.8 kB
+    ├ /test/1
+    ├ /test/2
+    └ /test/3
++ First Load JS shared by all            99.7 kB
+  ├ chunks/215-068c1a118b622a9f.js       45.2 kB
+  ├ chunks/4bd1b696-4511a67b86327928.js  52.5 kB
+  └ other shared chunks (total)          1.88 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+じゃあ、どうしたら「ページを開いた時の時間」を表示させられるかというと、**動的ページにすれば良い**です。
+
+page.tsxに、```export const dynamic = "force-dynamic";```を追加すれば、強制的に動的ページにすることができます。
+
+```tsx
+// 追加
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+    const res = await fetch("http://localhost:5000/api/time");
+    const time = await res.text();
+    return (
+        <>
+            <h1>fetchデフォルト動作</h1>
+            <div>時間：{time}</div>
+        </>
+    );
+}
+```
+
+これでビルドすると、動的ページとして生成されました。fetch1ページが、「f」（オン・デマンド⇒動的レンダリング）になっていることが確認できます。
+
+```bash
+┌ ○ /                                    5.58 kB         105 kB
+├ ○ /_not-found                          899 B           101 kB
+├ ƒ /fetch1                              154 B          99.8 kB
+├ ƒ /showdata                            154 B          99.8 kB
+└ ● /test/[slug]                         154 B          99.8 kB
+    ├ /test/1
+    ├ /test/2
+    └ /test/3
++ First Load JS shared by all            99.7 kB
+  ├ chunks/215-068c1a118b622a9f.js       45.2 kB
+  ├ chunks/4bd1b696-4511a67b86327928.js  52.5 kB
+  └ other shared chunks (total)          1.88 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+画像は割愛しますが、ちゃんとページを開いた時の時間が毎度表示されるようになりました！
+
+（時間の場合はニーズはないですが、）この上でキャッシュを使いたい場合は、オプションで```{ cache: 'force-cache' }```を指定すれば良いということだと思います。
+
+<h3 id="cache-without-fetch">fetch関数を使わない場合</h3>
+
+Server Components内であれば、別にfetch関数を使わなくてもデータの取得が可能です。非同期関数であれば問題ありません。
+
+基本的にはfetch関数を使う場合と挙動は同じなので、例示は割愛します。同じく```export const dynamic = "force-dynamic";```を入れれば動的レンダリングされるので、リアルタイムの情報が取れるようになります。
+
+ただし、fetch関数のように、オプションでキャッシュを有効にすることは出来ません。
+
+ちょっと手を加えれば有効にすることはできるようです。私は試したことはないのですが、[Fetching data on the server with an ORM or database](https://nextjs.org/docs/app/building-your-application/data-fetching/fetching#caching-data-with-an-orm-or-database)に説明がされているので、適宜ご参照ください。unstable_cacheという後方互換のためだけ存在している機能を使っているようなので、今後変更が入る可能性は高いかもしれません。
+
+<h3 id="cache-client-router">Client Router Cache</h3>
+
+Next.jsではClient側のキャッシュもあります。正直、この機能は私もあまり意識はしていませんでしたが、、、。
+
+```"next/link"```のLinkコンポーネントを使うと、表示したページやリンク先の情報をクライアント側でキャッシュし、高速にページ遷移ができるようになります。そのため、動的なコンテンツのページを一度開き、サイト内の別ページを踏んで戻って来た場合、**最初に開いた時の情報**が表示されるということがありました。
+
+前バージョンではキャッシュの有効間隔がデフォルトで30秒としていされていましたが、今回から**0秒**に変更されています。そのため、上記のような操作でもリアルタイムな情報を表示することが可能です。
+
+ただし、ブラウザの戻る・進むボタンを押した場合等、引き続きキャッシュが使われるケースもあります。詳細は[こちらのドキュメント](https://nextjs.org/blog/next-15#client-router-cache-no-longer-caches-page-components-by-default)をご確認ください。
+
+```next.config.js```に手を加えることで、キャッシュを手動で制御することも可能になります。**experimental**となっているので、まだ実験的な機能のようですね。
+
+```ts
+const nextConfig = {
+  experimental: {
+    staleTimes: {
+      // キャッシュする秒数を指定
+      dynamic: 30,
+    },
+  },
+};
+ 
+export default nextConfig;
+```
+
+<h3 id="cache-route-handler">Route Handlers(GET)</h3>
+
+おそらく、ここが一番不満が多かったのではないでしょうか。
+
+[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)はNext.jsのバックエンド機能ですが、GETリクエストはデフォルトではキャッシュされるという仕様でした。今回から、晴れてキャッシュ無効がデフォルトとなりました。キャッシュを有効にしたい場合は、```route.ts```に```export const dynamic = 'force-static'```;を追加すればOKです。
+
+例として、キャッシュ無し（デフォルト）と、キャッシュ有りのAPIエンドポイントを２つ作って動作確認してみます。分かりやすいように、リクエスト実行時の時間を返すエンドポイントにし、ボタンを押すと結果を画面表示されるようにします。
+
+#### キャッシュ無のエンドポイント
+
+Route Handlersで、```/api/default-time```をエンドポイントとして、現在時間を返す処理を書きました。キャッシュはされないので、クライアント側から実行すれば、実行時の時間が表示されるはずです。
+
+<div class="fn">```/app/api/default-time```</div>
+
+```tsx
+import { NextResponse } from "next/server";
+
+export async function GET() {
+    // 現在時刻を取得
+    const time = new Date().toLocaleString();
+    // text/plainで時間を返す
+    return new NextResponse(time, {
+        status: 200,
+        headers: { "Content-Type": "text/plain; charset=UTF-8" },
+    });
+}
+```
+
+#### キャッシュ有のエンドポイント
+
+キャッシュ有のエンドポイントを```/api/static-time```として定義します。こっちのほうは、いつ呼び出してもキャッシュ時の時間が表示される想定です。
+
+<div class="fn">```/app/api/static-time```</div>
+
+```tsx
+import { NextResponse } from "next/server";
+
+// 強制的にstaticにする
+export const dynamic = 'force-static'
+
+export async function GET() {
+    // 現在時刻を取得
+    const time = new Date().toLocaleString();
+    // text/plainで時間を返す
+    return new NextResponse(time, {
+        status: 200,
+        headers: { "Content-Type": "text/plain; charset=UTF-8" },
+    });
+}
+```
+
+```export const dynamic = 'force-static'```で強制的に静的にしており、ここが唯一の違いです。
+
+#### pageコンポーネント
+
+上記の２つのエンドポイントを実行するためのボタンを設置したページを作ります。
+
+「デフォルト」ボタンを押すと、キャッシュ無しのGETメソッドが実行され、「force-static」ボタンを押すと、キャッシュ有のほうが実行されます。
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import "./page.css";
+
+export default function Page() {
+  // `dynaic`をしていないGET Route Handlerから取得した時間
+  const [defaultTime, setDefaultTime] = useState("");
+  // `dynamic="force-static"`を指定したGET Route Handlerから取得した時間
+  const [staticTime, setStaticTime] = useState("");
+
+  const defaultClicked = () => {
+    fetch("/api/default-time")
+      .then(res => res.text())
+      .then(v => setDefaultTime(v))
+  }
+
+  const staticClicked = () => {
+    fetch("/api/static-time")
+      .then(res => res.text())
+      .then(v => setStaticTime(v))
+  }
+
+  return (
+    <>
+      <h1>GET Route Hanlder Test</h1>
+      <div>
+        <button onClick={defaultClicked}>デフォルト</button>
+        <span>{defaultTime}</span>
+      </div>
+      <div>
+        <button onClick={staticClicked}>force-static</button>
+        <span>{staticTime}</span>
+      </div>
+    </>
+  );
+}
+```
+
+#### 動作確認
+
+開発環境では確認できないので、ビルドして確認します。
+
+ビルド結果は以下の通りです。関係のないページ等は一部省略しています。
+
+```bash
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    5.58 kB         105 kB
+├ ○ /_not-found                          899 B           101 kB
+├ ƒ /api/default-time                    159 B          99.8 kB
+├ ○ /api/static-time                     159 B          99.8 kB
+├ ○ /res-api                             451 B           100 kB
+└ ● /test/[slug]                         159 B          99.8 kB
+    ├ /test/1
+    ├ /test/2
+    └ /test/3
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+```/api/default-time```のGETハンドラは、f（Dynamic）として出力され、強制的にstaticにした```/api/static-time```は○(static)として出力されていることが確認できます。
+
+実際に画面を開いて、ボタンを押して時間を取得してみます。
+
+<Image src={handlersExample} alt="handlers-example" width={536} height={172}/>
+
+「デフォルト」のボタンを押すと、押したときの時間が表示されます。一方で、「force-static」のボタンを押すと、どのタイミングで押してもビルド時の時間（キャッシュされた時間）が表示されます。
+
+Route Handlersのほうは直感的ですね！
+
+なお、キャッシュの更新間隔は調整可能ですが、今回は割愛します。
+
+<h2 id="other-updates">その他の変更点</h2>
+
+以前のバージョンからの破壊的な変更点は上記のとおり、「一部機能の非同期化」と「キャッシュ戦略の変更」の2つです。
+
+他には、Turbopack（開発環境用のコンパイラ）の安定化、Server Actionsのセキュリティ向上、Formsコンポーネントの新設、next.configのTypeScriptサポート、等の機能追加があります。
+
+個人的には、ビルド時に出力される*f*とか*○*で、静的・動的レンダリングが可視化されるのが良い変更点だと思います。また、開発環境で「（ビルド時に）静的ページとして出力されるページ」を開いた場合、画面の左下に以下のアイコンが表示されるようになりました！
+
+<Image src={indicator} alt="static-indicator-icon" width={189} height={63}/>
+
+
+「意図せず静的ページとしてビルドされていて、本番環境と開発環境で動作が一致しない」ことは、Next.jsあるあるだと思います。このような目印はとても良いと思います。
+
+<h2 id="last">最後に</h2>
+
+Next.js15の破壊的変更点を中心に説明しました。Next.js13でApp Routerが導入され、そこからメジャーアップデートが２回あり、様々な改善がされてきたように感じます。
+
+しかし、今回の例でみたように、「キャッシュを無効化しても、ページが静的に生成されるとビルド時の値が使われ続ける」といった、直感的には分かりにくい点も見受けられました（仕組み上難しい部分もあるのかと思いますが）。どういった場合に静的/動的生成となるのか、正しく理解をしておく必要性があると感じました。
+
+個人的にはついていくのが大変になりましたが、他の方たちはどう感じられているのでしょう。現時点でのApp Routerの採用率がどのくらいなのか気になりますね(´Д｀)。
+
+このサイトはv14で作っていますが、今回はまだ更新しない予定です。とはいえ、アップデート内容を見る限り、少なくとも私のサイトにはそこまで大きなインパクトはなさそうなので、余力のある時に検討をしたいと思います。
+
+<h2 id="ref">参考</h2>
+
+- Next.js 15: https://nextjs.org/blog/next-15
