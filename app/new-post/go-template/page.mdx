@@ -1,0 +1,764 @@
+
+export const mdxMeta = {
+    title:"GOのhtml/templateの使い方",
+    description:"GOにはhtmlのテンプレート・エンジンが標準パッケージに含まれています。簡単な使い方をポイントを絞って解説し、メリデメを紹介します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2024/1/16",
+};
+
+# GOのhtml/templateの使い方
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li>
+  <a href="#what">HTMLテンプレート・エンジンとは</a>
+  <ul>
+    <li><a href="#about">概要</a></li>
+    <li><a href="#diff">フロントエンド・フレームワークとの比較</a></li>
+  </ul>
+</li>
+<li><a href="#go-package">html/templateについて</a></li>
+<li>
+  <a href="#basic">基本的な使い方</a>
+  <ul>
+    <li><a href="#template">テンプレート部分</a></li>
+    <li><a href="#pgm">プログラム部分</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#other">その他の機能</a>
+  <ul>
+    <li><a href="#escape">HTMLタグを直接埋め込む</a></li>
+    <li><a href="#trim">埋め込み前後の余白を削除</a></li>
+    <li><a href="#if">if文</a></li>
+    <li><a href="#range">range</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#func">自作関数をテンプレート内で実行</a>
+  <ul>
+    <li><a href="#fn-pgm">プログラム部分</a></li>
+    <li><a href="#fn-template">テンプレート部分</a></li>
+    <li><a href="#fn-exec">実行結果</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#nest">テンプレートを入れ子にして使う</a>
+  <ul>
+    <li><a href="#nest-template">テンプレート部分</a></li>
+    <li><a href="#nest-pgm">プログラム部分</a></li>
+    <li><a href="#nest-exec">実行結果</a></li>
+  </ul>
+</li>
+<li><a href="#pro-con">メリデメ</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+GOの標準パッケージには、HTMLのテンプレート・エンジン（```html/template```）が含まれています。
+
+先日、このパッケージを使って新しいウェブサイト（⇒[詰将棋WIKI](http://tsume-shougi-wiki.com/)）を作成しましたので、使い方を紹介します。
+
+私自身、テンプレート・エンジンを使うのは今回が初めてです。そのため、他言語のエンジンとの比較はできないのですが、結構クセがあると感じました。なので、基本的な使い方に加えて、私が分かりにくかった部分を中心に機能の紹介をさせていただきます。
+
+<h2 id="what">HTMLテンプレート・エンジンとは</h2>
+
+<h3 id="about">概要</h3>
+
+HTMLテンプレート・エンジンとは、HTMLに直接変数や条件分岐等を組み込めるようにしたツールです。
+
+[Laravel(PHP)](https://laravel.com/docs/11.x)や[Django(Python)](https://docs.djangoproject.com/ja/5.1/)のようなフレームワークにもテンプレート・エンジンの機能が組み込まれていますし、node.jsにも[ejs](https://ejs.co/)や[pug](https://pugjs.org/api/getting-started.html)のようなパッケージがあり、他にも多数のテンプレート・エンジンが存在します。
+
+テンプレート・エンジンでは、直接HTMLに変数等を書き込みます。値はサーバー側で埋め込み、HTMLを完成させるのが特徴です。React.jsのようなフロントエンド・フレームワークでは、HTMLのコンテンツはクライアント側で生成するので、アプローチは大きく異なります。
+
+<h3 id="diff">フロントエンド・フレームワークとの比較</h3>
+
+テンプレート・エンジンは、フロントエンド・フレームワークより昔から使われていると思います。ただ、古いからといって、React.jsやVue.jsのような後発に取って代わられた技術、という訳では決してありません。
+
+React.js等では、HTMLの生成は主にクライアントで行いますが、テンプレート・エンジンではサーバーで行います。この違いがあるので、用途に応じて選定すれば良いかと思います。
+
+個人的な意見ですが、ユーザの操作に応じて画面の表示をインタラクティブに切り替える機能が多く必要なのであれば、フロントエンド・フレームワークの利用を検討すれば良いと思います。テンプレート・エンジンで画面の部分的なレンダリングを行う場合、JavaScriptでゴリゴリDOM操作をする必要があるため、ケースによってはかなり骨が折れると思います。
+
+一方で、部分的なレンダリングが少なく、ユーザ操作（リンク・クリック、フォーム送信等）に応じて別ページを表示するだけであれば、フロントエンド・フレームワークの必要性も少ないと思います。
+
+最終的には結局好みかと思います。ただ、フロントエンド・フレームワークのほうが学習コストは高いです。
+
+ちなみに、テンプレート・エンジンとフロントエンド・フレームワークを同時に使うことはできません（出来るケースもあるかもしれませんが、稀かと思います）。
+
+<h2 id="go-package">html/templateについて</h2>
+
+GOの標準パッケージに含まれるHTMLテンプレート・エンジンは[html/template](https://pkg.go.dev/html/template)です。
+
+似たパッケージで、[text/template](https://pkg.go.dev/text/template)があります。こちらは「文字列全般用」のテンプレート・エンジンです。公式ドキュメントにも、HTMLを出力する場合は```html/template```を使うように記載がされているので、間違えないようにしましょう。
+
+```html/template```のほうは、変数に値を展開する時にエスケープ処理をしてくれたりします。HTMLならではのインジェクション系の攻撃への対応が組み込まれているので、こちらを使うようにということでしょう。
+
+使い方は基本的に同じになるため、変数やロジックの組み込みのルールについては```text/template```のほうのドキュメントに記載がされています。
+
+<h2 id="basic">基本的な使い方</h2>
+
+<h3 id="template">テンプレート部分</h3>
+
+HTMLテンプレートは以下のように記述します。ファイルの拡張子は何でもOKです。私はエディタとの兼ね合いで、```.html```にしています。
+
+<div class="fn">templ.html</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{.Link}}
+    <title>Temple</title>
+</head>
+
+<body>
+    <h1>{{.Heading}}</h1>
+    <ul class="list">
+        {{range .List}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</body>
+
+</html>
+```
+
+```{{}}```の部分が、テンプレート・エンジン部分です。
+
+```{{.Link}}```や```{{.Heading}}```のように、ドット（.）からはじまるものが変数埋め込みです。プログラムから渡された値がここに展開されます。基本的にはstructのフィールド名（もしくはMapのkey名）が入ります。先頭のドットはカーソルと呼ばれ、渡されたデータにアクセスするために必要となります。
+
+ulタグ内の、```{{range .List}}...{{end}}```がループ処理です。```.List```に文字列の配列を渡せば、配列の長さ分、その中身をliタグに展開してくれます。上記の例にはありませんが、```{{if 条件}}...{{end}}```のように条件分岐をさせることも可能です。いずれのケースでも、```{{end}}```でループや条件分岐の終端を示す必要があります。
+
+<h3 id="pgm">プログラム部分</h3>
+
+それでは、上記のテンプレートにデータを渡すプログラムを作ります。
+
+出力結果はプログラム内で扱うこともできますが、今回はHTMLファイルとして出力します。
+
+<div class="fn">main.go</div>
+
+```go
+package main
+
+import (
+	"html/template"
+	"log"
+	"os"
+)
+
+// templateに渡すデータの型
+type (
+	Data struct {
+		Heading string
+		List    []string
+		// metaタグ用
+		Link string
+	}
+)
+
+func main() {
+
+	// テンプレートの読み取り。複数のファイルを指定することも可能
+	tmpl, err := template.ParseFiles("./templ.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 保存用のファイル
+	file, err := os.Create("animals.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// テンプレートに渡すデータ
+	data := Data{
+		Heading: "動物たち",
+		List: []string{
+			"dog", "cat", "pig", "lion",
+		},
+		Link: "<link rel='stylesheet' href='./main.css'>",
+	}
+
+	// テンプレートにデータを渡して実行
+	// 第二引数のファイル名は、parseFilesで読み取ったファイル名と一致する必要がある
+	err = tmpl.ExecuteTemplate(file, "templ.html", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```main```関数の最初の```template.ParseFiles("./templ.html")```で、テンプレートをファイルから読み取っています。例示ではテンプレートは１つだけですが、複数ある場合も指定可能です。
+
+そして、最後の```tmpl.ExecuteTemplate(file,"templ.html",data)```の部分で、テンプレートにデータを渡し、結果をファイルに出力しています。第二引数で、```template.ParseFiles```で読み取ったテンプレートの指定（今回の例だと"templ.html"）を行います。読み取ったファイル名と一致しないとエラーになるので注意が必要です。
+
+なお、指定は**ファイル名のみ**で行います。ParseFilesで```/a/templ.html```、```/b/templ.html```のように指定していたとしても、フォルダ名は入れません。ファイル名が被ってしまう場合は、最後に指定されたテンプレートで実行される仕様です。ここは把握していないと結構ハマってしまうかもです。
+
+上記の例では、テンプレートの```{{.Link}}```部分に直接HTMLを文字列を、```{{.Title}}```部分にH1タグの中身を渡しています。
+
+```{{.List}}```部分には動物の名前を文字列の配列として渡しています。ここは、テンプレートの```{{range}}{{.}}{{end}}```部分でループ処理されます。ドット（```{{.}}```）はテンプレートに渡すデータを指すのが原則ですが、range内では、rangeに渡したデータ（```.List```）を指します。そのため、range内の```{{.}}```は、List配列の要素を指すことになります。
+
+<h3 id="exec">実行結果の確認</h3>
+
+```go run .```でプログラムを実行し、出力されたHTMLを確認します。結果は以下のとおりになります。
+
+<div class="fn">animals.html</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    &lt;link rel=&#39;stylesheet&#39; href=&#39;./main.css&#39;&gt;
+    <title>Temple</title>
+</head>
+
+<body>
+    <h1>動物たち</h1>
+    <ul class="list">
+        
+        <li>dog</li>
+        
+        <li>cat</li>
+        
+        <li>pig</li>
+        
+        <li>lion</li>
+        
+    </ul>
+</body>
+
+</html>
+```
+
+ちゃんとテンプレートに値が埋め込まれて出力されていることが確認できます。
+
+しかし、2つほど気になる点があるかと思います。対応方法はいずれも後述します。
+
+#### linkタグがエスケープされている
+
+```{{.Link}}```には```<link rel='stylesheet' href='./main.css'>```のようにHTMLタグを直接文字列として渡していましたが、```&lt;link rel=&#39;stylesheet&#39; href=&#39;./main.css&#39;&gt;```のように、エスケープされた結果が出力されています。
+
+これは**仕様**となります。HTMLのタグを文字列としてそのまま扱うと、インジェクション系の攻撃のリスクがあり危険とされています。なので、パッケージ側でエスケープしてくれています。
+
+#### ulタグ内に余分な改行がある
+
+rangeでループして出力したliタグ前後に、余分な改行が出力されています。これは、goのテンプレート・エンジンでは、**改行や余白も忠実に出力される仕様**だからです。そのため、エディタで見やすいようにインデントや改行を入れている場合、それもそのまま出力されます。
+
+現状では、```{{range}}```や```{{end}}```の後に続く改行も出力されてしまっている状態となります。
+
+```html
+<ul>
+  {{range .List}} <!--←行末尾の改行も出力される -->
+  <li>{{.}}</li>
+  {{end}} <!--←行末尾の改行も出力 -->
+</ul>
+```
+
+<h2 id="other">その他の機能</h2>
+
+上の例では触れられなかった機能を中心に、簡単に説明します。
+
+<h3 id="escape">HTMLタグを直接埋め込む</h3>
+
+上記の例のとおり、テンプレートにHTMLタグを文字列として直接して渡すと、自動でエスケープされます。エスケープをしたくない場合、以下のように文字列を**template.HTML**型に変更すればＯＫです。
+
+<div class="fn">main.go</div>
+
+```go
+// ～略
+type (
+	Data struct {
+		Heading string
+		List    []string
+		// metaタグ用
+		// template.HTML型にするとエスケープされない
+		Link template.HTML
+	}
+)
+
+func main(){
+    // ～略
+  	// テンプレートに渡すデータ
+	data := Data{
+		Heading: "動物たち",
+		List: []string{
+			"dog", "cat", "pig", "lion",
+		},
+		// template.HTML型にキャスト
+		Link: template.HTML("<link rel='stylesheet' href='./main.css'>"),
+	}
+    // ～略
+}
+```
+
+ただし、インジェクション系の攻撃に対して脆くなります。生成するHTMLタグが、第三者（ユーザ入力、外部のAPI等）に依存する場合、使わないほうが良いです。
+
+<h3 id="trim">埋め込み前後の余白を削除</h3>
+
+上の例では、rangeで展開した要素の前後に余分な改行が出力されていました。
+
+テンプレート独自記法（```{{}}```）の前後の余白（改行含む）は、削除することが可能です。
+
+例えば、```{{- .FieldName}}```のように、「マイナス＋半角スペース＋名前」と記載すると、**前の余白**が削除されます。```{{.FieldName -}}```のように「名前＋半角スペース＋マイナス」と記載すれば**後ろの余白**が削除されます。両方組み合わせることも可能です。
+
+例えば、何も指定せずに以下のテンプレートを実行したとします。
+
+```html
+<!-- テンプレート-->
+<span>
+  {{.SomeValue}}
+</span>
+```
+
+そうすると、出力結果は改行や余白も込みで出力されます。
+
+```html
+<!-- 出力結果-->
+<span>
+  何かの値
+</span>
+```
+
+ここで、テンプレートを以下のように修正してみます。
+
+```html
+<!-- テンプレート-->
+<span>
+  {{- .SomeValue -}} 
+</span>
+```
+
+そうすれば、前後の余白（改行含む）が削除されて出力されます。
+
+```html
+<!-- 出力結果-->
+<span>何かの値</span>
+```
+
+<a href="#exec">実行結果の確認</a>では、range内の要素に不要な改行が付いていました。これを解消するには、以下のようにテンプレートを修正すればOKです。
+
+```html
+<ul class="list">
+  {{- range .List}}
+  <li>{{.}}</li>
+  {{- end}}
+</ul>
+```
+
+そうすれば出力結果は良い感じになります。
+
+```html
+<ul class="list">
+  <li>dog</li>
+  <li>cat</li>
+  <li>pig</li>
+  <li>lion</li>
+</ul>
+```
+
+ここはちょっと分かりにくいですね。もっとも、出力されたHTMLの見栄えを気にするケースはあまりないと思うので、あまり神経質になる必要はないと思います。
+
+<h3 id="if">if文</h3>
+
+if文で条件分岐をさせることも可能です。
+
+```html
+{{if .someCondition}}
+<p>真の場合</p>
+{{else}}
+<p>偽の場合</p>
+{{end}}
+```
+
+*.someCondition*がfalse、0、nil pointer、長さ0の配列・マップ・文字列の場合、「偽」判定となります。
+
+```{{if eq .Name "cat"}}...{{end}}```のように、比較演算子を利用することも出来ます（厳密には、演算子ではなく関数として定義されています）。
+
+以下が使えます。詳細は[公式ドキュメント](https://pkg.go.dev/text/template#hdr-Functions)をご確認ください。
+
+- eq: 等しい
+- ne: 等しくない
+- lt: 小なり
+- le: 小なりイコール
+- gt: 大なり
+- ge: 大なりイコール
+
+<h3 id="range">range</h3>
+
+<a href="#basic">基本的な使い方</a>では、rangeを以下のように使っていました。
+
+```html
+{{range .List}}
+<li>{{.}}</li>
+{{end}}
+```
+
+これを、以下のように指定することで、インデックスと配列の要素を変数に入れることも出来ます。
+
+```html
+<!-- $iがインデックス、$vが配列の要素 -->
+{{range $i,$v := .List}}
+<li>No{{$i}} {{$v}}</li>
+{{end}}
+```
+
+インデックスは0からはじまります。
+
+また、以下のように変数を１つだけ指定した場合、**配列の要素**が設定されます。ここは、GOの通常のrangeとは挙動が異なるので注意が必要です。
+
+```html
+<!-- $vが配列の要素 -->
+{{range $v := .List}}
+<li>{{$v}}</li>
+{{end}}
+```
+
+<h2 id="func">自作関数を実行</h2>
+
+自作の関数を定義し、テンプレート内で実行することも可能です。
+
+例えば、rangeで配列の長さ文liタグを生成する際に、番号を一緒に表示したいケースは多いと思います。上記の<a href="#range">range</a>で見たとおり、配列のインデックスの取得は可能ですが、0からはじまる仕様です。
+
+なので、**インデックスに1を足す**関数を自作してみようと思います。
+
+<h3 id="fn-pgm">プログラム部分</h3>
+
+テンプレートに自作関数を組み込む際には、**テンプレートの読み取り前**に利用する関数を設定する必要があります。
+
+<div class="fn">main.go</div>
+
+```go
+package main
+
+import (
+	"html/template"
+	"log"
+	"os"
+)
+
+// templateに渡すデータの型
+type (
+	Data struct {
+		List []string
+	}
+)
+
+func main() {
+
+	// テンプレート内で実行する自作関数
+	fn := template.FuncMap{
+		"add": func(i int) int {
+			return i + 1
+		},
+	}
+
+	// templateの初期化
+	tmpl := template.New("func-test")
+	// 自作関数を追加
+	tmpl.Funcs(fn)
+	// テンプレートのファイルを読み取る
+	_, err := tmpl.ParseFiles("./func-test.html")
+
+	// テンプレートの読み取り。複数のファイルを指定することも可能
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 保存用のファイル
+	file, err := os.Create("func.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// テンプレートに渡すデータ
+	data := Data{
+		List: []string{
+			"dog", "cat", "pig", "lion",
+		},
+	}
+
+	// テンプレートにデータを渡して実行
+	// 第二引数のファイル名は、parseFilesで読み取ったファイル名と一致する必要がある
+	err = tmpl.ExecuteTemplate(file, "func-test.html", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+自作関数を```template.FuncMap```型で定義します。ここで設定したキー（"add"）が、テンプレート内で呼び出せる関数名になります。今回の例では、引数に1を加えた値を返すadd関数を定義しています。
+
+<a href="#basic">基本的な使い方</a>では、```template.ParseFiles```でテンプレートを直接読み取っていました。しかし、自作関数を使う場合、**template.ParseFilesの前**に関数を設定する必要があります。そのため、テンプレート（*template.Template型）の初期化を別の方法で行っています。
+
+それが、```tmpl := template.New("func-test")```の部分です。ここで、*template.Template型のデータを初期化し、tmpl変数に設定しています。引数はテンプレートを識別するための名前なので、何でもOKです。
+
+ここで、```tmpl.Funcs(fn)```で自作関数の設定を行い、そのあとに```tmpl.ParseFiles("./func-test.html")```でファイルの読み取りを行っています。
+
+```ParseFiles```は、http/templateの関数として定義されていますが、*template.Template型のメソッドとしても定義されています。今回使っているのは、**後者のメソッド**のほうです。ややこしいですね。
+
+<h3 id="fn-template">テンプレート部分</h3>
+
+テンプレートは以下のようにしておきます。
+
+```html
+<ul>
+  {{- range $i,$v := .List}}
+  <li>
+    <span>No.{{add $i}}:</span><span>{{$v}}</span>
+  </li>
+  {{- end}}
+</ul>
+```
+
+自作関数は、```add $i```のように呼び出しています。$iは、add関数に渡す実引数です。実引数は、関数名の後に記載します。複数ある場合も、半角スペースで区切って続けて記載するだけです。
+
+<h3 id="fn-exec">実行結果</h3>
+
+これを実行すると以下のような結果になります。
+
+```html
+<ul>
+  <li>
+    <span>No.1:</span><span>dog</span>
+  </li>
+  <li>
+    <span>No.2:</span><span>cat</span>
+  </li>
+  <li>
+    <span>No.3:</span><span>pig</span>
+  </li>
+  <li>
+    <span>No.4:</span><span>lion</span>
+  </li>
+</ul>
+```
+
+ちゃんとインデックスに１を加えた値が出力されていることが確認できます。
+
+<h2 id="nest">テンプレートを入れ子にする</h2>
+
+最後に、テンプレートを入れ子にする（テンプレートを別のテンプレートで使う）方法を紹介します。うまく扱えば、複数ページの共通レイアウト部分をテンプレート化し、中身の異なる部分を別のテンプレートにする等、ページの作成を効率化することもできると思います。
+
+テンプレート全体を、```{{define "name"}}...{{end}}```で囲って定義すると、別のテンプレートで扱うことが可能になります。使う側では、```{{template "name" .}}```のように呼び出すことができます。
+
+簡単な例で見てみます。
+
+<h3 id="nest-template">テンプレート部分</h3>
+
+まずは以下のようなテンプレートを作成します。
+
+<div class="fn">layout.html</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入れ子テスト</title>
+</head>
+
+<body>
+  <h1>{{.Heading}}</h1>
+  <main>
+    {{template "content" .Content}}
+  </main>
+  <footer>
+    <div>{{.Footer}}</div>
+  </footer>
+</body>
+
+</html>
+```
+
+ポイントは、mainタグ内の``` {{template "content" .Content}}```部分です。ここで、**content**という名前のテンプレートを利用しています。contentテンプレートには、.Contentのデータを渡しています。
+
+contentテンプレートは、別ファイルで以下のように定義しておきます。
+
+<div class="fn">content.html</div>
+
+```html
+{{define "content" -}}
+<ul>
+  {{- range .}}
+  <li>{{.}}</li>
+  {{- end}}
+</ul>
+{{end}}
+```
+
+こちらは、```layout.html```から読み取られるテンプレートとなるので、全体を```{{define "content"}}...{{end}}```で囲っています。**content**がテンプレートの名前となります。
+
+後はrangeでループして、配列の要素をliタグで表示させているだけです。なので、呼び出す時は文字列型の配列を渡してあげる必要があります。
+
+<h3 id="nest-pgm">プログラム部分</h3>
+
+プログラムは以下のような感じです。
+
+<div class="fn">main.go</div>
+
+```go
+package main
+
+import (
+	"html/template"
+	"log"
+	"os"
+)
+
+// templateに渡すデータの型
+type (
+	Data struct {
+		Heading string
+		Content []string
+		Footer  string
+	}
+)
+
+func main() {
+	// テンプレートのファイルを2つ読み取る
+	tmpl, err := template.ParseFiles("./layout.html", "./content.html")
+
+	// テンプレートの読み取り。複数のファイルを指定することも可能
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 保存用のファイル
+	file, err := os.Create("nest.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// テンプレートに渡すデータ
+	data := Data{
+		Heading: "入れ子テスト",
+		Content: []string{
+			"dog", "cat", "pig", "lion",
+		},
+		Footer: "by全力君 2025-1",
+	}
+
+	// テンプレートにデータを渡して実行
+	// 2つテンプレートを読み取っているので、実行する方を指定
+	err = tmpl.ExecuteTemplate(file, "layout.html", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+今までの例と大きな変化はありませんが、```template.ParseFiles("./layout.html", "./content.html")```で、テンプレートを2つ読み取りしています。
+
+今回の例だと、layout.htmlがcontent.htmlを入れ子にしています。この場合、**ParseFilesに両ファイルとも指定**する必要があります。
+
+また、テンプレートを実行する際には、入れ子の外側のファイル（layout.html）を指定する必要があります。```tmpl.ExecuteTemplate(file, "layout.html", data)```の部分ですね。
+
+<h3 id="nest-exec">実行結果</h3>
+
+実際に出力されるHTMLは以下のようになります（インデントとかは少し整形しています）。
+
+<div class="fn">nest.html</div>
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入れ子テスト</title>
+</head>
+
+<body>
+  <h1>入れ子テスト</h1>
+  <main>
+    <ul>
+      <li>dog</li>
+      <li>cat</li>
+      <li>pig</li>
+      <li>lion</li>
+    </ul>
+
+  </main>
+  <footer>
+    <div>by全力君 2025-1</div>
+  </footer>
+</body>
+
+</html>
+```
+
+ちゃんと入れ子になったテンプレート部分も値が設定されていることが確認できますね。
+
+使い方や機能の紹介は以上になります。
+
+<h2 id="pro-con">メリデメ</h2>
+
+実際にhtml/templateを使ってウェブサイトを作ってみて、私が感じたメリデメを紹介します。React.js（Next.js）も使ったことがあるので、可能な範囲で比較します。
+
+<h3 id="merit">メリット</h3>
+
+#### 外部パッケージ不要
+
+標準パッケージで提供されるので、外部パッケージを利用する必要がありません。PythonやNode.js等、多言語で利用できるテンプレート・エンジンは基本的には外部パッケージになるので、依存関係を減らせるという点でメリットかと思います。
+
+#### フロント側が自由
+
+html/templateはサーバーで利用する機能です。フロント側に制約を加えることはありません。
+
+Next.jsのようなReact系のフレームワークを利用すると、バンドラや各種プラグイン等が一緒にインストールされますが、そのようなこともありません。自分で必要なものだけ選ぶことができます。小規模の製作なら、特にあれこれ必要になることはあまりないと思いますしね。
+
+もちろん、バンドラも必要であれば使うことはできますし、tailwind等のフロント向けのパッケージを利用することは可能です。
+
+#### 思ったよりパフォーマンスが悪くない
+
+私がhtml/templateを使ったサイトでは、基本的にはリクエストが来たら、リクエストに応じて必要なデータを取得し、HTMLを組み立ててクライアントに返しています。事前にHTMLを生成している訳ではないですし、バンドラも入れていませんし、Next.jsで構築したサイトと比較すると、パフォーマンスが悪くなるのではと懸念していました。しかし、体感では全く問題ありません。サクサク動きます。パフォーマンスはコンテンツの量等にも依存すると思うので、一概に比較は出来ませんが、個人的には満足です。
+
+なお、現時点ではアクセス数がきわめて少ない状態で確認しています。今後アクセス数が増えてくればパフォーマンスのチェックも確認できるので、今後注目してみたいと思います。
+
+<h3 id="demerit">デメリット</h3>
+
+#### 素のJavaScriptを使う必要がある
+
+Reactのようなフレームワークとの併用は出来ません。そのため、フロント側は素のJavaScriptを使う必要があります。
+
+ちょっとした処理なら大した事ありませんが、ゴリゴリ処理を書くとキツイと感じることもあります。特に、DOM操作をしてページのコンテンツを差し替えたりすると、結構面倒です。Reactが恋しくなることもありました。
+
+#### TypeScriptやバンドラを使う場合、自分で設定が必要
+
+これは使う場合のみですが、、、。
+
+フロントエンド向けのフレームワークを使う場合、専用のセットアップツールを使えば必要な外部パッケージをインストールしてくれ、バンドラやTypeScript、TailwindCSSのようなツールのconfigもよしなに設定してくれます。
+
+自分でインストールしてconfigを設定するとなると、案外面倒臭かったりします。
+
+<h2 id="last">最後に</h2>
+
+GOのhtml/templateの簡単な使い方を紹介しました。
+
+GOのテンプレート・エンジンは、他言語のテンプレート・エンジンと比べても比較的評判は良いみたいです。これが標準パッケージとして提供されているのは良いですね。
+
+今まで、素のHTML/JavaScript、もしくはReact系のフレームワークを使っていましたが、今回、テンプレート・エンジンは初めて使ってみました。まだ、効率よく使いまわせるようにテンプレートを組み立てることは出来ませんが、うまく使えば結構便利だと思います。
+
+React.jsに代表されるフロントエンドのフレームワークでは、クライアント側（JavaScript）でHTMLのコンテンツを生成しますが、Server Componentsが導入され、徐々にサーバー側に処理を移す流れになっていると思います。この流れにのって、テンプレート・エンジンが再評価されることもあるかもしれませんね。
+
+<h2 id="ref">参考</h2>
+
+- html/template: https://pkg.go.dev/html/template
+- text/template: https://pkg.go.dev/text/template
