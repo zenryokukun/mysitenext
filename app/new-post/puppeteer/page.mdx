@@ -1,0 +1,627 @@
+
+export const mdxMeta = {
+  title: "puppeteerでウェブスクレイピング",
+  description: "puppeteerを使った、node.jsでウェブスクレイングする方法を簡単に解説します。",
+}
+
+export const frontMatter = {
+  author: "全力君",
+  postedDate: "2025/9/30",
+};
+
+# puppeteerでウェブ・スクレイピング
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#about">Puppeteerとは</a></li>
+<li><a href="#env">環境</a></li>
+<li><a href="#install">インストール</a></li>
+<li>
+  <a href="#basic-usage">基本的な使い方</a>
+  <ul>
+    <li><a href="#flow">流れ</a></li>
+    <li><a href="#launch">puppeteer.launch</a></li>
+    <li><a href="#new-page">browser.newPage</a></li>
+    <li><a href="#goto">page.goto</a></li>
+    <li><a href="#evaluate">page.evaluate</a></li>
+    <li><a href="#close">browser.close</a></li>
+    <li><a href="#example">実行例</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#action">HTML要素の操作</a>
+  <ul>
+    <li><a href="#action-usage">使い方</a></li>
+    <li><a href="#selector">引数のセレクタ</a></li>
+    <li><a href="#multi">複数の要素がマッチした場合</a></li>
+    <li><a href="#merit">メリット</a></li>
+  </ul>
+</li>
+<li>
+  <a href="#wait">「待ち」の制御</a>
+  <ul>
+    <li><a href="#navigation">ページ遷移する場合</a></li>
+    <li><a href="#dynamic">動的なページ</a></li>
+  </ul>
+</li>
+<li><a href="#console">ブラウザのコンソールを表示させる</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+凄い久しぶりの更新となりました。ちょっとサボっている間に、生成AIがあらゆる現場を席巻する（ことを期待する）世の中になったように感じます。
+
+それはさておき、今回はNode.jsのブラウザ自動化ライブラリである[Puppeteer](https://pptr.dev/)の簡単な使い方を紹介します。
+
+多くのウェブサイトでは規約上スクレイピングを禁止しており、ブラウザ自動化・スクレイピングには正直なところあまり興味がありませんでした。多少あったとしても「法的にグレー」というイメージがあり、手を出さずにいたというほうが正確ですかね。
+
+とはいえ、大手テック企業や主要な生成AIモデルも、インターネット上にある情報をスクレイピングして取得している、ということは（良し悪しは別にして）ある意味公然の事実となっていると思います。
+
+なので、私も少し試してみようと思い立った訳です。私自身はじめてのスクレイピングですが、参考になれば幸いです。
+
+P.S．だからといって、「どのサイトでもウェブ・スクレイピングをしても良い」とはならないので、ご自身で試される場合は利用規約やrobots.txtを事前に確認してください。
+
+<h2 id="about">Puppeteerとは</h2>
+
+[Puppeteer](https://pptr.dev/)はブラウザの自動化をしてくれるNode.jsライブラリです。Google社が開発したようです。[Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/)を使って自動化を実現しているとのことです。
+
+ウェブページの操作（フォーム入力や送信等）を自動化でき、主に画面のテストやスクレイピング等に使用することができます。
+
+公式ドキュメントによると、手動で行うだいたいの操作はPuppeteerで自動化できるとのことです。
+
+ウェブ・スクレイピングというとPythonのイメージが強かったですが、Puppeteerだとブラウザの操作を直接JavaScriptで記述できるので、DOM操作に抵抗がない方には良いかと思います（もしかするとPythonでもパッケージによってはできるかもしれません）。
+
+ちなみに、Puppeteerで操作できるブラウザは、ChromeとFirefoxのみです。スクレイピングだけならあまり関係ないかもしれませんが、画面のテストを自動化する際は注意したほうが良いかもしれません。EdgeのようにChromiumベースのブラウザでも大丈夫なようです。
+
+<h2 id="env">環境</h2>
+
+私のNode.jsのバージョンはv18.18.2です（今見たらEOLを迎えているようなので今度アプデしておきます、、）。以降のバージョンをお使いなら問題ないと思います。
+
+```bash
+> node --version
+v18.18.2
+```
+
+なお、ESMで記述したいので```package.json```に```"type": "module"```を追加しています。
+
+以降のコードではトップ・レベルの```await```を使います。そのためにはESMである必要がありますので、ご注意ください。
+
+<div class="fn">```package.json```</div>
+
+```json
+{
+  "type": "module",
+  // ...
+  // 以下略
+}
+```
+
+<h2 id="install">インストール</h2>
+
+インストール方法は以下のとおりです（公式ドキュメント抜粋）。
+
+```bash
+npm i puppeteer # Downloads compatible Chrome during installation.
+```
+
+コメントによると、Chromeも一緒にインストールされるようです。他にも自動化用のWebドライバ等も一緒にインストールされているようです。
+
+純粋にPuppeteerのみインストールする場合は、以下のような方法もあるようです。
+
+```bash
+npm i puppeteer-core # Alternatively, install as a library, without downloading Chrome.
+```
+
+コメントにあるように、こちらはChromeはインストールされません。
+
+既にChromeをインストールされている方でも、上段でインストールしておいたほうが良い気がします。Webドライバ等様々なツールが一緒にインストールされているようなので、Chromeが既にインストールされている・いないだけで決めないほうが良いと思います。
+
+下段は未検証ですが、おそらく自動化に必要な他のツールを自前でを準備できる方向けの方法かなと思います。少なくとも、私は既にChromeがインストールされている状態で、上段のコマンドでインストールしましたが、特に問題なく使えています。
+
+<h2 id="basic-usage">基本的な使い方</h2>
+
+<h3 id="flow">流れ</h3>
+
+Puppeteerを使用するにあたって、基本的な流れは以下の通りです。
+
+<div class="fn">```index.js```</div>
+
+```js
+import puppeteer from "puppeteer";
+
+// ブラウザを起動。デフォルトはChrome
+const browser = await puppeteer.launch();
+
+// 新しいページを開く
+const page = await browser.newPage();
+
+// 指定のURLに行く
+await page.goto(/*websiteのurl*/);
+
+// ここがスクレイピング部分
+await page.evaluate(()=>{
+  // 現在のページで実行するクライアントのコード
+});
+
+// ブラウザを閉じる
+await browser.close();
+```
+
+やたら```await```が多いですがしょうがありません。
+
+<h3 id="launch">puppeteer.launch</h3>
+
+まず、```puppeteer.launch()```でブラウザを起動します。
+
+デフォルトではChromeがヘッドレス（バックグラウンド）で起動します。オプションでFirefoxに変えたり、ヘッドフル（バックグラウンドでなく、目に見える状態で起動）に変更することができます。
+
+#### Firefoxに変更したい場合
+
+引数で```browser```オプションでFirefoxを指定すれば変更できます。
+
+```js
+const browser = await puppeteer.launch({browser: "firefox"});
+```
+
+ただし、事前に以下のコマンドでPuppeteer用にFirefoxをインストールする必要があります。
+
+```bash
+npx puppeteer browsers install firefox
+```
+
+これを実行していないとエラーになります。私の場合は以下のように怒られました。割と分かりやすく教えてくれますね。
+
+
+> <p>1. you did not perform an installation for Firefox before running the script (e.g. `npx puppeteer browsers install firefox`) or 2. your cache path is incorrectly configured (which is: C:\Users\bathi\.cache\puppeteer).</p>
+
+#### ヘッドフルに変えたい場合
+
+こちらも引数で変更できます。
+
+```js
+const browser = await puppteer.launch({ headless: false });
+```
+
+ヘッドフルだとブラウザが可視化されます。想定通り動いているか目で確認できるので、開発環境などで利用すると良いと思います。
+
+#### その他のオプション
+
+他にもいろいろありますが、私も使ったことがないので割愛します。
+
+詳細は公式ドキュメントの[launchoptions](https://pptr.dev/api/puppeteer.launchoptions)をご確認ください。全体的に公式ドキュメントは丁寧に書かれていると思います。
+
+<h3 id="new-page">browser.newPage</h3>
+
+今度は```const page = await browser.newPage();```の部分です。
+
+立ち上げたブラウザ上でタブを開く操作に該当します。「ページ」と名前がついていますが、ブラウザのタブのイメージでよいと思います。
+
+戻り値の[Page](https://pptr.dev/api/puppeteer.page)オブジェクトでは、ページ内の要素をクリックしたり、ホバーしたり、クライアントのJavaScriptを実行して要素を取得したりすることができます。ここは<a href="#action">HTML要素の操作</a>で後述します。
+
+また、複数のページ（タブ）を扱うことも可能ですが、今回は特に利用しないので割愛します。
+
+<h3 id="goto">page.goto</h3>
+
+```await page.goto(/*websiteのurl*/);```の部分です。操作したいウェブサイトに遷移します。ここは直感的だと思います。
+
+この後、実際にpageオブジェクトを通じてページの操作を行うことになります。
+
+#### 「待ち」の制御
+
+ここの部分で、実際にページのHTMLを取得してブラウザでレンダリングが行われます。
+
+しかし、**まだ操作したい要素が表示されていない**ことも結構あります。単にJSやCSSの読み込みが終わっていないケースや、何かのデータを取得している最中だったり、様々なケースがあると思います。
+
+このあたりはウェブサイトの作りにもよりますが、例えばデータの取得待ち中に表示される「スケルトン」の状態でページ操作が行われてしまうこともあります。例えば私の場合、商品価格を取ろうとしたら、初期表示時に表示される「-円」が取れてしまいました。少し待つと価格が表示されるので、操作の前にちょっと待つ必要がありました。
+
+この「待ち」をうまく制御するのがポイントになります。手動で操作する場合、目で確認できるため先走って操作してしまうことは稀ですが、自動化の際には考慮する必要があります。
+
+Puppeteerでは、「特定の要素が現れるまで待つ」、「特定の文字列が表示されるまで待つ」、「ページ遷移まで待つ」、「関数で指定した条件を満たすまで待つ」等、待ち制御するための機能がたくさんあります。
+
+この部分は<a href="#wait">「待ち」の制御</a>で後述します。
+
+#### 戻り値について
+
+```page.goto```はHTTPResponseを返します。必要であればエラー制御を加えておくと良いと思います。
+
+```js
+const resp = await page.goto(/*websiteのurl*/);
+// JSのResponse型とは異なり、okは関数
+if (!resp.ok()) {
+  // okじゃないときの制御
+} 
+```
+
+ただし、JavaScriptの[Response型](https://developer.mozilla.org/ja/docs/Web/API/Response)とは異なります。Puppeteer固有の型のようです。例えば、```ok```はbool値でなく関数になっています（詳細は[HTTPResponse class](https://pptr.dev/api/puppeteer.httpresponse)ご参照）。
+
+<h3 id="evaluate">page.evaluate</h3>
+
+```page.evaluate```の部分が、ページを操作する部分です。コールバック関数が実際にブラウザで実行されるJavaScriptのコードとなります。以下のように、お好きなようにDOM操作をすることができます。
+
+```js
+page.evaluate(()=>{
+  const node = document.querySelector(".some-class");
+});
+```
+
+#### 注意点
+
+PuppeteerはNode.js環境で実行されますが、このコールバック関数はブラウザで実行されます。そのため、**コールバック関数より外のスコープの変数にアクセスすることができません**。
+
+当然ですが、Node.jsのパッケージを使ったり、```process```のようなNode.js固有の機能は使うこともできません。
+
+コールバック関数はブラウザで実行されるため、クライアントのJavaScriptしか記述できない、ということです。このコールバック関数はNode.js環境とは切り離されて実行されると考えればOKです。
+
+```js
+import fs from "node:fs";
+
+// 略
+page.evaluate(()={
+  // nodeの機能は使えない。そもそもfsはスコープ外。
+  fs.readFile("./some-local-file.txt");
+  // 当然processも使えない
+  if (process.env.NODE_ENV === "production"){/*略*/}
+});
+```
+
+#### 戻り値
+
+```page.evaluate```から値を受け取ることも出来ます。ただし、**クライアントの実行結果をNode.js環境に返す**ことになるので、型に制約があります。
+
+具体的に返すことのできる型は、原始型（数字、文字列、真偽値、undefined、null、日付）と、これらを含む配列やオブジェクト（JSONに変換できる場合のみ）です。関数やHTML要素は直接返せません。ブラウザからNode.jsへ、ネットワーク越しに結果を返しているので当然と言えば当然です。
+
+```js
+// OKな例　文字列を返す
+const ret = await page.evaluate(()=>{
+  const elem = document.querySelector("#some-id");
+  return elem.textContent;
+});
+
+// OKな例２　JSON変換可能な形式のオブジェクトを返す
+const ret2 = await page.evaluate(()=>{
+  const elem = document.querySelector("#some-id");
+  return {
+    content: elem.textContent
+    ,success: true,
+  };
+});
+
+// ダメな例　HTML要素を返す
+const ret3 = await page.evaluate(()=>{
+  const elem = document.querySelector("#some-id");
+  return elem;
+});
+
+// ret3 は以下のような値に変換される
+// {__mutation_summary_node_map_id__1758980976000: 176}
+
+```
+
+HTML要素のように変換できない値を返した場合、```{__mutation_summary_node_map_id__1758980976000: 176}```のような値に変換されます。ChatGPTによると、Chrome DevTools Protocolによって生成される、DOMのNodeのIDとのことです。エラーになる訳ではないのでご留意ください。私はこれで結構ハマりました。
+
+#### 引数
+
+コールバック関数に引数を渡すこともできます。コールバックの後の引数に指定するだけです。いくつでも大丈夫です。
+
+```js
+const n1 = 1;
+const n2 = 2;
+const n3 = 3;
+page.evaluate((a,b,c)=>{},n1,n2,n3);
+```
+
+指定できる引数の型は、戻り値の型と同じ制約があります。ここも、エラーにはなりませんが想定通り動かないのでご注意ください。例えば、Node.jsのfsパッケージの関数とかも渡せてしまいますが、当然クライアント側で実行しても想定どおり動きません。
+
+<h3 id="close">browser.close</h3>
+
+最後に```browser.close```を呼んでブラウザを閉じましょう。閉じないとNode.jsの実行が終わりません。これも非同期関数なので```await```した方が良いかと思います。ブラウザが閉じる前にNode.jsがexitする可能性があるので。
+
+<h3 id="example">実行例</h3>
+
+それでは実際に例で見てみようと思います。私のウェブサイトのページから、h2タグの文字列を取得する例です。
+
+```js
+import puppeteer from "puppeteer";
+
+// ブラウザを起動。デフォルトはChrome
+const browser = await puppeteer.launch();
+
+// 新しいページを開く
+const page = await browser.newPage();
+
+// 指定のURLに行く
+await page.goto("https://zenryoku-kun.com/new-post/website-db");
+
+// ここがスクレイピング部分
+const texts = await page.evaluate(() => {
+    const h2s = document.querySelectorAll("h2");
+    // NodeList型はは直接返せないため
+    // h2タグ内の文字列を配列にいれて返す
+    const h2texts = Array.from(h2s).map(n => n.textContent);
+    return h2texts;
+});
+
+console.log(texts);
+
+// ブラウザを閉じる
+await browser.close();
+```
+
+実行結果はいかのようになりました。ちゃんとh2タグの内容がとれてます。
+
+```bash
+[
+  'はじめに',
+  'Webサイトでのデータベース選定',
+  '移行前のDB:MongoDB(Atlas)',
+  '移行後のDB:SQLite3について',
+  '私の結論',
+  '参考'
+]
+```
+
+<h2 id="action">HTML要素の操作</h2>
+
+HTML要素には、クリックやホバー、フォームの入力、スクロール等、様々なユーザ操作を行うことができます。
+
+ここでは、puppeteerの[Locator](https://pptr.dev/api/puppeteer.locator)を使った操作方法を紹介します。
+
+```page.evaluate```で、クライアント側のコードを直接記述できるのに、何故？と思われるかもしれません。私は未検証ですが、ホバーやフォームの入力等はある程度それで対応できるのかもしれません。ただし、待ちの制御が複雑になると思いますし、特にリンクをクリックしてページ遷移（ナビゲーション）をする場合に、```page```オブジェクトに遷移情報が引き渡されないため、基本的にはLocator等を使うことをお勧めします。
+
+<h3 id="action-usage">使い方</h3>
+
+使い方は以下のとおりです。
+
+```js
+/* 略 */
+const locator = page.locator(".some-class");
+// 後はクリックするなりホバーするなり
+await locator.click();
+await locator.hover();
+await locator.fill("input value");
+```
+
+pageオブジェクトのメソッドとなります。初期化の際は```await```は必要ありません。
+
+引数にセレクタを指定すると、Locatorオブジェクトが返ってきます。Locatorでは、セレクトされたHTML要素をある程度Node.js環境で扱うことができます。
+
+できる操作はクリックやホバー等のユーザ操作です。当然DOM操作を丸ごとできるわけではありません。```click```や```hover```等の操作系のメソッドは```await```する必要があります。
+
+<h3 id="selector">引数のセレクタ</h3>
+
+引数にはHTML要素を抽出するためのセレクタを指定します。```.some-class```の部分です。
+
+通常の[CSS Selectors](https://developer.mozilla.org/ja/docs/Web/CSS/CSS_selectors)に加え、puppeteer独自の拡張機能も使えます。```>>>```とか```>>>>```とか、いっぱいありますが、多いので割愛します。詳細は[Non-CSS Selectors](https://pptr.dev/guides/page-interactions#non-css-selectors)をご参照ください。
+
+個人的には文字列でセレクトできる機能は便利だと思ったので、そこだけ紹介します。
+
+```js
+// "updates"の文字列を持つaタグがセレクトされる
+const locator = page.locator("a ::-p-text(updates)");
+```
+
+<h3 id="multi">複数の要素がマッチした場合</h3>
+
+指定したセレクタにマッチする複数ある場合も、同じくLocatorインスタンスが返ってきます。配列になる訳ではありません。ただし、クリック等の操作が出来るのは１つの要素のみですので、何らかの制御をおこなう必要があるのですが、、、、ぶっちゃけやり方がよく分かりません。
+
+セレクタは１つの要素のみマッチするように指定したほうが良いかと思います。
+
+複数マッチが必須でしたら、[Page.$$() method](https://pptr.dev/api/puppeteer.page.__)のような代替の機能を使った方が良いかもしれません（ただし、これはLocatorでなくElementHandleという別の戻り値になります）。
+
+<h3 id="merit">メリット</h3>
+
+クリック等のユーザ操作をした場合、以下を保証してくれます：
+- その要素がviewport内にあること
+- visible（もしくはhidden）になるまで待つこと
+- 入力の場合input等がdisableされていないこと、
+- ２つの連続したアニメーション・フレームで、安定した境界ボックスがあること
+
+最後は正直よく分かりませんが、要素に対する操作を行う際、待ち等の制御をある程度自動でやってくれるのはメリットと言えると思います。（半面、自動で待ってくれるのでタイムアウト・エラーになるケースも多いですが、、、）
+
+<h2 id="wait">「待ち」の制御</h2>
+
+aタグ等をクリックして、ページ遷移（ナビゲーション）する場合や、ボタンを押すと画面の表示内容が切り替わったりする場合、ちゃんとページ遷移なり、表示内容の切り替わりが終わるまで「待つ」必要があります。この待ち方を紹介します。
+
+<h3 id="navigation">ページ遷移する場合</h3>
+
+aタグをクリックして、ページ遷移（ナビゲーション）させ、遷移後のページで要素を取得する例を考えてみます。このサイトのトップページから、「updates」のリンクをクリックし、遷移後のページのh2タグの文字列を取得してみます。
+
+以下のように記述しても、うまく動きません。
+
+```js
+import puppeteer from "puppeteer";
+
+// ブラウザを起動。デフォルトはChrome
+const browser = await puppeteer.launch();
+
+// 新しいページを開く
+const page = await browser.newPage();
+
+// 指定のURLに行く
+await page.goto("https://zenryoku-kun.com/");
+
+// "updates"の文字列があるaタグを取得
+const locator = page.locator("a ::-p-text(updates)");
+
+// aタグをクリック
+await locator.click();
+
+// 遷移後のページで、H2タグ内の文字列を取得
+const ret = await page.evaluate(() => {
+    const elems = document.querySelectorAll("h2");
+    return Array.from(elems).map(e => e.textContent);
+});
+
+console.log(ret);
+
+// ブラウザを閉じる
+await browser.close();
+```
+
+実行結果は、以下のようになり、遷移前のページのh2の内容が取得されています。
+
+```bash
+[ 'プログラミングについて', '直近の製作物' ]
+```
+
+理由はシンプルで、pageオブジェクトがページ遷移を待っていないからです。単純に```await locator.click()```では不十分ということです。
+
+以下のようにすれば、想定どおり動きます。
+
+```js
+await Promise.all([
+    page.waitForNavigation({ waitUntil: ["load", "networkidle2"] }),
+    locator.click(),
+]);
+```
+
+```page.waitForNavigation```で、ページ遷移自体を待つことができます。パラメタの```waitUntil```で待ちの条件を指定できます（複数可）。```load```はページがロードされるまで待ってくれます。```networkidle2```は500ミリ秒間、ネットワーク接続が２つ以下になるまで待ちます。ロードが終わった後、外部からデータ取得等を行う場合があるので、それがある程度終わるまで待ってくれるイメージかと思います。両方指定しておいたほうが安全かと思います。
+
+実行結果は以下のとおりです。ちゃんと遷移後のページから取得されています。
+
+```bash
+[ 'お知らせ', 'リリース', '更新予定', '将来の実装予定' ]
+```
+
+ちなみに、```page.waitForNavigation```を先に指定し、```locator.click```と並列に実行する必要があります。以下の例はいずれもタイムアウト・エラーになります。
+
+```js
+// ダメな例：操作が先
+await Promise.all([
+    locator.click(),
+    page.waitForNavigation({ waitUntil: ["load", "networkidle2"] }),
+]);
+
+// ダメな例：直列
+await page.waitForNavigation({ waitUntil: ["load", "networkidle2"] });
+await locator.click();
+```
+
+「ページ遷移を待ち受けた状態にして、その状態でユーザ操作（クリック）」する必要があります。
+
+<h3 id="dynamic">動的なページ</h3>
+
+ユーザ操作で、ページ遷移はしなくても、ページの内容が切り替わることもあります。その場合、「特定の要素（セレクタ）が現れるまで待つ」（```page.waitForSelector```）、「関数の条件を満たすまで待つ」（```page.waitForFunction```）方法があります。
+
+後者はCSS Selectorでの指定では識別できないケース（初期表示にはスケルトンのみが表示され、データ取得後に値のみ書き換わるケース等）で使えると思います。
+
+このサイトはスマホで表示すると、右上にメニュー表示用のアイコン（ハンバーガ）があります。これをクリックするとメニューが展開するので、その要素に対する例です。もっとも、私のサイトでは単に表示⇔非表示を切り替えているだけなので、あってもなくても結果は変わりませんが、、、例ということでご了承ください。
+
+#### page.waitForSelector
+
+```js
+// ブラウザを起動。デフォルトはChrome
+const browser = await puppeteer.launch();
+
+// 新しいページを開く
+const page = await browser.newPage();
+
+// スマホ用のビューポートを設定
+page.setViewport({ width: 500, height: 670 })
+
+// 指定のURLに行く
+await page.goto("https://zenryoku-kun.com/");
+
+// ハンバーガの要素
+const locator = page.locator(".Navigation_hamWrapper__ocs01");
+
+await locator.click();
+await page.waitForSelector(".Navigation_listWrapper__Xi0vM");
+
+// 遷移後のページで、H2タグ内の文字列を取得
+const ret = await page.evaluate(() => {
+    // 動的表示されたメニューについて好きなように操作
+});
+
+// ブラウザを閉じる
+await browser.close();
+```
+
+```page.waitForSelector```では、```{hidden:true}```や```{visible:true}```のようにオプションを指定することができます。それぞれの定義はドキュメントをご確認ください。
+
+- [hidden](https://pptr.dev/api/puppeteer.elementhandle.ishidden)
+- [visible](https://pptr.dev/api/puppeteer.elementhandle.isvisible)
+
+#### page.waitForFunction
+
+こちらは、指定した関数の条件を満たすまで待ってくれます。セレクタでは識別しきれないときに使えると思います。上と同じ例で、プルダウンメニューの中に「tutorial」の文字列が現れるまで待つ例です。
+
+```js
+/* 略 */
+
+await locator.click();
+
+// 第一引数：コールバック関数
+// 第二引数：オプション
+// 第三引数：コールバック関数に渡す引数
+await page.waitForFunction(iniText => {
+
+    // メニューの外側のul要素を取得
+    const ul = document.querySelector(".Navigation_listWrapper__Xi0vM");
+    
+    // 再帰処理。Nodeの子要素にiniTextと一致する文字列があればtrue
+    function iter(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.nodeValue === iniText;
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            return Array.from(node.childNodes).some(n => iter(n));
+        }
+        return false;
+    }
+
+    return iter(ul);
+
+}, {}, "tutorial");
+
+/* 略 */
+```
+
+第一引数のコールバック関数がtrueを返すまで定期的に呼び出してくれます。なので、コールバックは真偽値を返す必要があります。一定期間trueが返らないとタイムアウト・エラーが発生します。
+
+第二引数はオプションです。ドキュメントでは何も指定がない場合でも空オブジェクトを```{}```明示的に渡しているので、省略したりnullを指定したりしないほうが良いと思います。
+
+他にも待ち系の機能はありますが、私も試せていないので割愛します。
+
+<h2 id="console">ブラウザのコンソールを表示させる</h2>
+
+```page.evaluate```のコールバック関数のように、ブラウザで実行されるコード部分は、たとえコンソールへの出力があっても、Node.jsのコンソールには表示されません。これではエラーがあった時に確認ができず不便です。
+
+しかし、以下のように```"console"```イベントを```page```オブジェクトに付けてあげれば、ブラウザのコンソールへの出力がNode.jsのコンソールに表示されます。
+
+```js
+// consoleイベ円とをpageに付与
+page.on("console", msg => console.log("PAGE:", msg.text()));
+// ページ遷移
+await page.goto("https://zenryoku-kun.com/");
+await page.evaluate(() => console.log("hello,world"));
+```
+
+これを実行すると、Node.jsのコンソールに「hello,world」と出力されます。
+
+ただし、以下のようにHTML要素を出力しようとすると、「JSHandle@Node」のようにPuppeteerがNode.jsで扱える型に変換した値で表示されます。基本的には原始型の出力に徹したほうが良いと思います。
+
+```js
+// consoleイベ円とをpageに付与
+page.on("console", msg => console.log("PAGE:", msg.text()));
+// ページ遷移
+await page.goto("https://zenryoku-kun.com/");
+await page.evaluate(() => {
+  const h1 = document.querySelector("h1");
+  console.log(h1); // JSHandle@Nodeと出力される
+});
+```
+
+<h2 id="last">最後に</h2>
+
+Puppeteerの簡単な操作方法を解説しました。まだ、[page.$](https://pptr.dev/api/puppeteer.page._)や[page.$$](https://pptr.dev/api/puppeteer.page.__)等、ブラウザの操作関連は私も試せておらず、今回は触れられていません。このあたりを駆使すれば、もっと高度な制御が可能になると思いますので、今後も触れていきたいと思っています。
+
+Node.jsでウェブ・スクレイピングをする方は稀？かもしれませんが、興味ある方は参考にしてみてください。私は思っていたより簡単だなという印象です。
+
+<h2 id="ref">参考</h2>
+
+- [https://pptr.dev/](https://pptr.dev/)
