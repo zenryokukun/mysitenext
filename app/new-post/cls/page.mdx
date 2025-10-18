@@ -1,0 +1,114 @@
+import Image from "../ImageWrapper";
+import GSCPic from "./gsc.jpg";
+import CLSPic from "./cls.jpg";
+import CLSAfterPic from "./cls-after.jpg";
+
+export const mdxMeta = {
+    title:"「CLSに関する問題: 0.25超」でGoogleに怒られた！",
+    description:"Google Search Consoleで、CLS（Cumulative Layout Shift）の問題が急に表示されるようになりました。私の行った対応策とその結果を共有します。"
+}
+
+export const frontMatter = {
+    author: "全力君",
+    postedDate: "2025/10/18",
+};
+
+# 「CLSに関する問題: 0.25超」でGoogleに怒られた！
+
+<nav class="table-of-contents ">
+<div class="table__title">目次</div>
+<ul>
+<li><a href="#start">はじめに</a></li>
+<li><a href="#cls">CLSとは</a></li>
+<li><a href="#incident">私に起こったこと</a></li>
+<li><a href="#measure">対策</a></li>
+<li><a href="#last">最後に</a></li>
+<li><a href="#ref">参考</a></li>
+</ul>
+</nav>
+
+<h2 id="start">はじめに</h2>
+
+半年ほど前から、Google Search Consoleの「Webに関する主な指標」で、「CLSに関する問題：0.25超」が表示されるようになりました。
+
+急に出てきたため、放っておいてもすぐなおると思っていましたが、依然として治らないので対策してみました。
+
+検証が終わったページでは、完全ではないものの改善が確認できたため、私に起こったことと実施したことを共有します。
+
+時間のない方向けに結論だけ先に書くと、**Google Adsenseのアンカー広告を無効化**したら、（少しだけ？）改善しました。
+
+<h2 id="cls">CLSとは</h2>
+
+Google社がWebページの品質を測る指標として、[Core Web Vitals](https://web.dev/articles/vitals)というものがあります。SEO対策としてご存知の方も多いと思います。
+
+CLSは**Cumulative Layout Shift**の略で、このCore Web Vitalsで定められている指標です。画像やフォント等の読込後に生じる画面上の「要素のずれ」に関する指標です。
+
+計算方法が難しく、正直理解はあまりできていないですが、「影響を受けた（ずれた）面積の割合」と「ずれた距離の（ビューポートの高さとの）割合」をかけあわせたものがCLSスコアとなるようです。
+
+このスコアが0.1以下ならGood、0.25以下ならNeeds Improvement（要改善）、0.25超えならPoor（poor）と評価されます。
+
+Core Web Vialsには、他にも**First Contentful Paint**（FCP）や**Interaction To Next Paint**（INP）がありますが、今回は関係ないので割愛します。
+
+CLSやFCPについては[【Core Web Vitals】imgタグをレスポンシブにする方法](/post/responsive-image)で過去に記事にしているのでご参考にしてください。記事内のFID（First Input Delay）は、2024.3からINPに取って代わられましたので、その点だけご留意ください。
+
+### 指標のスコアの確認方法
+
+Google Search Consoleで、Core Web Vitalsの各指標がどのように評価されているか確認できます。
+
+<Image src={GSCPic} width={314} height={500} alt="google-search-console" />
+
+メニューの「エクスペリエンス」＞「ウェブに関する主な指標」で確認できます。
+
+<h2 id="incident">私に起こったこと</h2>
+
+CLSに関しては、サイトリリース当初に問題になったため、対策していました。その時はimgタグにwidthとheightを指定したら改善しました。
+
+しかし、ある時からまた「CLSに関する問題：0.25超（モバイル）」が表示されるようになってしまいました。
+
+<Image src={CLSPic} width={920} height={339} alt="cls-score-poor" />
+
+問題が検出されるのはモバイルのみで、該当するURLが58もあります。ちなみにPCは問題ありませんでした。
+
+### 原因
+
+この間、該当ページに特段変更は加えておりません。しかし、Google Adsenseで自動広告を導入していました。そのため、広告が悪さをしている可能性が高いと推測しました。
+
+ググってみると、確かにAdsenseの広告が原因となることもあるようです。アンカー広告等、CLSに影響してしまう広告の種類もあるようです。
+
+<h2 id="measure">対策</h2>
+
+私もアンカー広告も表示させていたので、試しにオフにしてGoogle Search Consoleで検証依頼を出してみました。
+
+ちなみにアンカー広告は、Adsenseのサイトの「広告」＞該当サイトの編集アイコン（ペンのアイコン）＞「オーバーレイフォーマット」でon/offの切り替えができます。
+
+1週間ほどで検証が終わり、結果は以下のとおりになりました。
+
+<Image src={CLSAfterPic} width={920} height={341} alt="cls-score-needs-improvement" />
+
+うーん、、、0.25超（poor）と評価されていたものが、そのまま0.1超（要改善）になりました。まだ対策が必要なことには変わりませんが、前進は一応しましたね、、。
+
+アンカー広告や全画面広告を止めたら改善したという報告もありましたが（現に私も改善はしました）、ChatGPTに聞くと、『アンカーや全画面表示は固定されているが、むしろテキストの合間に表示される広告が固定されていない分、悪さをしているケースが多い』との回答でした。
+
+確かに感覚的にはそう感じますが、一体どっちが正しいのですかね、、、
+
+<h2 id="last">最後に</h2>
+
+今回、Google Adsenseのアンカー広告をオフにして、CLSの問題が改善するか試してみました。
+
+「0.25超（poor）」が「0.1超（要改善）」になり、少し中途半端な結果にりました。でも前進はしましたよね。
+
+これだけで解決するサイトもあると思いますが、収益重視の場合は難しいかもしれません。その場合は、ユーザ体験（SEO重視）と天秤にかけての判断になるかと思います。
+
+私の次の１手としては、初期表示時のビューポート内に広告が入らないように除外設定をしてみようと思います。ページ上部の広告の方がCLSの影響を受けやすいと思うので。今検証依頼中ですので、結果が分かったら追記しておきます。
+
+他にも、自動広告ではなく手動広告にし、予めheightを指定したプレースホルダー(div要素)内に広告を設置する手もあるようです。確かに、大きめにとればシフトはしないでしょうし、仮に小さめに設定してもシフトの幅は小さくなりそうです。なるほど～とは思いますが、現時点では私はここまでやるつもりはありません。
+
+広告とCLSの課題は結構密接のようです。難しいですね(´Д｀)。
+
+<h2 id="ref">参考</h2>
+
+原因と対策は以下のサイトを参考にさせていただきました。
+
+- [自動広告とclsの共存(Google Adsense ヘルプ)](https://support.google.com/adsense/thread/111404705/%E8%87%AA%E5%8B%95%E5%BA%83%E5%91%8A%E3%81%A8cls%E3%81%AE%E5%85%B1%E5%AD%98?hl=ja)
+- [https://dad-union.com/cls-mobile-problem-solutions](https://dad-union.com/cls-mobile-problem-solutions)
+
