@@ -1,7 +1,10 @@
 import Image from "../ImageWrapper";
+import Caution from "../Caution";
 import GSCPic from "./gsc.jpg";
 import CLSPic from "./cls.jpg";
 import CLSAfterPic from "./cls-after.jpg";
+import noAdResultPic from "./no-ad-result.jpg";
+import noAdResultPic2 from "./no-ad-result2.jpg"
 
 export const mdxMeta = {
     title:"「CLSに関する問題: 0.25超」でGoogleに怒られた！",
@@ -15,6 +18,13 @@ export const frontMatter = {
 
 # 「CLSに関する問題: 0.25超」でGoogleに怒られた！
 
+<Caution>
+<div><b>2025-10-25追記</b></div>
+<div>
+<a href="#no-ads">2025-10-25追記:広告除外設定の結果</a>を追記しました。
+</div>
+</Caution>
+
 <nav class="table-of-contents ">
 <div class="table__title">目次</div>
 <ul>
@@ -23,6 +33,7 @@ export const frontMatter = {
 <li><a href="#incident">私に起こったこと</a></li>
 <li><a href="#measure">対策</a></li>
 <li><a href="#last">最後に</a></li>
+<li><a href="#no-ads">2025-10-25追記：広告除外設定の結果</a></li>
 <li><a href="#ref">参考</a></li>
 </ul>
 </nav>
@@ -105,10 +116,30 @@ CLSに関しては、サイトリリース当初に問題になったため、�
 
 広告とCLSの課題は結構密接のようです。難しいですね(´Д｀)。
 
+<h2 id="no-ads">2025-10-25追記：広告除外設定の結果</h2>
+
+「初期表示時のビューポート内に広告が入らないように除外設定」について、一部Googleの検証が終わりましたので、結果を追記します。
+
+<Image src={noAdResultPic} width={920} height={332} alt="fewer-needs-improvement" />
+
+「改善が必要」はもともと58個ありましたが、27個まで減っています。この27個は現時点でまだ検証が始まってません。終われば無事ゼロになると見込んでいます。
+
+<Image src={noAdResultPic2} width={920} height={346} alt="good score" />
+
+差分の31個は、「良好なURL」として評価されました！
+
+結論、私のサイトでは「アンカー広告を停止したら少し改善」し、「その状態で初期表示のビューポート内の広告を除外したらGood評価」となりました。
+
+今のこの状態でアンカー広告を出したらどうなるか、は気になりますが、、、現時点では指標重視にしたいと思います。
+
+しかし、収益ですが、（もともと微々たるものでしたが）1/4くらいになってしまいました。ページが表示されたらすぐ離脱される方が多かったということでしょう。
+
+もっと中身を読んでもらえるように精進したいと思います。
+
 <h2 id="ref">参考</h2>
 
 原因と対策は以下のサイトを参考にさせていただきました。
 
 - [自動広告とclsの共存(Google Adsense ヘルプ)](https://support.google.com/adsense/thread/111404705/%E8%87%AA%E5%8B%95%E5%BA%83%E5%91%8A%E3%81%A8cls%E3%81%AE%E5%85%B1%E5%AD%98?hl=ja)
-- [https://dad-union.com/cls-mobile-problem-solutions](https://dad-union.com/cls-mobile-problem-solutions)
+- [【要注意】Google Search Consoleの「CLS に関する問題」とは？原因と対策を徹底解説](https://dad-union.com/cls-mobile-problem-solutions)
 

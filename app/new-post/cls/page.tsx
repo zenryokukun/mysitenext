@@ -18,7 +18,7 @@ import Content from "./page.mdx";
 
 import type { Metadata } from "next";
 
-const DIR = "linux-ssh";
+const DIR = "cls";
 
 export const metadata: Metadata = generateMeta(mdxMeta, DIR)
 
